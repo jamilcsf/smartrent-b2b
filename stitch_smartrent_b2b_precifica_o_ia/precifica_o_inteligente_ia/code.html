@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: 'class', theme: { extend: { colors: { 'primary-fixed': '#d2e4ff', 'on-error': '#ffffff', 'inverse-primary': '#b0c8eb', 'secondary-fixed': '#cde5ff', 'on-background': '#0b1c30', 'surface-container': '#e5eeff', 'on-surface': '#0b1c30', 'on-primary-fixed': '#001c37', 'secondary-container': '#67bafd', 'primary-container': '#0a2540', 'surface-dim': '#cbdbf5', 'error-container': '#ffdad6', 'tertiary-fixed': '#b3ebff', 'surface-variant': '#d3e4fe', 'surface-bright': '#f8f9ff', 'tertiary-fixed-dim': '#4cd6fb', 'secondary': '#006399', 'surface-container-highest': '#d3e4fe', 'secondary-fixed-dim': '#94ccff', 'primary-fixed-dim': '#b0c8eb', 'error': '#ba1a1a', 'on-secondary-fixed-variant': '#004b74', 'on-primary-container': '#768dad', 'primary': '#000f22', 'on-primary': '#ffffff', 'on-surface-variant': '#43474d', 'on-secondary-fixed': '#001d32', 'on-tertiary-fixed-variant': '#004e5f', 'surface-tint': '#49607e', 'on-secondary-container': '#004972', 'surface': '#f8f9ff', 'background': '#f8f9ff', 'on-tertiary-fixed': '#001f27', 'on-tertiary-container': '#0098b7', 'outline': '#74777e', 'on-tertiary': '#ffffff', 'inverse-surface': '#213145', 'tertiary': '#001116', 'surface-container-high': '#dce9ff', 'inverse-on-surface': '#eaf1ff', 'outline-variant': '#c4c6ce', 'surface-container-lowest': '#ffffff', 'surface-container-low': '#eff4ff', 'on-secondary': '#ffffff', 'tertiary-container': '#002832', 'on-primary-fixed-variant': '#314865', 'on-error-container': '#93000a' }, borderRadius: { 'DEFAULT': '0.25rem', 'lg': '0.5rem', 'xl': '0.75rem', 'full': '9999px' }, spacing: { 'space-xl': '1.5rem', 'space-3xl': '3rem', 'edge-margin-tablet': '1.5rem', 'space-2xl': '2rem', 'space-md': '1rem', 'space-lg': '1.25rem', 'card-gap': '0.75rem', 'space-2xs': '0.25rem', 'space-xs': '0.5rem', 'space-sm': '0.75rem', 'edge-margin-mobile': '1rem' }, fontFamily: { 'numeric-metric': ['Plus Jakarta Sans'], 'headline-sm': ['Plus Jakarta Sans'], 'display-lg': ['Plus Jakarta Sans'], 'body-sm': ['Plus Jakarta Sans'], 'label-md': ['Plus Jakarta Sans'], 'display-sm': ['Plus Jakarta Sans'], 'body-md': ['Plus Jakarta Sans'], 'title-md': ['Plus Jakarta Sans'], 'headline-md': ['Plus Jakarta Sans'], 'label-lg': ['Plus Jakarta Sans'], 'body-lg': ['Plus Jakarta Sans'], 'label-sm': ['Plus Jakarta Sans'], 'headline-lg': ['Plus Jakarta Sans'] }, fontSize: { 'numeric-metric': ['26px', { lineHeight: '32px', letterSpacing: '-0.02em', fontWeight: '700' }], 'headline-sm': ['18px', { lineHeight: '24px', letterSpacing: '-0.01em', fontWeight: '600' }], 'display-lg': ['40px', { lineHeight: '48px', letterSpacing: '-0.03em', fontWeight: '800' }], 'body-sm': ['12px', { lineHeight: '16px', letterSpacing: '0.01em', fontWeight: '400' }], 'label-md': ['12px', { lineHeight: '16px', letterSpacing: '0.02em', fontWeight: '600' }], 'display-sm': ['32px', { lineHeight: '40px', letterSpacing: '-0.025em', fontWeight: '700' }], 'body-md': ['14px', { lineHeight: '20px', letterSpacing: '0', fontWeight: '400' }], 'title-md': ['16px', { lineHeight: '22px', letterSpacing: '-0.005em', fontWeight: '600' }], 'headline-md': ['22px', { lineHeight: '28px', letterSpacing: '-0.015em', fontWeight: '600' }], 'label-lg': ['14px', { lineHeight: '18px', letterSpacing: '0.01em', fontWeight: '600' }], 'body-lg': ['16px', { lineHeight: '24px', letterSpacing: '0', fontWeight: '400' }], 'label-sm': ['11px', { lineHeight: '14px', letterSpacing: '0.04em', fontWeight: '700' }], 'headline-lg': ['28px', { lineHeight: '36px', letterSpacing: '-0.02em', fontWeight: '700' }] } } } };</script><style>@layer base{html,body{width:100vw;margin:0;padding:0;background-color:#f8f9ff;}body{overscroll-behavior:none;-webkit-tap-highlight-color:transparent;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style></head><body class="bg-background font-body-md text-on-surface flex flex-col min-h-screen"><header class="fixed top-0 inset-x-0 z-50 bg-surface/85 backdrop-blur-xl shadow-[0_1px_8px_rgba(10,37,64,0.05)] pt-safe"><div class="h-20 px-edge-margin-mobile flex flex-col justify-center"><div class="flex items-center justify-between gap-space-xs"><div class="flex items-center gap-space-xs min-w-0"><img alt="Logo Temporada Inteligente B2B" class="h-8 w-auto object-contain flex-shrink-0" src="https://lh3.googleusercontent.com/aida/AEtjO1WgdEZvxtaJB29o90lBVXCc3aLFRnQPm13xYKX0LP4AJ52IeksBFSRRbMFSjuoYK9ErpRKT4uzmCxBkU_MPeqelbNMMSZCZ7FD3ullQIhFfKPJUmaeDeEbAnn8zDAWHf34qmxufvV4ZrlPXjWh4XpVnD4TIO3zeGgszox0VR8lTgh-g1z9EbPr7_kiEOtVUkOwHof06_aeKBaW3sw5kzLE9ZlMOvOBxDClY4GwIQtyJH26UwxIdd2_O7LA"/><div class="flex flex-col min-w-0"><div class="flex items-center gap-space-2xs"><span class="font-title-md text-title-md text-on-surface truncate">Temporada Inteligente</span></div><span class="font-label-sm text-label-sm text-secondary truncate">Florianópolis • B2B</span></div></div><div class="flex items-center gap-space-xs flex-shrink-0"><button aria-label="Notificações" class="relative w-11 h-11 flex items-center justify-center rounded-full bg-surface-container-low text-on-surface-variant hover:bg-surface-container active:scale-95 transition-all"><span class="material-symbols-outlined text-[20px]">notifications</span><span class="absolute top-2 right-2 w-2 h-2 rounded-full bg-secondary-container"></span></button><img alt="Profile" class="w-8 h-8 rounded-full object-cover shadow-[0_1px_4px_rgba(10,37,64,0.12)]" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDkNdSXOHWOmG4KWPpvU4ONSQ-F7TFYFzgBynYL4XA1PqhDTvYmf8OAo03qvQSk2D6TERz-oxeZZ94Qqm2aaC8peYr-hyx9ohShgxaUWWWjMLhf0ykc3VLJLsBJXD3n3sxvlHL8wZIh7ZdrnZY0viwV74Fc-GU-xnDaaiNmrDVwegHsGNcoind99Ice9jbO5G_SV_-n2EJqdatOc_r-bmMhgMXjrumk_YTJ93-H6zFA7PUQaQ4F_7K5"/></div></div><div class="flex items-center justify-between mt-1"><div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-surface-container text-on-secondary-container text-label-sm font-label-sm"><span class="w-1.5 h-1.5 rounded-full bg-secondary-container animate-pulse"></span><span>API IA: Online (Groq)</span></div><span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Precificação Ia</span></div></div></header><main class="flex-1 flex flex-col relative w-full px-edge-margin-mobile pt-20 pb-28 bg-surface"><div class="flex flex-col w-full space-y-space-md">
+<!-- System Status Banner -->
+<div class="flex items-center justify-between p-space-sm bg-surface-container-low rounded-xl shadow-sm">
+<div class="flex items-center space-x-space-xs">
+<div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[18px]">neurology</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center space-x-1.5">
+<span class="font-label-md text-label-md text-on-surface">Llama-3 Preditivo</span>
+<span class="px-1.5 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed text-[10px] font-bold uppercase tracking-wider">Groq REST</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Latência 420ms • Fallback Ativo</span>
+</div>
+</div>
+<div class="flex items-center space-x-1 px-2.5 py-1 rounded-full bg-surface-container-highest text-secondary font-label-sm text-label-sm">
+<span class="w-2 h-2 rounded-full bg-secondary-container animate-pulse"></span>
+<span>Conectado</span>
+</div>
+</div>
+<!-- Selection & Parameters Card -->
+<div class="flex flex-col p-space-md bg-surface-container-lowest rounded-xl shadow-sm space-y-space-md">
+<div class="flex flex-col space-y-space-2xs">
+<label class="font-label-lg text-label-lg text-on-surface flex items-center justify-between">
+<span>Imóvel de Referência</span>
+<span class="font-label-sm text-label-sm text-secondary">Florianópolis</span>
+</label>
+<!-- Selected Property Preview -->
+<div class="flex items-center space-x-space-sm p-space-xs bg-surface-container-low rounded-lg">
+<img class="w-14 h-14 rounded-lg object-cover flex-shrink-0" data-alt="Modern beachfront apartment balcony overlooking the ocean in Jurerê Internacional Florianópolis, sunny morning light, pristine coastal architecture, contemporary minimalist decor with soft neutral tones" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC4v564r9BT3YiF64OWGrpCiZ-XyHnyabR3GbDCPBcPgXxTLNtviBH9oT2GkQgwv4RjeI4GAfgq893E3bY4z9iAjGMEOdjtYiqSuu8zn8XTtlw2_iQz-tdJQar5qPOV2eOI6wEHw8LYngirvu06JiaCPgSIFgU5nee9sP1VWX1CI92CftBzbZoLCXLO_kwN7tVx-ovSmSFZxikmWNNpL8I7b0cJ717iQYvFeaaxGv-8SK4TnFlejwZ3"/>
+<div class="flex flex-col min-w-0 flex-1">
+<span class="font-title-md text-title-md text-on-surface truncate">Apt Vista Mar - Jurerê</span>
+<div class="flex items-center space-x-2 text-on-surface-variant font-body-sm text-body-sm truncate">
+<span>Base: <strong class="text-on-surface">R$ 450/dia</strong></span>
+<span>•</span>
+<span>6 hóspedes</span>
+</div>
+</div>
+<button aria-label="Trocar imóvel" class="p-2 text-secondary hover:bg-surface-container rounded-lg transition-colors">
+<span class="material-symbols-outlined text-[20px]">swap_horiz</span>
+</button>
+</div>
+</div>
+<!-- Date Parameters -->
+<div class="flex flex-col space-y-space-xs">
+<div class="flex justify-between items-center">
+<label class="font-label-md text-label-md text-on-surface">Data de Referência</label>
+<button class="px-2 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed font-label-sm text-label-sm hover:opacity-90 transition-opacity flex items-center space-x-1" id="quick-date-btn">
+<span class="material-symbols-outlined text-[14px]">event</span>
+<span>Próx: Páscoa / Tiradentes</span>
+</button>
+</div>
+<div class="flex items-center space-x-space-xs">
+<div class="relative flex-1">
+<input class="w-full h-11 px-3 bg-surface-container-low rounded-lg font-body-md text-body-md text-on-surface outline-none focus:bg-surface-container transition-all" id="ref-date-input" type="date" value="2025-04-18"/>
+</div>
+<div class="flex items-center px-3 h-11 bg-surface-container rounded-lg text-on-surface-variant font-label-sm text-label-sm flex-shrink-0 space-x-1">
+<span class="material-symbols-outlined text-[16px] text-secondary">wb_sunny</span>
+<span>Fim de Semana</span>
+</div>
+</div>
+</div>
+<!-- Seasonality Badge Detected -->
+<div class="flex items-center justify-between p-space-sm rounded-lg bg-surface-container-high text-on-surface">
+<div class="flex items-center space-x-2">
+<span class="material-symbols-outlined text-secondary text-[20px]">insights</span>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Demanda Detectada</span>
+<span class="font-title-md text-title-md text-on-surface">Alta Temporada • Feriado</span>
+</div>
+</div>
+<span class="inline-flex items-center px-2 py-1 rounded-full bg-secondary-container text-on-secondary-container text-[11px] font-bold">
+        Demanda +44%
+      </span>
+</div>
+<!-- Primary Action Button -->
+<div class="flex flex-col space-y-1">
+<button class="h-12 w-full rounded-lg bg-primary text-on-primary font-label-lg text-label-lg flex items-center justify-center space-x-2 active:scale-[0.98] transition-transform shadow-md hover:bg-secondary" id="generate-ai-btn">
+<span class="material-symbols-outlined text-[20px] text-tertiary-fixed-dim">bolt</span>
+<span>Gerar Sugestão com IA</span>
+</button>
+<span class="text-center font-body-sm text-[11px] text-on-surface-variant">Consulta REST Spring Boot 3 via Groq/OpenAI com cache Redis</span>
+</div>
+</div>
+<!-- Highlighted AI Result Card -->
+<div class="flex flex-col p-space-md bg-surface-container-lowest rounded-xl shadow-md space-y-space-md relative overflow-hidden" id="ai-result-card">
+<div class="absolute -right-6 -top-6 w-24 h-24 bg-surface-variant rounded-full blur-2xl pointer-events-none"></div>
+<div class="flex items-center justify-between">
+<div class="flex items-center space-x-2">
+<div class="w-7 h-7 rounded-full bg-surface-container flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[16px]">auto_awesome</span>
+</div>
+<span class="font-label-lg text-label-lg text-on-surface">Recomendação do Modelo</span>
+</div>
+<span class="px-2.5 py-0.5 rounded-full bg-surface-container text-secondary font-label-sm text-label-sm font-bold">
+        Confiança 94%
+      </span>
+</div>
+<!-- Pricing Metric Display -->
+<div class="flex flex-col p-space-sm bg-surface-container-low rounded-xl">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Diária Recomendada</span>
+<div class="flex items-baseline justify-between mt-1">
+<div class="flex items-baseline space-x-1">
+<span class="font-headline-lg text-headline-lg text-on-surface">R$ 620</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">/ noite</span>
+</div>
+<div class="flex items-center space-x-1 px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm font-bold">
+<span class="material-symbols-outlined text-[14px]">trending_up</span>
+<span>+37.8% vs Base</span>
+</div>
+</div>
+<div class="flex items-center justify-between pt-2 mt-2 font-body-sm text-body-sm text-on-surface-variant">
+<span>Preço Base Configurado:</span>
+<span class="font-label-md text-label-md text-on-surface">R$ 450,00</span>
+</div>
+</div>
+<!-- AI Justification Narrative -->
+<div class="flex flex-col space-y-1">
+<span class="font-label-sm text-label-sm text-secondary uppercase tracking-wider flex items-center space-x-1">
+<span class="material-symbols-outlined text-[14px]">psychology</span>
+<span>Justificativa Algorítmica</span>
+</span>
+<p class="font-body-md text-body-md text-on-surface bg-surface-container-low p-space-sm rounded-lg leading-relaxed">
+        Para o período em Jurerê Internacional, a demanda histórica e a taxa de ocupação projetada de 88% justificam diária entre <strong>R$ 600 e R$ 650</strong>. O evento confirmado no P12 e previsão marítima favorável minimizam riscos de vacância para reservas de 3 noites.
+      </p>
+</div>
+<!-- Card Action Buttons -->
+<div class="flex items-center space-x-space-xs pt-1">
+<button class="flex-1 h-11 rounded-lg bg-primary text-on-primary font-label-md text-label-md flex items-center justify-center space-x-1.5 shadow-sm active:scale-95 transition-all" id="apply-rate-btn">
+<span class="material-symbols-outlined text-[18px]">check_circle</span>
+<span>Aplicar Preço</span>
+</button>
+<button class="h-11 px-4 rounded-lg bg-surface-container text-on-surface font-label-md text-label-md flex items-center justify-center space-x-1 hover:bg-surface-container-high transition-colors" id="manual-adjust-btn">
+<span class="material-symbols-outlined text-[18px]">tune</span>
+<span>Ajuste</span>
+</button>
+</div>
+</div>
+<!-- Interactive Chart Section -->
+<div class="flex flex-col p-space-md bg-surface-container-lowest rounded-xl shadow-sm space-y-space-sm">
+<div class="flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-title-md text-title-md text-on-surface">Projeção 10 Dias</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Preço Base vs. Sugerido IA</span>
+</div>
+<div class="flex items-center space-x-2">
+<div class="flex items-center space-x-1">
+<span class="w-2.5 h-2.5 rounded-full bg-secondary"></span>
+<span class="font-label-sm text-[10px] text-on-surface-variant">IA</span>
+</div>
+<div class="flex items-center space-x-1">
+<span class="w-2.5 h-2.5 rounded-full bg-outline"></span>
+<span class="font-label-sm text-[10px] text-on-surface-variant">Base</span>
+</div>
+</div>
+</div>
+<!-- Chart Canvas Container -->
+<div class="w-full h-56 relative">
+<canvas id="priceChart"></canvas>
+</div>
+<div class="flex items-center justify-around pt-2 text-center bg-surface-container-low rounded-lg p-2">
+<div class="flex flex-col">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Média Sugerida</span>
+<span class="font-title-md text-title-md text-on-surface">R$ 585</span>
+</div>
+<div class="w-px h-6 bg-surface-variant"></div>
+<div class="flex flex-col">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Ocupação Estimada</span>
+<span class="font-title-md text-title-md text-secondary">86%</span>
+</div>
+<div class="w-px h-6 bg-surface-variant"></div>
+<div class="flex flex-col">
+<span class="font-body-sm text-body-sm text-on-surface-variant">RevPAR Esperado</span>
+<span class="font-title-md text-title-md text-on-surface">R$ 503</span>
+</div>
+</div>
+</div>
+<!-- Historical Log Section -->
+<div class="flex flex-col p-space-md bg-surface-container-lowest rounded-xl shadow-sm space-y-space-sm">
+<div class="flex items-center justify-between">
+<span class="font-title-md text-title-md text-on-surface">Histórico de Recomendações</span>
+<span class="font-label-sm text-label-sm text-secondary">PostgreSQL / JPA</span>
+</div>
+<div class="flex flex-col space-y-space-xs">
+<!-- Item 1 -->
+<div class="flex items-center justify-between p-space-xs bg-surface-container-low rounded-lg">
+<div class="flex items-center space-x-space-xs">
+<div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[18px]">verified</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface">18/04 • Tiradentes</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">R$ 620,00 (+37.8%)</span>
+</div>
+</div>
+<div class="flex flex-col items-end">
+<span class="px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-sm text-[10px] font-bold">APLICADO</span>
+<span class="font-body-sm text-[10px] text-on-surface-variant mt-0.5">Hoje, 10:24</span>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="flex items-center justify-between p-space-xs bg-surface-container-low rounded-lg">
+<div class="flex items-center space-x-space-xs">
+<div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-outline">
+<span class="material-symbols-outlined text-[18px]">edit_calendar</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface">12/04 • Fim de Semana</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">R$ 510,00 (+13.3%)</span>
+</div>
+</div>
+<div class="flex flex-col items-end">
+<span class="px-2 py-0.5 rounded-full bg-surface-container text-on-surface-variant font-label-sm text-[10px]">IGNORADO</span>
+<span class="font-body-sm text-[10px] text-on-surface-variant mt-0.5">Ontem, 16:40</span>
+</div>
+</div>
+<!-- Item 3 -->
+<div class="flex items-center justify-between p-space-xs bg-surface-container-low rounded-lg">
+<div class="flex items-center space-x-space-xs">
+<div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[18px]">verified</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface">05/04 • Sábado Regular</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">R$ 480,00 (+6.6%)</span>
+</div>
+</div>
+<div class="flex flex-col items-end">
+<span class="px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-sm text-[10px] font-bold">APLICADO</span>
+<span class="font-body-sm text-[10px] text-on-surface-variant mt-0.5">02/04, 09:12</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  (function initPriceModule() {
+    const ctx = document.getElementById('priceChart');
+    if (!ctx) return;
+
+    const labels = ['14/04', '15/04', '16/04', '17/04', '18/04', '19/04', '20/04', '21/04', '22/04', '23/04'];
+    const suggestedData = [450, 460, 490, 580, 620, 650, 640, 590, 470, 450];
+    const baseData = [450, 450, 450, 450, 450, 450, 450, 450, 450, 450];
+
+    const chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: 'Sugerido IA (R$)',
+            data: suggestedData,
+            borderColor: '#006399',
+            backgroundColor: 'rgba(103, 186, 253, 0.15)',
+            borderWidth: 2.5,
+            tension: 0.35,
+            fill: true,
+            pointRadius: 3.5,
+            pointBackgroundColor: '#006399',
+            pointBorderColor: '#ffffff',
+            pointBorderWidth: 1.5
+          },
+          {
+            label: 'Preço Base (R$)',
+            data: baseData,
+            borderColor: '#74777e',
+            borderWidth: 1.5,
+            borderDash: [4, 4],
+            tension: 0,
+            fill: false,
+            pointRadius: 0
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+          mode: 'index',
+          intersect: false
+        },
+        plugins: {
+          legend: {
+            display: false
+          },
+          tooltip: {
+            backgroundColor: '#0a2540',
+            titleFont: { family: 'Plus Jakarta Sans', size: 12, weight: '600' },
+            bodyFont: { family: 'Plus Jakarta Sans', size: 12 },
+            padding: 10,
+            cornerRadius: 8,
+            callbacks: {
+              label: function(context) {
+                return ' ' + context.dataset.label + ': R$ ' + context.raw;
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: {
+              font: { family: 'Plus Jakarta Sans', size: 10 },
+              color: '#43474d'
+            }
+          },
+          y: {
+            min: 400,
+            max: 700,
+            ticks: {
+              stepSize: 100,
+              font: { family: 'Plus Jakarta Sans', size: 10 },
+              color: '#43474d',
+              callback: function(val) {
+                return 'R$' + val;
+              }
+            },
+            grid: {
+              color: '#e5eeff'
+            }
+          }
+        }
+      }
+    });
+
+    // Micro-interactions
+    const quickBtn = document.getElementById('quick-date-btn');
+    const dateInput = document.getElementById('ref-date-input');
+    if (quickBtn && dateInput) {
+      quickBtn.addEventListener('click', () => {
+        dateInput.value = '2025-04-18';
+        dateInput.classList.add('bg-secondary-fixed');
+        setTimeout(() => dateInput.classList.remove('bg-secondary-fixed'), 400);
+      });
+    }
+
+    const genBtn = document.getElementById('generate-ai-btn');
+    const resultCard = document.getElementById('ai-result-card');
+    if (genBtn && resultCard) {
+      genBtn.addEventListener('click', () => {
+        const originalContent = genBtn.innerHTML;
+        genBtn.innerHTML = '<span class="material-symbols-outlined text-[18px] animate-spin">refresh</span><span>Processando IA...</span>';
+        genBtn.disabled = true;
+
+        setTimeout(() => {
+          genBtn.innerHTML = originalContent;
+          genBtn.disabled = false;
+          resultCard.classList.add('scale-[1.01]');
+          setTimeout(() => resultCard.classList.remove('scale-[1.01]'), 250);
+        }, 650);
+      });
+    }
+
+    const applyBtn = document.getElementById('apply-rate-btn');
+    if (applyBtn) {
+      applyBtn.addEventListener('click', () => {
+        applyBtn.innerHTML = '<span class="material-symbols-outlined text-[18px]">done_all</span><span>Preço Publicado!</span>';
+        applyBtn.classList.replace('bg-primary', 'bg-secondary');
+        setTimeout(() => {
+          applyBtn.innerHTML = '<span class="material-symbols-outlined text-[18px]">check_circle</span><span>Aplicar Preço</span>';
+          applyBtn.classList.replace('bg-secondary', 'bg-primary');
+        }, 2000);
+      });
+    }
+
+    const routes = {
+      inicio: '../dashboard_executivo_in_cio/code.html',
+      imoveis: '../gest_o_de_im_veis/code.html',
+      'precificacao-ia': 'code.html',
+      reservas: '../gest_o_de_reservas/code.html'
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('nav a[data-path]').forEach((link) => {
+        const route = routes[link.dataset.path];
+        if (route) link.href = route;
+      });
+    });
+  })();
+</script></main><nav class="fixed bottom-0 inset-x-0 z-50 pb-safe bg-surface/90 backdrop-blur-xl shadow-[0_-2px_12px_rgba(10,37,64,0.06)]" data-active-classes="text-secondary bg-surface-container font-label-md"><div class="flex justify-around items-center h-16 px-space-xs"><a class="flex flex-col items-center justify-center min-w-[64px] h-12 rounded-xl text-on-surface-variant hover:text-on-surface transition-all" data-path="inicio" href="#"><span class="material-symbols-outlined text-[22px]">space_dashboard</span><span class="font-label-sm text-label-sm mt-0.5">Início</span></a><a class="flex flex-col items-center justify-center min-w-[64px] h-12 rounded-xl text-on-surface-variant hover:text-on-surface transition-all" data-path="imoveis" href="#"><span class="material-symbols-outlined text-[22px]">domain</span><span class="font-label-sm text-label-sm mt-0.5">Imóveis</span></a><a class="relative flex flex-col items-center justify-center min-w-[72px] h-12 rounded-xl text-on-surface-variant hover:text-on-surface transition-all" data-path="precificacao-ia" href="#"><span class="absolute -top-1 px-1.5 py-0.2 rounded-full bg-secondary-container text-on-secondary-container text-[9px] font-bold leading-tight uppercase tracking-wider">IA</span><span class="material-symbols-outlined text-[22px]">auto_awesome</span><span class="font-label-sm text-label-sm mt-0.5">Precificação</span></a><a class="flex flex-col items-center justify-center min-w-[64px] h-12 rounded-xl text-on-surface-variant hover:text-on-surface transition-all" data-path="reservas" href="#"><span class="material-symbols-outlined text-[22px]">calendar_month</span><span class="font-label-sm text-label-sm mt-0.5">Reservas</span></a></div></nav></body></html>
