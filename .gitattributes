@@ -1,0 +1,13 @@
+# Este repositório está com core.autocrlf=true.
+#
+# Sem as regras abaixo o Git classifica PDF e DOCX como TEXTO — a heurística
+# dele procura byte nulo nos primeiros 8000 bytes, e um PDF costuma não ter
+# nenhum ali — e aplica conversão LF<->CRLF, corrompendo o arquivo no
+# checkout. Marcá-los como binary desliga qualquer conversão.
+*.pdf   binary
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.docx  binary
+*.xlsx  binary
+*.zip   binary
