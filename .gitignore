@@ -1,0 +1,42 @@
+# Maven
+target/
+!**/src/main/**/target/
+!**/src/test/**/target/
+# O wrapper foi gerado no modo only-script: mvnw, mvnw.cmd e
+# .mvn/wrapper/maven-wrapper.properties DEVEM ser versionados.
+
+# Variáveis de ambiente / segredos
+.env
+.env.local
+*.pem
+
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# Eclipse
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+# NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+
+# VS Code
+.vscode/
+
+# Logs e sistema operacional
+*.log
+.DS_Store
+Thumbs.db
