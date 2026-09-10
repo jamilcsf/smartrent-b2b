@@ -323,20 +323,22 @@ story.append(Paragraph(
 
 story.append(Paragraph("6.2 Modelo físico", styles["H2"]))
 story.append(Paragraph(
-    "O esquema físico, em PostgreSQL, é versionado por migration e foi gerado a partir do "
-    "mapeamento objeto-relacional em modo somente-geração-de-script do Hibernate (FIELDING; "
-    "BAUER; KING, [2024] apud documentação do projeto), validado em seguida contra uma "
-    "instância real do banco de dados antes desta versão do relatório.", styles["Body"]))
+    "O esquema físico, em PostgreSQL, foi gerado a partir do mapeamento objeto-relacional "
+    "em modo somente-geração-de-script do Hibernate (FIELDING; BAUER; KING, [2024] apud "
+    "documentação do projeto) e é versionado como migration no arquivo "
+    "V1__criacao_schema_inicial.sql, aplicado pelo Flyway na inicialização da aplicação. O "
+    "esquema resultante foi validado contra uma instância real do banco de dados antes "
+    "desta versão do relatório.", styles["Body"]))
 
 tables_ddl = [
     ("usuarios", [
-        ("id", "bigserial", "chave primária"), ("nome", "varchar(120)", "obrigatório"),
+        ("id", "bigint identity", "chave primária"), ("nome", "varchar(120)", "obrigatório"),
         ("email", "varchar(150)", "obrigatório, único"), ("senha_hash", "varchar(60)", "obrigatório"),
         ("papel", "varchar(20)", "obrigatório"), ("telefone", "varchar(20)", "opcional"),
         ("ativo", "boolean", "obrigatório"), ("data_criacao", "timestamp", "obrigatório"),
     ]),
     ("imoveis", [
-        ("id", "bigserial", "chave primária"), ("usuario_id", "bigint", "obrigatório, referencia usuarios"),
+        ("id", "bigint identity", "chave primária"), ("usuario_id", "bigint", "obrigatório, referencia usuarios"),
         ("titulo", "varchar(150)", "obrigatório"), ("descricao", "text", "opcional"),
         ("tipo_imovel", "varchar(20)", "obrigatório"),
         ("endereço (logradouro, bairro, cidade, estado, cep)", "varchar", "obrigatório"),
@@ -346,7 +348,7 @@ tables_ddl = [
         ("ativo", "boolean", "obrigatório"), ("data_cadastro", "timestamp", "obrigatório"),
     ]),
     ("reservas", [
-        ("id", "bigserial", "chave primária"), ("imovel_id", "bigint", "obrigatório, referencia imoveis"),
+        ("id", "bigint identity", "chave primária"), ("imovel_id", "bigint", "obrigatório, referencia imoveis"),
         ("hospede_nome, hospede_email", "varchar", "obrigatório"),
         ("hospede_telefone", "varchar(20)", "opcional"),
         ("data_checkin, data_checkout", "date", "obrigatório"),
@@ -356,7 +358,7 @@ tables_ddl = [
         ("versao", "bigint", "controle de concorrência otimista"),
     ]),
     ("sugestoes_preco", [
-        ("id", "bigserial", "chave primária"), ("imovel_id", "bigint", "obrigatório, referencia imoveis"),
+        ("id", "bigint identity", "chave primária"), ("imovel_id", "bigint", "obrigatório, referencia imoveis"),
         ("data_referencia", "date", "obrigatório"),
         ("valor_base, valor_sugerido", "numeric(10,2)", "obrigatório"),
         ("percentual_ajuste, fator_sazonalidade, fator_microgeografia", "numeric(5,2)", "opcional"),
@@ -374,10 +376,12 @@ for tname, cols in tables_ddl:
                          quadro_table(tdata, [72 * mm, 30 * mm, 50 * mm], font_size=8.6)))
 
 story.append(Paragraph(
-    "Além das colunas listadas, o esquema inclui a tabela associativa imovel_comodidades e os "
-    "índices idx_usuarios_email, idx_imoveis_usuario, idx_imoveis_ativo, idx_reservas_imovel, "
-    "idx_reservas_periodo (usado pela verificação de conflito de datas) e "
-    "idx_sugestoes_imovel_data.", styles["Body"]))
+    "Além das colunas listadas, o esquema inclui a tabela de coleção imovel_comodidades, "
+    "que armazena as comodidades de cada imóvel, e cinco índices: idx_imoveis_usuario, "
+    "idx_imoveis_ativo, idx_reservas_imovel, idx_reservas_periodo (usado pela verificação "
+    "de conflito de datas) e idx_sugestoes_imovel_data. A unicidade do endereço de e-mail "
+    "do usuário é garantida por restrição de unicidade na própria coluna, não por índice "
+    "nomeado.", styles["Body"]))
 story.append(PageBreak())
 
 # ---------------------------------------------------------------------
