@@ -2,7 +2,7 @@
 
 **Projeto:** SmartRent B2B — Sistema de Gestão Inteligente para Aluguel por Temporada  
 **Instituição:** UniSENAI — ADS (Florianópolis/SC)[cite: 1, 4]  
-**Última Atualização:** 2026-09-09 — Inicialização do build Maven/Spring Boot e estratégia de schema (Flyway)  
+**Última Atualização:** 2026-09-09 — Build Maven/Spring Boot inicializado e schema versionado com Flyway, validado contra PostgreSQL 16  
 
 ---
 
@@ -35,7 +35,8 @@
 - [x] `SecurityConfig` temporária liberando os endpoints até existir autenticação
 - [x] Geração do Modelo Físico a partir das entidades — ver [ADR-002](docs/ADR-002-estrategia-de-schema.md)
 - [x] Versionamento do schema com Flyway (`V1__criacao_schema_inicial.sql`)
-- [ ] Primeiro boot contra o Supabase com a V1 aplicada (pendente das credenciais)
+- [x] Ciclo Flyway + `ddl-auto: validate` validado ponta a ponta contra PostgreSQL 16
+- [ ] Primeiro boot contra o Supabase (pendente apenas das credenciais)
 - [ ] Camada de Service e Controllers REST
 - [ ] Configuração do serviço de IA com tratamento de fallback
 - [ ] Escrita da suíte de testes unitários com Mockito

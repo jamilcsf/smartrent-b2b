@@ -84,3 +84,12 @@ reproduzível em outra máquina e não serve como artefato do Modelo Físico.
   a sintaxe. O Supabase roda versão superior, então o DDL é compatível; se algum
   recurso de versão mais nova for necessário, informar
   `hibernate.dialect.version` no gerador.
+
+## Validação
+
+Ciclo verificado de ponta a ponta em 2026-09-09 contra PostgreSQL 16.15 em
+container descartável: o Flyway aplicou a V1 (`Successfully applied 1 migration
+to schema "public"`), o Hibernate aceitou o schema com `ddl-auto: validate` e a
+aplicação subiu. Num segundo boot o Flyway reportou `Schema "public" is up to
+date` e a validação passou novamente, confirmando que a migration é idempotente
+e que o DDL gerado offline corresponde exatamente ao mapeamento.
