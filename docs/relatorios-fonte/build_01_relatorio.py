@@ -323,12 +323,13 @@ story.append(Paragraph(
 
 story.append(Paragraph("6.2 Modelo físico", styles["H2"]))
 story.append(Paragraph(
-    "O esquema físico, em PostgreSQL, foi gerado a partir do mapeamento objeto-relacional "
-    "em modo somente-geração-de-script do Hibernate (FIELDING; BAUER; KING, [2024] apud "
-    "documentação do projeto) e é versionado como migration no arquivo "
-    "V1__criacao_schema_inicial.sql, aplicado pelo Flyway na inicialização da aplicação. O "
-    "esquema resultante foi validado contra uma instância real do banco de dados antes "
-    "desta versão do relatório.", styles["Body"]))
+    "O esquema físico, em PostgreSQL, está especificado nos quadros a seguir. A estratégia "
+    "definida para o projeto é gerá-lo a partir do mapeamento objeto-relacional em modo "
+    "somente-geração-de-script do Hibernate (FIELDING; BAUER; KING, [2024] apud "
+    "documentação do projeto), versioná-lo como migration aplicada pelo Flyway na "
+    "inicialização da aplicação e reservar ao Hibernate apenas a validação do esquema "
+    "existente, nunca sua alteração. A especificação a seguir é o contrato que a primeira "
+    "migration deve cumprir.", styles["Body"]))
 
 tables_ddl = [
     ("usuarios", [

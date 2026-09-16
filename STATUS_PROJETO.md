@@ -2,7 +2,7 @@
 
 **Projeto:** SmartRent B2B — Sistema de Gestão Inteligente para Aluguel por Temporada  
 **Instituição:** UniSENAI — ADS (Florianópolis/SC)[cite: 1, 4]  
-**Última Atualização:** 2026-09-09 — Build Maven/Spring Boot inicializado e schema versionado com Flyway, validado contra PostgreSQL 16  
+**Última Atualização:** 2026-09-16 — Base de código reiniciada; documentação e decisões preservadas  
 
 ---
 
@@ -29,14 +29,13 @@
 - [x] Diagrama de Casos de Uso e Diagramas de Atividades (Mermaid)
 - [x] Modelo Conceitual e Lógico de Banco de Dados (PostgreSQL)
 - [x] Script técnico para o vídeo demonstrativo de 60 segundos[cite: 4]
-- [x] Implementação das entidades JPA (`Usuario`, `Imovel`, `Reserva`, `SugestaoPreco`)
-- [x] Criação dos repositórios Spring Data JPA com query de validação de choque de datas
-- [x] Inicialização do projeto Maven (Spring Boot 3.5.16, Java 17) e Maven Wrapper
-- [x] `SecurityConfig` temporária liberando os endpoints até existir autenticação
-- [x] Geração do Modelo Físico a partir das entidades — ver [ADR-002](docs/ADR-002-estrategia-de-schema.md)
-- [x] Versionamento do schema com Flyway (`V1__criacao_schema_inicial.sql`)
-- [x] Ciclo Flyway + `ddl-auto: validate` validado ponta a ponta contra PostgreSQL 16
-- [ ] Primeiro boot contra o Supabase (pendente apenas das credenciais)
+- [ ] Inicialização do projeto Maven (Spring Boot 3, Java 17) e Maven Wrapper
+- [ ] Implementação das entidades JPA (`Usuario`, `Imovel`, `Reserva`, `SugestaoPreco`)
+- [ ] Criação dos repositórios Spring Data JPA com query de validação de choque de datas
+- [ ] `SecurityConfig` temporária liberando os endpoints até existir autenticação
+- [ ] Geração do Modelo Físico a partir das entidades — ver [ADR-002](docs/ADR-002-estrategia-de-schema.md)
+- [ ] Versionamento do schema com Flyway (`V1__criacao_schema_inicial.sql`)
+- [ ] Primeiro boot contra o Supabase com o schema aplicado
 - [ ] Camada de Service e Controllers REST
 - [ ] Configuração do serviço de IA com tratamento de fallback
 - [ ] Escrita da suíte de testes unitários com Mockito
@@ -44,27 +43,21 @@
 
 ---
 
-## 🔧 Como rodar
+## 🔄 Estado da base de código
 
-Pré-requisitos: JDK 17+ (`JAVA_HOME` apontando para ele). Maven não é
-necessário — use o wrapper.
+Em 2026-09-16 a base de código foi **reiniciada**: backend, frontend e arquivos de
+configuração foram removidos para que a implementação recomece do princípio. O
+repositório contém, neste momento, apenas documentação.
 
-```bash
-# variáveis de ambiente (ver .env.example)
-export DATABASE_URL="jdbc:postgresql://<host>.supabase.co:5432/postgres?sslmode=require"
-export DATABASE_USERNAME="postgres"
-export DATABASE_PASSWORD="<senha>"
+O que foi preservado e continua valendo como ponto de partida:
 
-./mvnw spring-boot:run
-```
+- A documentação acadêmica em `docs/relatorios-fonte/` (scripts e os 6 PDFs).
+- A [ADR-002](docs/ADR-002-estrategia-de-schema.md), cuja decisão sobre geração e
+  versionamento de schema permanece como diretriz para a nova implementação.
+- O PRD, o `DESIGN.md` e as capturas dos protótipos em
+  `stitch_smartrent_b2b_precifica_o_ia/`.
 
-No primeiro boot o Flyway aplica `V1__criacao_schema_inicial.sql` e o Hibernate
-valida o mapeamento contra o schema resultante.
+O código anterior não foi perdido: permanece recuperável no histórico do Git, no
+commit `5385be3` e anteriores.
 
-Para regerar o DDL após alterar alguma entidade:
-
-```bash
-./mvnw -Pschema-gen process-test-classes   # escreve target/schema-postgres.sql
-```
-
-O resultado deve virar uma migration nova (`V2__...`), nunca uma edição da V1.
+As instruções de execução voltarão a esta seção quando o novo projeto tiver build.

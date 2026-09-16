@@ -1,6 +1,7 @@
 # ADR-002 — Estratégia de geração e versionamento do schema
 
-**Status:** Aceita
+**Status:** Aceita — diretriz vigente; a implementação correspondente foi removida
+em 2026-09-16 com a reinicialização da base de código (ver seção final)
 **Data:** 2026-09-09
 **Contexto do projeto:** SmartRent B2B — Projeto Aplicado IV, UniSENAI/ADS
 
@@ -93,3 +94,16 @@ to schema "public"`), o Hibernate aceitou o schema com `ddl-auto: validate` e a
 aplicação subiu. Num segundo boot o Flyway reportou `Schema "public" is up to
 date` e a validação passou novamente, confirmando que a migration é idempotente
 e que o DDL gerado offline corresponde exatamente ao mapeamento.
+
+## Situação em 2026-09-16
+
+A base de código do projeto foi reiniciada e, com ela, saíram do repositório o
+`SchemaGenerator`, o `V1__criacao_schema_inicial.sql` e a configuração do Flyway.
+**A decisão registrada aqui não foi revertida:** ela permanece como diretriz a ser
+seguida quando a implementação for refeita — gerar o DDL a partir das entidades em
+modo scripts-only, versioná-lo como migration do Flyway e manter o Hibernate em
+`validate`.
+
+O relato de validação acima descreve uma execução que de fato ocorreu e cujo
+resultado sustenta a decisão; ele é mantido como registro histórico, não como
+descrição do estado atual do repositório.

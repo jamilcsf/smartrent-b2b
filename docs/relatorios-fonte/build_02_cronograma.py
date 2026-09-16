@@ -26,7 +26,7 @@ fases = [
     ("Semana 1 — Fundação", "Dias 1 a 7",
      "Inicialização do projeto Maven e Spring Boot, modelagem das entidades JPA (Usuario, "
      "Imovel, Reserva, SugestaoPreco), repositórios com a verificação de conflito de datas, "
-     "geração e validação do esquema por migration contra um PostgreSQL real.", "Concluída"),
+     "geração e validação do esquema por migration contra um PostgreSQL real.", "Planejada"),
     ("Semana 2 — Domínio de negócio", "Dias 8 a 14",
      "Objetos de transferência de dados (Records), camada de serviço com a checagem de "
      "conflito dentro de transações, controladores REST e tratamento centralizado de "
@@ -56,10 +56,11 @@ story.extend(quadro(styles, "Detalhamento das fases do cronograma", quadro_table
     fdata, [32 * mm, 20 * mm, 84 * mm, 20 * mm], header_align_center=[1, 3])))
 
 story.append(Paragraph(
-    "A Semana 1 já foi concluída e validada de ponta a ponta: build do Maven, esquema aplicado "
-    "por migration e testado contra uma instância PostgreSQL real, incluindo um teste de "
-    "idempotência (nova execução da migration sem erro). O detalhamento técnico dessa etapa "
-    "está registrado em STATUS_PROJETO.md e na ADR-002, no repositório do projeto.",
+    "A Semana 1 chegou a ser executada e validada de ponta a ponta — build do Maven, esquema "
+    "aplicado por migration e testado contra uma instância PostgreSQL real, incluindo teste "
+    "de idempotência. A base de código foi posteriormente reiniciada, de modo que a fase "
+    "retorna à situação de planejada. As decisões técnicas tomadas naquela execução "
+    "permanecem registradas na ADR-002 e orientam a reexecução.",
     styles["Body"]))
 
 doc = new_doc(os.path.join(BASE, "out", "02_CRONOGRAMA.pdf"), "Cronograma do Projeto")
