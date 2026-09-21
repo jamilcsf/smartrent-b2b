@@ -323,23 +323,24 @@ story.append(Paragraph(
 
 story.append(Paragraph("6.2 Modelo físico", styles["H2"]))
 story.append(Paragraph(
-    "O esquema físico, em PostgreSQL, está especificado nos quadros a seguir. A estratégia "
-    "definida para o projeto é gerá-lo a partir do mapeamento objeto-relacional em modo "
+    "O esquema físico, em PostgreSQL, está especificado nos quadros a seguir e encontra-se "
+    "implementado. Ele foi gerado a partir do mapeamento objeto-relacional em modo "
     "somente-geração-de-script do Hibernate (FIELDING; BAUER; KING, [2024] apud "
-    "documentação do projeto), versioná-lo como migration aplicada pelo Flyway na "
-    "inicialização da aplicação e reservar ao Hibernate apenas a validação do esquema "
-    "existente, nunca sua alteração. A especificação a seguir é o contrato que a primeira "
-    "migration deve cumprir.", styles["Body"]))
+    "documentação do projeto) e é versionado por migrations aplicadas pelo Flyway na "
+    "inicialização da aplicação, cabendo ao Hibernate apenas validar o esquema existente, "
+    "nunca alterá-lo. A conformidade entre o mapeamento e os quadros a seguir foi "
+    "verificada contra uma instância PostgreSQL 16 em ambiente de desenvolvimento.",
+    styles["Body"]))
 
 tables_ddl = [
     ("usuarios", [
-        ("id", "bigint identity", "chave primária"), ("nome", "varchar(120)", "obrigatório"),
+        ("id", "bigserial", "chave primária"), ("nome", "varchar(120)", "obrigatório"),
         ("email", "varchar(150)", "obrigatório, único"), ("senha_hash", "varchar(60)", "obrigatório"),
         ("papel", "varchar(20)", "obrigatório"), ("telefone", "varchar(20)", "opcional"),
         ("ativo", "boolean", "obrigatório"), ("data_criacao", "timestamp", "obrigatório"),
     ]),
     ("imoveis", [
-        ("id", "bigint identity", "chave primária"), ("usuario_id", "bigint", "obrigatório, referencia usuarios"),
+        ("id", "bigserial", "chave primária"), ("usuario_id", "bigint", "obrigatório, referencia usuarios"),
         ("titulo", "varchar(150)", "obrigatório"), ("descricao", "text", "opcional"),
         ("tipo_imovel", "varchar(20)", "obrigatório"),
         ("endereço (logradouro, bairro, cidade, estado, cep)", "varchar", "obrigatório"),
@@ -349,7 +350,7 @@ tables_ddl = [
         ("ativo", "boolean", "obrigatório"), ("data_cadastro", "timestamp", "obrigatório"),
     ]),
     ("reservas", [
-        ("id", "bigint identity", "chave primária"), ("imovel_id", "bigint", "obrigatório, referencia imoveis"),
+        ("id", "bigserial", "chave primária"), ("imovel_id", "bigint", "obrigatório, referencia imoveis"),
         ("hospede_nome, hospede_email", "varchar", "obrigatório"),
         ("hospede_telefone", "varchar(20)", "opcional"),
         ("data_checkin, data_checkout", "date", "obrigatório"),
@@ -359,7 +360,7 @@ tables_ddl = [
         ("versao", "bigint", "controle de concorrência otimista"),
     ]),
     ("sugestoes_preco", [
-        ("id", "bigint identity", "chave primária"), ("imovel_id", "bigint", "obrigatório, referencia imoveis"),
+        ("id", "bigserial", "chave primária"), ("imovel_id", "bigint", "obrigatório, referencia imoveis"),
         ("data_referencia", "date", "obrigatório"),
         ("valor_base, valor_sugerido", "numeric(10,2)", "obrigatório"),
         ("percentual_ajuste, fator_sazonalidade, fator_microgeografia", "numeric(5,2)", "opcional"),

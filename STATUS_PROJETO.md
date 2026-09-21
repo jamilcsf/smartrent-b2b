@@ -2,7 +2,7 @@
 
 **Projeto:** SmartRent B2B — Sistema de Gestão Inteligente para Aluguel por Temporada  
 **Instituição:** UniSENAI — ADS (Florianópolis/SC)[cite: 1, 4]  
-**Última Atualização:** 2026-09-21 — Consolidação na base de código de Jamil Cherem; PostgreSQL e Flyway adequados aos RNFs  
+**Última Atualização:** 2026-09-21 — Modelo de dados convergido com a Seção 6.2 e API exposta por DTOs Records  
 
 ---
 
@@ -30,15 +30,16 @@
 - [x] Modelo Conceitual e Lógico de Banco de Dados (PostgreSQL)
 - [x] Script técnico para o vídeo demonstrativo de 60 segundos[cite: 4]
 - [x] Inicialização do projeto Maven (Spring Boot 3, Java 17)
-- [ ] Implementação das entidades JPA — parcial: `Reserva` e `SugestaoPreco` existem; faltam `Usuario` e `Imovel`
+- [x] Implementação das entidades JPA (`Usuario`, `Imovel`, `Reserva`, `SugestaoPreco` e o embutido `Endereco`)
 - [x] Repositório com query de validação de choque de datas
 - [x] Geração do Modelo Físico a partir das entidades — ver [ADR-002](docs/ADR-002-estrategia-de-schema.md)
-- [x] Versionamento do schema com Flyway (`V1__criacao_schema_inicial.sql`)
+- [x] Versionamento do schema com Flyway (`V1__` e `V2__convergencia_modelo_de_dados.sql`)
 - [x] Camada de Service e Controllers REST
+- [x] Objetos de transferência como Records (RNF08)
 - [x] Pipeline GitHub Actions (Etapa 3)
+- [ ] Endpoints REST de usuário e imóvel — hoje só se cadastra por SQL, e o seletor de imóveis do front é fixo no HTML
+- [ ] Integração real com a Groq via RestClient (RNF01) — o cliente devolve valor fixo, com o mock pertencendo apenas aos testes (RNF04)
 - [ ] Suíte de testes unitários com Mockito — parcial: 2 casos
-- [ ] Configuração do serviço de IA com tratamento de fallback — parcial: fallback existe, a chamada à Groq é um retorno fixo
-- [ ] Objetos de transferência como Records (RNF08)
 - [ ] Primeiro boot contra o Supabase com o schema aplicado
 
 ---
@@ -58,11 +59,14 @@ concluído:
   Flyway, com o Hibernate apenas validando, conforme a
   [ADR-002](docs/ADR-002-estrategia-de-schema.md).
 - **RNF03** — as credenciais passaram a vir de variáveis de ambiente.
+- **RNF08** — a API deixou de expor entidades e passou a usar DTOs como Records.
+- **Modelo de Dados** — as quatro entidades, o objeto de valor embutido, os enums e os
+  relacionamentos agora correspondem à Seção 6.2 do Relatório Técnico.
 
-Validado contra PostgreSQL 16.15: o Flyway aplica a migration, o Hibernate aceita
-o esquema e um cadastro via API persiste no banco.
+Validado contra PostgreSQL 16.15: as duas migrations aplicam em sequência, o
+Hibernate aceita o esquema em `validate`, e o cadastro de reservas funciona da
+interface até o banco, com a recusa de sobreposição de datas.
 
-Pendente de adequação: o Modelo de Dados (faltam `Usuario`, `Imovel` e o embutido
-`Endereco`, e os nomes de tabela ainda divergem da Seção 6.2 do Relatório), os
-objetos de transferência como Records (RNF08) e a integração real com a Groq API,
-hoje um retorno fixo no código de produção (RNF01 e RNF04).
+Pendente de adequação: a integração real com a Groq API, hoje um valor fixo no
+código de produção (RNF01), e os endpoints de usuário e imóvel, sem os quais o
+cadastro desses registros só acontece por SQL.
