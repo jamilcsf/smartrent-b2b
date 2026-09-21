@@ -4,120 +4,202 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SmartRent B2B - Gestão Completa de Reservas (CRUD)</title>
+  <title>SmartRent B2B - Gestão de Reservas (CRUD)</title>
+  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 
-<body class="bg-slate-50 text-slate-800">
+<body class="bg-slate-50 text-slate-800 min-h-screen font-sans flex flex-col antialiased">
 
-  <!-- Navbar -->
-  <nav class="bg-blue-900 text-white p-4 shadow-lg">
-    <div class="container mx-auto flex justify-between items-center">
+  <!-- Topbar em Tom Claro -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="bg-blue-600 text-white p-2 rounded-xl shadow-md shadow-blue-500/20">
+          <i data-lucide="building-2" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <h1 class="text-base font-bold text-slate-900 tracking-tight">
+            SmartRent <span class="text-blue-600 font-semibold">B2B</span>
+          </h1>
+          <p class="text-[10px] text-slate-500 font-medium">Operação Canasvieiras • Gestão de Reservas</p>
+        </div>
+      </div>
+
+      <!-- Navegação -->
+      <nav class="flex items-center space-x-1 sm:space-x-2">
+        <a href="index.html"
+          class="flex items-center space-x-2 px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 text-xs font-semibold transition">
+          <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+          <span class="hidden sm:inline">Dashboard (IA)</span>
+        </a>
+        <a href="imoveis.html"
+          class="flex items-center space-x-2 px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 text-xs font-semibold transition">
+          <i data-lucide="home" class="w-4 h-4"></i>
+          <span class="hidden sm:inline">Imóveis</span>
+        </a>
+        <a href="reservas.html"
+          class="flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 text-xs font-semibold transition">
+          <i data-lucide="calendar" class="w-4 h-4"></i>
+          <span class="hidden sm:inline">Gestão de Reservas (CRUD)</span>
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Conteúdo Principal -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+    <!-- Cabeçalho da Seção -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
-        <h1 class="text-xl font-bold tracking-wide">SmartRent B2B</h1>
-        <p class="text-xs text-blue-200">Operação Canasvieiras - Gestão de Reservas</p>
+        <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Gestão Operacional de Reservas</h2>
+        <p class="text-xs text-slate-500 mt-1">Cadastre, edite, cancele ou remova reservas integradas em tempo real com
+          o banco de dados H2.</p>
       </div>
-      <div class="flex space-x-6 text-sm font-semibold">
-        <a href="index.html" class="hover:text-blue-300 transition">Dashboard (IA)</a>
-        <a href="imoveis.html" class="hover:text-blue-300 transition">Imóveis</a>
-        <a href="reservas.html" class="text-blue-300 underline font-bold">Gestão de Reservas (CRUD)</a>
+
+      <!-- Badge Informativa -->
+      <div
+        class="inline-flex items-center gap-2 bg-white border border-slate-200 px-3 py-1.5 rounded-xl shadow-sm w-fit text-xs text-slate-600 font-medium">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        API REST com Spring Boot Ativa
       </div>
     </div>
-  </nav>
 
-  <div class="container mx-auto mt-8 p-4 grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-    <!-- Formulário de Criar/Editar (Create / Update) -->
-    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 lg:col-span-1">
-      <h2 id="tituloForm" class="text-lg font-bold text-slate-700 mb-4 border-b pb-2">Cadastrar Nova Reserva</h2>
-
-      <form id="formReserva" onsubmit="salvarReserva(event)" class="space-y-4">
-        <input type="hidden" id="reservaId">
-
-        <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1">Selecione o Imóvel:</label>
-          <select id="imovelId"
-            class="w-full p-2.5 border rounded-lg bg-slate-50 border-slate-300 text-xs focus:ring-2 focus:ring-blue-500"
-            required>
-            <option value="1">01 - Apto C120</option>
-            <option value="2">02 - Lindo Apto 2Q c/ Piscina</option>
-            <option value="3">03 - Studio c/ AC a 250m da Praia</option>
-            <option value="4">04 - Apto 1 Quarto Mobiliado</option>
-          </select>
+      <!-- Formulário de Criar/Editar (Create / Update) -->
+      <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm lg:col-span-1 space-y-5">
+        <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
+          <h3 id="tituloForm" class="text-sm font-bold text-slate-900 flex items-center gap-2">
+            <i data-lucide="plus-circle" class="w-4 h-4 text-blue-600"></i>
+            Cadastrar Nova Reserva
+          </h3>
         </div>
 
-        <div class="grid grid-cols-2 gap-2">
+        <form id="formReserva" onsubmit="salvarReserva(event)" class="space-y-4">
+          <input type="hidden" id="reservaId">
+
           <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Check-in:</label>
-            <input type="date" id="checkin" class="w-full p-2 border rounded-lg border-slate-300 text-xs" required>
+            <label class="block text-xs font-semibold text-slate-700 mb-1.5">Selecione o Imóvel:</label>
+            <select id="imovelId"
+              class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              required>
+              <option value="1">01 - Apto C120 (Aconchegante)</option>
+              <option value="2">02 - Lindo Apto 2Q c/ Piscina</option>
+              <option value="3">03 - Studio c/ AC a 250m da Praia</option>
+              <option value="4">04 - Apto 1 Quarto Mobiliado</option>
+            </select>
           </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1.5">Check-in:</label>
+              <input type="date" id="checkin"
+                class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                required>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1.5">Check-out:</label>
+              <input type="date" id="checkout"
+                class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                required>
+            </div>
+          </div>
+
           <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Check-out:</label>
-            <input type="date" id="checkout" class="w-full p-2 border rounded-lg border-slate-300 text-xs" required>
+            <label class="block text-xs font-semibold text-slate-700 mb-1.5">Valor da Diária (R$):</label>
+            <div class="relative">
+              <span class="absolute left-3 top-2.5 text-slate-400 text-xs font-semibold">R$</span>
+              <input type="text" id="valorDiaria" value="250,00"
+                class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 pl-9 text-xs text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                placeholder="250,00" required>
+            </div>
           </div>
-        </div>
 
-        <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1">Valor da Diária (R$):</label>
-          <input type="text" id="valorDiaria" value="250.00"
-            class="w-full p-2 border rounded-lg border-slate-300 text-xs" placeholder="Ex: 250.00" required>
-        </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1.5">Status da Reserva:</label>
+            <select id="statusReserva"
+              class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+              <option value="CONFIRMADA">CONFIRMADA</option>
+              <option value="PENDENTE">PENDENTE</option>
+              <option value="CANCELADA">CANCELADA</option>
+            </select>
+          </div>
 
-        <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1">Status da Reserva:</label>
-          <select id="statusReserva" class="w-full p-2 border rounded-lg bg-slate-50 border-slate-300 text-xs">
-            <option value="CONFIRMADA">CONFIRMADA</option>
-            <option value="PENDENTE">PENDENTE</option>
-            <option value="CANCELADA">CANCELADA</option>
-          </select>
-        </div>
+          <div class="pt-2 space-y-2">
+            <button type="submit" id="btnSalvar"
+              class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-md text-xs transition flex items-center justify-center gap-2">
+              <i data-lucide="check" class="w-4 h-4"></i> Salvar Reserva
+            </button>
+            <button type="button" id="btnCancelarEdicao" onclick="limparFormulario()"
+              class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2.5 rounded-xl text-xs hidden transition border border-slate-300">
+              Cancelar Edição
+            </button>
+          </div>
+        </form>
 
-        <button type="submit" id="btnSalvar"
-          class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-2.5 rounded-lg shadow text-xs transition">
-          Salvar Reserva
-        </button>
-        <button type="button" id="btnCancelarEdicao" onclick="limparFormulario()"
-          class="w-full bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2 rounded-lg text-xs hidden transition">
-          Cancelar Edição
-        </button>
-      </form>
-
-      <div id="mensagemRetorno" class="mt-4 p-3 rounded-lg hidden text-xs font-semibold"></div>
-    </div>
-
-    <!-- Tabela de Listagem em Tempo Real (Read / Delete) -->
-    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 lg:col-span-2">
-      <div class="flex justify-between items-center mb-4 border-b pb-2">
-        <h2 class="text-lg font-bold text-slate-700">Reservas Cadastradas no Banco H2</h2>
-        <button onclick="carregarReservas()"
-          class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded font-semibold border border-slate-300">
-          ↻ Atualizar Tabela
-        </button>
+        <div id="mensagemRetorno" class="p-3 rounded-xl hidden text-xs font-semibold border transition"></div>
       </div>
 
-      <div class="overflow-x-auto">
-        <table class="w-full text-xs text-left">
-          <thead class="bg-slate-100 text-slate-700 font-bold uppercase border-b">
-            <tr>
-              <th class="p-2.5">ID</th>
-              <th class="p-2.5">Imóvel ID</th>
-              <th class="p-2.5">Datas</th>
-              <th class="p-2.5">Diária</th>
-              <th class="p-2.5">Status</th>
-              <th class="p-2.5 text-center">Ações (CRUD)</th>
-            </tr>
-          </thead>
-          <tbody id="tabelaReservas" class="divide-y divide-slate-100 font-medium text-slate-600">
-            <!-- Preenchido dinamicamente via JS -->
-          </tbody>
-        </table>
+      <!-- Tabela de Listagem em Tempo Real (Read / Delete) -->
+      <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm lg:col-span-2 space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div>
+            <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+              <i data-lucide="database" class="w-4 h-4 text-emerald-600"></i>
+              Reservas Registradas no Banco H2
+            </h3>
+            <p class="text-xs text-slate-500">Sincronização via API REST Java</p>
+          </div>
+          <button onclick="carregarReservas()"
+            class="text-xs bg-slate-50 hover:bg-slate-100 text-slate-700 px-3 py-2 rounded-xl font-semibold border border-slate-200 transition flex items-center gap-1.5">
+            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Atualizar Tabela
+          </button>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs text-left">
+            <thead class="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider border-b border-slate-200">
+              <tr>
+                <th class="p-3">ID</th>
+                <th class="p-3">Imóvel</th>
+                <th class="p-3">Período</th>
+                <th class="p-3">Diária</th>
+                <th class="p-3">Status</th>
+                <th class="p-3 text-center">Ações (CRUD)</th>
+              </tr>
+            </thead>
+            <tbody id="tabelaReservas" class="divide-y divide-slate-100 font-medium text-slate-700">
+              <!-- Renderizado via JavaScript -->
+            </tbody>
+          </table>
+        </div>
       </div>
+
     </div>
 
-  </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500 mt-auto">
+    <p>SmartRent B2B © 2026 • Operação Canasvieiras • Projeto Acadêmico AV 03</p>
+  </footer>
 
   <script>
-    // Inicializa as datas padrão
+    lucide.createIcons();
+
+    // Mapeamento de IDs para nomes de imóveis
+    const nomesImoveis = {
+      1: "Apto C120",
+      2: "Apto 2Q Piscina",
+      3: "Studio AC",
+      4: "Apto 1Q Mobiliado"
+    };
+
+    // Datas iniciais padrão
     document.getElementById('checkin').valueAsDate = new Date();
     const amanha = new Date();
     amanha.setDate(amanha.getDate() + 3);
@@ -133,28 +215,40 @@
         tbody.innerHTML = '';
 
         if (!reservas || reservas.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-slate-400">Nenhuma reserva cadastrada no banco.</td></tr>';
+          tbody.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="p-8 text-center text-slate-400 font-normal">
+                                Nenhuma reserva cadastrada no banco de dados H2.
+                            </td>
+                        </tr>`;
           return;
         }
 
         reservas.forEach(r => {
           const tr = document.createElement('tr');
-          tr.className = "hover:bg-slate-50";
+          tr.className = "hover:bg-slate-50/80 transition";
+
+          let badgeClass = "bg-emerald-50 text-emerald-700 border-emerald-200";
+          if (r.status === 'PENDENTE') badgeClass = "bg-amber-50 text-amber-700 border-amber-200";
+          else if (r.status === 'CANCELADA') badgeClass = "bg-rose-50 text-rose-700 border-rose-200";
+
+          const nomeImovel = nomesImoveis[r.imovelId] || `Imóvel #${r.imovelId}`;
+
           tr.innerHTML = `
-                        <td class="p-2.5 font-bold">#${r.id}</td>
-                        <td class="p-2.5">Imóvel #${r.imovelId}</td>
-                        <td class="p-2.5">${r.dataCheckin} até ${r.dataCheckout}</td>
-                        <td class="p-2.5 font-semibold text-slate-800">R$ ${parseFloat(r.valorDiaria).toFixed(2)}</td>
-                        <td class="p-2.5">
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${r.status === 'CONFIRMADA' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">
+                        <td class="p-3 font-bold text-slate-900">#${r.id}</td>
+                        <td class="p-3 font-medium text-slate-800">${nomeImovel}</td>
+                        <td class="p-3 text-slate-600">${r.dataCheckin} até ${r.dataCheckout}</td>
+                        <td class="p-3 font-bold text-slate-900">R$ ${parseFloat(r.valorDiaria).toFixed(2)}</td>
+                        <td class="p-3">
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold border ${badgeClass}">
                                 ${r.status}
                             </span>
                         </td>
-                        <td class="p-2.5 text-center space-x-1">
-                            <button onclick="prepararEdicao(${r.id}, ${r.imovelId}, '${r.dataCheckin}', '${r.dataCheckout}', ${r.valorDiaria}, '${r.status}')" class="bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-1 rounded text-[11px] font-bold">
+                        <td class="p-3 text-center space-x-1">
+                            <button onclick="prepararEdicao(${r.id}, ${r.imovelId}, '${r.dataCheckin}', '${r.dataCheckout}', '${r.valorDiaria}', '${r.status}')" class="bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 px-2.5 py-1 rounded-lg text-xs font-semibold transition">
                                 Editar
                             </button>
-                            <button onclick="excluirReserva(${r.id})" class="bg-rose-100 hover:bg-rose-200 text-rose-700 px-2 py-1 rounded text-[11px] font-bold">
+                            <button onclick="excluirReserva(${r.id})" class="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 px-2.5 py-1 rounded-lg text-xs font-semibold transition">
                                 Excluir
                             </button>
                         </td>
@@ -171,13 +265,11 @@
       event.preventDefault();
 
       const id = document.getElementById('reservaId').value;
-
-      // Tratamento rigoroso do número (troca vírgula por ponto)
       let valorInput = document.getElementById('valorDiaria').value.toString().replace(',', '.');
       let valorNum = parseFloat(valorInput);
 
       if (isNaN(valorNum)) {
-        exibirMensagem("Por favor, insira um valor numérico válido para a diária.", false);
+        exibirMensagem("Insira um valor numérico válido para a diária.", false);
         return;
       }
 
@@ -205,8 +297,8 @@
           carregarReservas();
         } else {
           const errorText = await response.text();
-          console.error("Detalhes do erro no backend Java:", errorText);
-          exibirMensagem(`Erro (${response.status}): Verifique o console do navegador (F12).`, false);
+          console.error("Erro no backend:", errorText);
+          exibirMensagem(`Erro (${response.status}): Verifique os dados fornecidos.`, false);
         }
       } catch (err) {
         console.error("Erro na requisição:", err);
@@ -224,47 +316,47 @@
           exibirMensagem(`Reserva #${id} excluída com sucesso!`, true);
           carregarReservas();
         } else {
-          exibirMensagem("Erro ao excluir reserva.", false);
+          exibirMensagem("Erro ao excluir a reserva no servidor.", false);
         }
       } catch (err) {
         exibirMensagem("Erro ao conectar com o servidor.", false);
       }
     }
 
-    // Preencher formulário para edição (Update)
+    // Preparar Edição
     function prepararEdicao(id, imovelId, checkin, checkout, valor, status) {
       document.getElementById('reservaId').value = id;
       document.getElementById('imovelId').value = imovelId;
       document.getElementById('checkin').value = checkin;
       document.getElementById('checkout').value = checkout;
-      document.getElementById('valorDiaria').value = valor;
+      document.getElementById('valorDiaria').value = parseFloat(valor).toFixed(2).replace('.', ',');
       document.getElementById('statusReserva').value = status;
 
-      document.getElementById('tituloForm').innerText = `Editar Reserva #${id}`;
+      document.getElementById('tituloForm').innerHTML = `<i data-lucide="edit" class="w-4 h-4 text-blue-600"></i> Editar Reserva #${id}`;
       document.getElementById('btnSalvar').innerText = "Atualizar Reserva";
-      document.getElementById('btnSalvar').className = "w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg shadow text-xs transition";
       document.getElementById('btnCancelarEdicao').classList.remove('hidden');
+      lucide.createIcons();
     }
 
     function limparFormulario() {
       document.getElementById('reservaId').value = '';
-      document.getElementById('tituloForm').innerText = "Cadastrar Nova Reserva";
+      document.getElementById('tituloForm').innerHTML = `<i data-lucide="plus-circle" class="w-4 h-4 text-blue-600"></i> Cadastrar Nova Reserva`;
       document.getElementById('btnSalvar').innerText = "Salvar Reserva";
-      document.getElementById('btnSalvar').className = "w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-2.5 rounded-lg shadow text-xs transition";
       document.getElementById('btnCancelarEdicao').classList.add('hidden');
       document.getElementById('formReserva').reset();
       document.getElementById('checkin').valueAsDate = new Date();
-      document.getElementById('valorDiaria').value = "250.00";
+      document.getElementById('valorDiaria').value = "250,00";
+      lucide.createIcons();
     }
 
     function exibirMensagem(msg, sucesso) {
       const boxMsg = document.getElementById('mensagemRetorno');
-      boxMsg.className = `mt-4 p-3 rounded-lg block text-xs font-semibold ${sucesso ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-rose-50 text-rose-800 border border-rose-200'}`;
+      boxMsg.className = `p-3 rounded-xl block text-xs font-semibold ${sucesso ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : 'bg-rose-50 text-rose-800 border-rose-200'}`;
       boxMsg.innerText = msg;
       setTimeout(() => boxMsg.classList.add('hidden'), 5000);
     }
 
-    // Carregar na inicialização
+    // Carregar registros ao abrir
     carregarReservas();
   </script>
 </body>
