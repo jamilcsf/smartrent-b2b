@@ -46,6 +46,18 @@
           </select>
         </div>
 
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Nome do hóspede:</label>
+          <input type="text" id="hospedeNome" class="w-full p-2 border rounded-lg border-slate-300 text-xs"
+            placeholder="Ex: Maria Souza" required>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">E-mail do hóspede:</label>
+          <input type="email" id="hospedeEmail" class="w-full p-2 border rounded-lg border-slate-300 text-xs"
+            placeholder="Ex: maria@exemplo.com" required>
+        </div>
+
         <div class="grid grid-cols-2 gap-2">
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Check-in:</label>
@@ -58,8 +70,8 @@
         </div>
 
         <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1">Valor da Diária (R$):</label>
-          <input type="text" id="valorDiaria" value="250.00"
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Valor Total (R$):</label>
+          <input type="text" id="valorTotal" value="1000.00"
             class="w-full p-2 border rounded-lg border-slate-300 text-xs" placeholder="Ex: 250.00" required>
         </div>
 
@@ -88,7 +100,7 @@
     <!-- Tabela de Listagem em Tempo Real (Read / Delete) -->
     <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 lg:col-span-2">
       <div class="flex justify-between items-center mb-4 border-b pb-2">
-        <h2 class="text-lg font-bold text-slate-700">Reservas Cadastradas no Banco H2</h2>
+        <h2 class="text-lg font-bold text-slate-700">Reservas Cadastradas no PostgreSQL</h2>
         <button onclick="carregarReservas()"
           class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded font-semibold border border-slate-300">
           ↻ Atualizar Tabela
@@ -100,9 +112,9 @@
           <thead class="bg-slate-100 text-slate-700 font-bold uppercase border-b">
             <tr>
               <th class="p-2.5">ID</th>
-              <th class="p-2.5">Imóvel ID</th>
+              <th class="p-2.5">Imóvel / Hóspede</th>
               <th class="p-2.5">Datas</th>
-              <th class="p-2.5">Diária</th>
+              <th class="p-2.5">Valor Total</th>
               <th class="p-2.5">Status</th>
               <th class="p-2.5 text-center">Ações (CRUD)</th>
             </tr>
@@ -142,16 +154,16 @@
           tr.className = "hover:bg-slate-50";
           tr.innerHTML = `
                         <td class="p-2.5 font-bold">#${r.id}</td>
-                        <td class="p-2.5">Imóvel #${r.imovelId}</td>
+                        <td class="p-2.5">Imóvel #${r.imovelId}<br><span class="text-[10px] text-slate-500">${r.hospedeNome ?? ''}</span></td>
                         <td class="p-2.5">${r.dataCheckin} até ${r.dataCheckout}</td>
-                        <td class="p-2.5 font-semibold text-slate-800">R$ ${parseFloat(r.valorDiaria).toFixed(2)}</td>
+                        <td class="p-2.5 font-semibold text-slate-800">R$ ${parseFloat(r.valorTotal).toFixed(2)}</td>
                         <td class="p-2.5">
                             <span class="px-2 py-0.5 rounded text-[10px] font-bold ${r.status === 'CONFIRMADA' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">
                                 ${r.status}
                             </span>
                         </td>
                         <td class="p-2.5 text-center space-x-1">
-                            <button onclick="prepararEdicao(${r.id}, ${r.imovelId}, '${r.dataCheckin}', '${r.dataCheckout}', ${r.valorDiaria}, '${r.status}')" class="bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-1 rounded text-[11px] font-bold">
+                            <button onclick="prepararEdicao(${r.id}, ${r.imovelId}, '${r.dataCheckin}', '${r.dataCheckout}', ${r.valorTotal}, '${r.status}', '${r.hospedeNome ?? ''}', '${r.hospedeEmail ?? ''}')" class="bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-1 rounded text-[11px] font-bold">
                                 Editar
                             </button>
                             <button onclick="excluirReserva(${r.id})" class="bg-rose-100 hover:bg-rose-200 text-rose-700 px-2 py-1 rounded text-[11px] font-bold">
@@ -173,19 +185,21 @@
       const id = document.getElementById('reservaId').value;
 
       // Tratamento rigoroso do número (troca vírgula por ponto)
-      let valorInput = document.getElementById('valorDiaria').value.toString().replace(',', '.');
+      let valorInput = document.getElementById('valorTotal').value.toString().replace(',', '.');
       let valorNum = parseFloat(valorInput);
 
       if (isNaN(valorNum)) {
-        exibirMensagem("Por favor, insira um valor numérico válido para a diária.", false);
+        exibirMensagem("Por favor, insira um valor numérico válido para o total.", false);
         return;
       }
 
       const reservaData = {
         imovelId: parseInt(document.getElementById('imovelId').value),
+        hospedeNome: document.getElementById('hospedeNome').value,
+        hospedeEmail: document.getElementById('hospedeEmail').value,
         dataCheckin: document.getElementById('checkin').value,
         dataCheckout: document.getElementById('checkout').value,
-        valorDiaria: valorNum,
+        valorTotal: valorNum,
         status: document.getElementById('statusReserva').value
       };
 
@@ -232,12 +246,14 @@
     }
 
     // Preencher formulário para edição (Update)
-    function prepararEdicao(id, imovelId, checkin, checkout, valor, status) {
+    function prepararEdicao(id, imovelId, checkin, checkout, valor, status, hospedeNome, hospedeEmail) {
       document.getElementById('reservaId').value = id;
       document.getElementById('imovelId').value = imovelId;
+      document.getElementById('hospedeNome').value = hospedeNome || '';
+      document.getElementById('hospedeEmail').value = hospedeEmail || '';
       document.getElementById('checkin').value = checkin;
       document.getElementById('checkout').value = checkout;
-      document.getElementById('valorDiaria').value = valor;
+      document.getElementById('valorTotal').value = valor;
       document.getElementById('statusReserva').value = status;
 
       document.getElementById('tituloForm').innerText = `Editar Reserva #${id}`;
@@ -254,7 +270,7 @@
       document.getElementById('btnCancelarEdicao').classList.add('hidden');
       document.getElementById('formReserva').reset();
       document.getElementById('checkin').valueAsDate = new Date();
-      document.getElementById('valorDiaria').value = "250.00";
+      document.getElementById('valorTotal').value = "1000.00";
     }
 
     function exibirMensagem(msg, sucesso) {

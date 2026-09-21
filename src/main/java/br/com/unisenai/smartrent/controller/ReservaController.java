@@ -1,58 +1,85 @@
 package br.com.unisenai.smartrent.controller;
 
+import br.com.unisenai.smartrent.dto.ReservaRequest;
+import br.com.unisenai.smartrent.dto.ReservaResponse;
+import br.com.unisenai.smartrent.model.Imovel;
 import br.com.unisenai.smartrent.model.Reserva;
+import br.com.unisenai.smartrent.model.enums.OrigemReserva;
+import br.com.unisenai.smartrent.model.enums.StatusReserva;
+import br.com.unisenai.smartrent.repository.ImovelRepository;
 import br.com.unisenai.smartrent.repository.ReservaRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import br.com.unisenai.smartrent.service.ReservaService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/reservas")
+@CrossOrigin(origins = "*")
 public class ReservaController {
 
-    @Autowired
-    private ReservaRepository reservaRepository;
+    private final ReservaRepository reservaRepository;
+    private final ImovelRepository imovelRepository;
+    private final ReservaService reservaService;
 
-    // 1. READ ALL - Listar todas as reservas
-    @GetMapping
-    public List<Reserva> listarTodas() {
-        return reservaRepository.findAll();
+    public ReservaController(ReservaRepository reservaRepository,
+                             ImovelRepository imovelRepository,
+                             ReservaService reservaService) {
+        this.reservaRepository = reservaRepository;
+        this.imovelRepository = imovelRepository;
+        this.reservaService = reservaService;
     }
 
-    // 2. READ BY ID - Buscar uma reserva especifica
+    @GetMapping
+    public List<ReservaResponse> listarTodas() {
+        return reservaRepository.findAll().stream().map(ReservaResponse::de).toList();
+    }
+
     @GetMapping("/{id}")
-    public ResponseEntity<Reserva> buscarPorId(@PathVariable Long id) {
+    public ResponseEntity<ReservaResponse> buscarPorId(@PathVariable Long id) {
         return reservaRepository.findById(id)
+                .map(ReservaResponse::de)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    // 3. CREATE - Cadastrar nova reserva
     @PostMapping
-    public ResponseEntity<Reserva> criarReserva(@RequestBody Reserva reserva) {
-        if (reserva.getStatus() == null) {
-            reserva.setStatus("CONFIRMADA");
+    public ResponseEntity<?> criarReserva(@RequestBody ReservaRequest req) {
+        Optional<Imovel> imovel = imovelRepository.findById(req.imovelId());
+        if (imovel.isEmpty()) {
+            return ResponseEntity.badRequest().body("Imovel nao encontrado: " + req.imovelId());
         }
-        Reserva nova = reservaRepository.save(reserva);
-        return ResponseEntity.ok(nova);
+
+        Reserva reserva = new Reserva();
+        reserva.setImovel(imovel.get());
+        aplicar(req, reserva);
+        reserva.setStatus(req.status() == null ? StatusReserva.CONFIRMADA : req.status());
+        reserva.setOrigem(req.origem() == null ? OrigemReserva.DIRETA : req.origem());
+
+        try {
+            return ResponseEntity.ok(ReservaResponse.de(reservaService.cadastrarReserva(reserva)));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
-    // 4. UPDATE - Atualizar dados da reserva
     @PutMapping("/{id}")
-    public ResponseEntity<Reserva> atualizarReserva(@PathVariable Long id, @RequestBody Reserva dados) {
+    public ResponseEntity<ReservaResponse> atualizarReserva(@PathVariable Long id,
+                                                            @RequestBody ReservaRequest req) {
         return reservaRepository.findById(id).map(reserva -> {
-            reserva.setDataCheckin(dados.getDataCheckin());
-            reserva.setDataCheckout(dados.getDataCheckout());
-            reserva.setValorDiaria(dados.getValorDiaria());
-            reserva.setStatus(dados.getStatus());
-            Reserva atualizada = reservaRepository.save(reserva);
-            return ResponseEntity.ok(atualizada);
+            aplicar(req, reserva);
+            if (req.status() != null) {
+                reserva.setStatus(req.status());
+            }
+            if (req.origem() != null) {
+                reserva.setOrigem(req.origem());
+            }
+            return ResponseEntity.ok(ReservaResponse.de(reservaRepository.save(reserva)));
         }).orElse(ResponseEntity.notFound().build());
     }
 
-    // 5. DELETE - Cancelar/Excluir reserva
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletarReserva(@PathVariable Long id) {
         if (reservaRepository.existsById(id)) {
@@ -60,5 +87,15 @@ public class ReservaController {
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.notFound().build();
+    }
+
+    private void aplicar(ReservaRequest req, Reserva reserva) {
+        reserva.setHospedeNome(req.hospedeNome());
+        reserva.setHospedeEmail(req.hospedeEmail());
+        reserva.setHospedeTelefone(req.hospedeTelefone());
+        reserva.setDataCheckin(req.dataCheckin());
+        reserva.setDataCheckout(req.dataCheckout());
+        reserva.setValorTotal(req.valorTotal());
+        reserva.setObservacoes(req.observacoes());
     }
 }

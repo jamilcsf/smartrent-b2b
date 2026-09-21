@@ -1,5 +1,6 @@
 package br.com.unisenai.smartrent.service;
 
+import br.com.unisenai.smartrent.model.Imovel;
 import br.com.unisenai.smartrent.model.Reserva;
 import br.com.unisenai.smartrent.repository.ReservaRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -30,18 +31,20 @@ class ReservaServiceTest {
         Long imovelId = 1L;
         LocalDate checkin = LocalDate.now().plusDays(2);
         LocalDate checkout = LocalDate.now().plusDays(5);
-        
+
+        Imovel imovel = new Imovel();
+        imovel.setId(imovelId);
+
         Reserva novaReserva = new Reserva();
-        novaReserva.setImovelId(imovelId);
+        novaReserva.setImovel(imovel);
         novaReserva.setDataCheckin(checkin);
         novaReserva.setDataCheckout(checkout);
 
         when(reservaRepository.existeConflitoDeDatas(imovelId, checkin, checkout)).thenReturn(true);
 
         IllegalArgumentException exception = assertThrows(
-            IllegalArgumentException.class, 
-            () -> reservaService.cadastrarReserva(novaReserva)
-        );
+                IllegalArgumentException.class,
+                () -> reservaService.cadastrarReserva(novaReserva));
 
         assertEquals("Conflito de datas detectado para este imovel.", exception.getMessage());
         verify(reservaRepository, never()).save(any());
