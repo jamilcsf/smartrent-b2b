@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartRent B2B - Gestão Completa de Reservas (CRUD)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-slate-50 text-slate-800">
+
+  <!-- Navbar -->
+  <nav class="bg-blue-900 text-white p-4 shadow-lg">
+    <div class="container mx-auto flex justify-between items-center">
+      <div>
+        <h1 class="text-xl font-bold tracking-wide">SmartRent B2B</h1>
+        <p class="text-xs text-blue-200">Operação Canasvieiras - Gestão de Reservas</p>
+      </div>
+      <div class="flex space-x-6 text-sm font-semibold">
+        <a href="index.html" class="hover:text-blue-300 transition">Dashboard (IA)</a>
+        <a href="imoveis.html" class="hover:text-blue-300 transition">Imóveis</a>
+        <a href="reservas.html" class="text-blue-300 underline font-bold">Gestão de Reservas (CRUD)</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container mx-auto mt-8 p-4 grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+    <!-- Formulário de Criar/Editar (Create / Update) -->
+    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 lg:col-span-1">
+      <h2 id="tituloForm" class="text-lg font-bold text-slate-700 mb-4 border-b pb-2">Cadastrar Nova Reserva</h2>
+
+      <form id="formReserva" onsubmit="salvarReserva(event)" class="space-y-4">
+        <input type="hidden" id="reservaId">
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Selecione o Imóvel:</label>
+          <select id="imovelId"
+            class="w-full p-2.5 border rounded-lg bg-slate-50 border-slate-300 text-xs focus:ring-2 focus:ring-blue-500"
+            required>
+            <option value="1">01 - Apto C120</option>
+            <option value="2">02 - Lindo Apto 2Q c/ Piscina</option>
+            <option value="3">03 - Studio c/ AC a 250m da Praia</option>
+            <option value="4">04 - Apto 1 Quarto Mobiliado</option>
+          </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Check-in:</label>
+            <input type="date" id="checkin" class="w-full p-2 border rounded-lg border-slate-300 text-xs" required>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Check-out:</label>
+            <input type="date" id="checkout" class="w-full p-2 border rounded-lg border-slate-300 text-xs" required>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Valor da Diária (R$):</label>
+          <input type="text" id="valorDiaria" value="250.00"
+            class="w-full p-2 border rounded-lg border-slate-300 text-xs" placeholder="Ex: 250.00" required>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Status da Reserva:</label>
+          <select id="statusReserva" class="w-full p-2 border rounded-lg bg-slate-50 border-slate-300 text-xs">
+            <option value="CONFIRMADA">CONFIRMADA</option>
+            <option value="PENDENTE">PENDENTE</option>
+            <option value="CANCELADA">CANCELADA</option>
+          </select>
+        </div>
+
+        <button type="submit" id="btnSalvar"
+          class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-2.5 rounded-lg shadow text-xs transition">
+          Salvar Reserva
+        </button>
+        <button type="button" id="btnCancelarEdicao" onclick="limparFormulario()"
+          class="w-full bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2 rounded-lg text-xs hidden transition">
+          Cancelar Edição
+        </button>
+      </form>
+
+      <div id="mensagemRetorno" class="mt-4 p-3 rounded-lg hidden text-xs font-semibold"></div>
+    </div>
+
+    <!-- Tabela de Listagem em Tempo Real (Read / Delete) -->
+    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 lg:col-span-2">
+      <div class="flex justify-between items-center mb-4 border-b pb-2">
+        <h2 class="text-lg font-bold text-slate-700">Reservas Cadastradas no Banco H2</h2>
+        <button onclick="carregarReservas()"
+          class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded font-semibold border border-slate-300">
+          ↻ Atualizar Tabela
+        </button>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-xs text-left">
+          <thead class="bg-slate-100 text-slate-700 font-bold uppercase border-b">
+            <tr>
+              <th class="p-2.5">ID</th>
+              <th class="p-2.5">Imóvel ID</th>
+              <th class="p-2.5">Datas</th>
+              <th class="p-2.5">Diária</th>
+              <th class="p-2.5">Status</th>
+              <th class="p-2.5 text-center">Ações (CRUD)</th>
+            </tr>
+          </thead>
+          <tbody id="tabelaReservas" class="divide-y divide-slate-100 font-medium text-slate-600">
+            <!-- Preenchido dinamicamente via JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Inicializa as datas padrão
+    document.getElementById('checkin').valueAsDate = new Date();
+    const amanha = new Date();
+    amanha.setDate(amanha.getDate() + 3);
+    document.getElementById('checkout').valueAsDate = amanha;
+
+    // READ - Listar todas as reservas
+    async function carregarReservas() {
+      try {
+        const response = await fetch('/api/reservas');
+        const reservas = await response.json();
+
+        const tbody = document.getElementById('tabelaReservas');
+        tbody.innerHTML = '';
+
+        if (!reservas || reservas.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-slate-400">Nenhuma reserva cadastrada no banco.</td></tr>';
+          return;
+        }
+
+        reservas.forEach(r => {
+          const tr = document.createElement('tr');
+          tr.className = "hover:bg-slate-50";
+          tr.innerHTML = `
+                        <td class="p-2.5 font-bold">#${r.id}</td>
+                        <td class="p-2.5">Imóvel #${r.imovelId}</td>
+                        <td class="p-2.5">${r.dataCheckin} até ${r.dataCheckout}</td>
+                        <td class="p-2.5 font-semibold text-slate-800">R$ ${parseFloat(r.valorDiaria).toFixed(2)}</td>
+                        <td class="p-2.5">
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${r.status === 'CONFIRMADA' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">
+                                ${r.status}
+                            </span>
+                        </td>
+                        <td class="p-2.5 text-center space-x-1">
+                            <button onclick="prepararEdicao(${r.id}, ${r.imovelId}, '${r.dataCheckin}', '${r.dataCheckout}', ${r.valorDiaria}, '${r.status}')" class="bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-1 rounded text-[11px] font-bold">
+                                Editar
+                            </button>
+                            <button onclick="excluirReserva(${r.id})" class="bg-rose-100 hover:bg-rose-200 text-rose-700 px-2 py-1 rounded text-[11px] font-bold">
+                                Excluir
+                            </button>
+                        </td>
+                    `;
+          tbody.appendChild(tr);
+        });
+      } catch (err) {
+        console.error("Erro ao carregar reservas:", err);
+      }
+    }
+
+    // CREATE & UPDATE
+    async function salvarReserva(event) {
+      event.preventDefault();
+
+      const id = document.getElementById('reservaId').value;
+
+      // Tratamento rigoroso do número (troca vírgula por ponto)
+      let valorInput = document.getElementById('valorDiaria').value.toString().replace(',', '.');
+      let valorNum = parseFloat(valorInput);
+
+      if (isNaN(valorNum)) {
+        exibirMensagem("Por favor, insira um valor numérico válido para a diária.", false);
+        return;
+      }
+
+      const reservaData = {
+        imovelId: parseInt(document.getElementById('imovelId').value),
+        dataCheckin: document.getElementById('checkin').value,
+        dataCheckout: document.getElementById('checkout').value,
+        valorDiaria: valorNum,
+        status: document.getElementById('statusReserva').value
+      };
+
+      const url = id ? `/api/reservas/${id}` : '/api/reservas';
+      const method = id ? 'PUT' : 'POST';
+
+      try {
+        const response = await fetch(url, {
+          method: method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(reservaData)
+        });
+
+        if (response.ok) {
+          exibirMensagem(`Reserva ${id ? 'atualizada' : 'criada'} com sucesso!`, true);
+          limparFormulario();
+          carregarReservas();
+        } else {
+          const errorText = await response.text();
+          console.error("Detalhes do erro no backend Java:", errorText);
+          exibirMensagem(`Erro (${response.status}): Verifique o console do navegador (F12).`, false);
+        }
+      } catch (err) {
+        console.error("Erro na requisição:", err);
+        exibirMensagem("Erro de conexão com o servidor Java.", false);
+      }
+    }
+
+    // DELETE
+    async function excluirReserva(id) {
+      if (!confirm(`Tem certeza que deseja excluir a reserva #${id}?`)) return;
+
+      try {
+        const response = await fetch(`/api/reservas/${id}`, { method: 'DELETE' });
+        if (response.ok) {
+          exibirMensagem(`Reserva #${id} excluída com sucesso!`, true);
+          carregarReservas();
+        } else {
+          exibirMensagem("Erro ao excluir reserva.", false);
+        }
+      } catch (err) {
+        exibirMensagem("Erro ao conectar com o servidor.", false);
+      }
+    }
+
+    // Preencher formulário para edição (Update)
+    function prepararEdicao(id, imovelId, checkin, checkout, valor, status) {
+      document.getElementById('reservaId').value = id;
+      document.getElementById('imovelId').value = imovelId;
+      document.getElementById('checkin').value = checkin;
+      document.getElementById('checkout').value = checkout;
+      document.getElementById('valorDiaria').value = valor;
+      document.getElementById('statusReserva').value = status;
+
+      document.getElementById('tituloForm').innerText = `Editar Reserva #${id}`;
+      document.getElementById('btnSalvar').innerText = "Atualizar Reserva";
+      document.getElementById('btnSalvar').className = "w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg shadow text-xs transition";
+      document.getElementById('btnCancelarEdicao').classList.remove('hidden');
+    }
+
+    function limparFormulario() {
+      document.getElementById('reservaId').value = '';
+      document.getElementById('tituloForm').innerText = "Cadastrar Nova Reserva";
+      document.getElementById('btnSalvar').innerText = "Salvar Reserva";
+      document.getElementById('btnSalvar').className = "w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-2.5 rounded-lg shadow text-xs transition";
+      document.getElementById('btnCancelarEdicao').classList.add('hidden');
+      document.getElementById('formReserva').reset();
+      document.getElementById('checkin').valueAsDate = new Date();
+      document.getElementById('valorDiaria').value = "250.00";
+    }
+
+    function exibirMensagem(msg, sucesso) {
+      const boxMsg = document.getElementById('mensagemRetorno');
+      boxMsg.className = `mt-4 p-3 rounded-lg block text-xs font-semibold ${sucesso ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-rose-50 text-rose-800 border border-rose-200'}`;
+      boxMsg.innerText = msg;
+      setTimeout(() => boxMsg.classList.add('hidden'), 5000);
+    }
+
+    // Carregar na inicialização
+    carregarReservas();
+  </script>
+</body>
+
+</html>
