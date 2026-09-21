@@ -88,12 +88,13 @@ W, H = 130, 10 * 8.6
 usuario = class_box(ax, 20, 20, 190, 140, "Usuario",
     ["- id: Long", "- nome: String", "- email: String", "- senhaHash: String",
      "- papel: PapelUsuario", "- telefone: String", "- ativo: boolean",
-     "«implements» UserDetails"], title_bg=TEAL)
+     "- dataCriacao: LocalDateTime"], title_bg=TEAL)
 
 imovel = class_box(ax, 330, 20, 210, 168, "Imovel",
     ["- id: Long", "- titulo: String", "- tipoImovel: TipoImovel",
      "- endereco: Endereco", "- capacidadeHospedes: Integer",
      "- numeroQuartos: Integer", "- numeroBanheiros: Integer",
+     "- metragemQuadrada: Integer", "- vagasGaragem: Integer",
      "- valorDiariaBase: BigDecimal", "- comodidades: List<String>",
      "- ativo: boolean"], title_bg=TEAL)
 
@@ -107,7 +108,7 @@ reserva = class_box(ax, 330, 250, 230, 178, "Reserva",
      "- dataCheckout: LocalDate", "- valorTotal: BigDecimal",
      "- status: StatusReserva", "- origem: OrigemReserva",
      "- versao: Long  «@Version»",
-     "+ isPeriodoValido(): boolean"], title_bg=TEAL)
+     ], title_bg=TEAL)
 
 sugestao = class_box(ax, 610, 250, 230, 178, "SugestaoPreco",
     ["- id: Long", "- dataReferencia: LocalDate", "- valorBase: BigDecimal",

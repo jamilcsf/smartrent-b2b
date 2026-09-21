@@ -23,8 +23,9 @@ story.append(Paragraph(
 rows = [
     ("RF01", "Autenticar-se", "4.3", "Usuario, AuthService, JwtService, SecurityConfig", "CT13–CT31"),
     ("RF02", "Cadastrar imóvel", "4.3", "Imovel, Endereco, ImovelRepository", "CT10"),
+    # RF04 passa a ter endpoint proprio; antes so havia o repositorio.
     ("RF03", "Editar ou inativar imóvel", "4.3", "Imovel, ImovelRepository", "—"),
-    ("RF04", "Listar imóveis por situação", "4.3", "ImovelRepository", "—"),
+    ("RF04", "Listar imóveis por situação", "4.3", "ImovelController, ImovelRepository", "—"),
     ("RF05", "Cadastrar reserva", "4.1", "Reserva, ReservaRepository", "CT11"),
     ("RF06", "Verificar conflito de datas", "4.1", "ReservaRepository", "CT01–CT06"),
     ("RF07", "Cancelar ou concluir reserva", "4.3", "Reserva, ReservaRepository", "—"),

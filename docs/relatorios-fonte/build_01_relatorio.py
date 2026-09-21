@@ -346,6 +346,8 @@ tables_ddl = [
         ("endereço (logradouro, bairro, cidade, estado, cep)", "varchar", "obrigatório"),
         ("latitude, longitude", "numeric(10,7)", "obrigatório — microgeografia"),
         ("capacidade_hospedes, numero_quartos, numero_banheiros", "integer", "obrigatório"),
+        ("metragem_quadrada", "integer", "opcional — área útil em m²"),
+        ("vagas_garagem", "integer", "opcional — nulo e zero são distintos"),
         ("valor_diaria_base", "numeric(10,2)", "obrigatório"),
         ("ativo", "boolean", "obrigatório"), ("data_cadastro", "timestamp", "obrigatório"),
     ]),
