@@ -21,7 +21,7 @@ story.append(Paragraph(
     styles["Body"]))
 
 rows = [
-    ("RF01", "Autenticar-se (herdado do PA III)", "4.3", "Usuario", "CT13"),
+    ("RF01", "Autenticar-se", "4.3", "Usuario, AuthService, JwtService, SecurityConfig", "CT13–CT31"),
     ("RF02", "Cadastrar imóvel", "4.3", "Imovel, Endereco, ImovelRepository", "CT10"),
     ("RF03", "Editar ou inativar imóvel", "4.3", "Imovel, ImovelRepository", "—"),
     ("RF04", "Listar imóveis por situação", "4.3", "ImovelRepository", "—"),
@@ -30,6 +30,7 @@ rows = [
     ("RF07", "Cancelar ou concluir reserva", "4.3", "Reserva, ReservaRepository", "—"),
     ("RF08", "Gerar sugestão de preço via IA", "4.2", "SugestaoPreco, SugestaoPrecoService", "CT07"),
     ("RF09", "Aplicar cálculo de contingência", "4.2", "SugestaoPreco, SugestaoPrecoService", "CT08, CT09"),
+    # RF06 permanece com CT01-CT06: apenas CT02 esta implementado ate aqui.
     ("RF10", "Exibir painel executivo", "4.3", "SugestaoPrecoRepository", "—"),
     ("RF11", "Consultar histórico de sugestões", "4.3", "SugestaoPrecoRepository", "—"),
     ("RF12", "Exibir reservas conflitantes no erro", "4.1", "ReservaRepository", "CT12"),
@@ -53,8 +54,14 @@ story.append(Paragraph(
     "A coluna de caso de uso remete às seções do Relatório Técnico (Documento 1) nas quais "
     "cada caso é descrito; a coluna de casos de teste remete aos identificadores do Plano de "
     "Testes (Documento 4). Requisitos sem teste associado ainda não possuem caso definido e "
-    "devem ser complementados à medida que a camada de serviço for implementada.",
-    styles["Body"]))
+    "devem ser complementados à medida que os componentes correspondentes forem "
+    "implementados.", styles["Body"]))
+
+story.append(Paragraph(
+    "A referência de um requisito a um intervalo de casos não implica que todos estejam "
+    "executados: o Plano de Testes indica, caso a caso, quais já possuem implementação. O "
+    "RF01 é hoje o requisito de maior cobertura, com dezenove casos automatizados; o RF06 "
+    "referencia seis casos, dos quais apenas o CT02 está implementado.", styles["Body"]))
 
 doc = new_doc(os.path.join(BASE, "out", "05_MATRIZ_DE_RASTREABILIDADE.pdf"), "Matriz de Rastreabilidade")
 hf = make_header_footer_simples(start_page=2)

@@ -2,7 +2,7 @@
 
 **Projeto:** SmartRent B2B — Sistema de Gestão Inteligente para Aluguel por Temporada  
 **Instituição:** UniSENAI — ADS (Florianópolis/SC)[cite: 1, 4]  
-**Última Atualização:** 2026-09-21 — Modelo de dados convergido com a Seção 6.2 e API exposta por DTOs Records  
+**Última Atualização:** 2026-09-21 — Autenticação com soft gating implementada e coberta por testes  
 
 ---
 
@@ -39,7 +39,8 @@
 - [x] Pipeline GitHub Actions (Etapa 3)
 - [ ] Endpoints REST de usuário e imóvel — hoje só se cadastra por SQL, e o seletor de imóveis do front é fixo no HTML
 - [ ] Integração real com a Groq via RestClient (RNF01) — o cliente devolve valor fixo, com o mock pertencendo apenas aos testes (RNF04)
-- [ ] Suíte de testes unitários com Mockito — parcial: 2 casos
+- [x] Autenticação (login e cadastro) com JWT e acesso público por padrão
+- [ ] Suíte de testes automatizados — 21 casos; falta cobrir conflito de datas em repositório e a IA
 - [ ] Primeiro boot contra o Supabase com o schema aplicado
 
 ---
@@ -60,6 +61,8 @@ concluído:
   [ADR-002](docs/ADR-002-estrategia-de-schema.md).
 - **RNF03** — as credenciais passaram a vir de variáveis de ambiente.
 - **RNF08** — a API deixou de expor entidades e passou a usar DTOs como Records.
+- **RF01** — autenticação por JWT com senhas em BCrypt, mantendo o site público por
+  padrão: o token identifica quem navega, sem bloquear visitantes.
 - **Modelo de Dados** — as quatro entidades, o objeto de valor embutido, os enums e os
   relacionamentos agora correspondem à Seção 6.2 do Relatório Técnico.
 
