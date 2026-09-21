@@ -49,7 +49,7 @@ class AuthControllerTest {
     private UsuarioRepository usuarioRepository;
 
     @Test
-    @DisplayName("CT23 - /api/auth/me sem token deve responder 401 em JSON")
+    @DisplayName("CT27 - /api/auth/me sem token deve responder 401 em JSON")
     void deveResponder401SemToken() throws Exception {
         mockMvc.perform(get("/api/auth/me"))
                 .andExpect(status().isUnauthorized())
@@ -58,7 +58,7 @@ class AuthControllerTest {
     }
 
     @Test
-    @DisplayName("CT24 - Soft gating: caminho público inexistente responde 404, não 401")
+    @DisplayName("CT28 - Soft gating: caminho público inexistente responde 404, não 401")
     void naoDeveBloquearCaminhoPublico() throws Exception {
         // Se a cadeia estivesse fechada por padrão, o status seria 401.
         mockMvc.perform(get("/api/caminho-que-nao-existe"))
@@ -66,7 +66,7 @@ class AuthControllerTest {
     }
 
     @Test
-    @DisplayName("CT25 - Login é acessível a visitante e devolve o token")
+    @DisplayName("CT29 - Login é acessível a visitante e devolve o token")
     void loginDeveSerPublico() throws Exception {
         when(authService.autenticar(any())).thenReturn(new AuthResponse("token-abc", 86400L,
                 new UsuarioResponse(1L, "Ana", "ana@smartrent.dev", PapelUsuario.ANFITRIAO)));
@@ -81,7 +81,7 @@ class AuthControllerTest {
     }
 
     @Test
-    @DisplayName("CT26 - Cadastro inválido deve responder 400 com o erro de cada campo")
+    @DisplayName("CT30 - Cadastro inválido deve responder 400 com o erro de cada campo")
     void cadastroInvalidoDeveDetalharCampos() throws Exception {
         mockMvc.perform(post("/api/auth/cadastro")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -97,7 +97,7 @@ class AuthControllerTest {
     }
 
     @Test
-    @DisplayName("CT27 - E-mail já cadastrado deve responder 409")
+    @DisplayName("CT31 - E-mail já cadastrado deve responder 409")
     void emailDuplicadoDeveResponder409() throws Exception {
         when(authService.cadastrar(any()))
                 .thenThrow(new AuthService.EmailJaCadastradoException("Já existe uma conta com este e-mail."));
@@ -114,7 +114,7 @@ class AuthControllerTest {
     }
 
     @Test
-    @DisplayName("CT28 - Credenciais inválidas devem responder 401")
+    @DisplayName("CT13 - Recusar autenticação com credenciais inválidas")
     void credenciaisInvalidasDevemResponder401() throws Exception {
         when(authService.autenticar(any()))
                 .thenThrow(new AuthService.CredenciaisInvalidasException("E-mail ou senha inválidos."));

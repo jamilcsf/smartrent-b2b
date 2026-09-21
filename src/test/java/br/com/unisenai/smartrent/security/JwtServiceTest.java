@@ -30,7 +30,7 @@ class JwtServiceTest {
     }
 
     @Test
-    @DisplayName("CT10 - Token emitido deve ser aceito e devolver o e-mail do dono")
+    @DisplayName("CT14 - Token emitido deve ser aceito e devolver o e-mail do dono")
     void deveEmitirEValidarToken() {
         String token = jwtService.gerarToken(usuario);
 
@@ -39,7 +39,7 @@ class JwtServiceTest {
     }
 
     @Test
-    @DisplayName("CT11 - Token adulterado deve ser recusado")
+    @DisplayName("CT15 - Token adulterado deve ser recusado")
     void deveRecusarTokenAdulterado() {
         String token = jwtService.gerarToken(usuario);
         // Troca o último caractere da assinatura.
@@ -50,7 +50,7 @@ class JwtServiceTest {
     }
 
     @Test
-    @DisplayName("CT12 - Token assinado com outro segredo deve ser recusado")
+    @DisplayName("CT16 - Token assinado com outro segredo deve ser recusado")
     void deveRecusarTokenDeOutroSegredo() {
         String tokeDeOutraOrigem = new JwtService(OUTRO_SEGREDO, 3600).gerarToken(usuario);
 
@@ -58,7 +58,7 @@ class JwtServiceTest {
     }
 
     @Test
-    @DisplayName("CT13 - Token expirado deve ser recusado")
+    @DisplayName("CT17 - Token expirado deve ser recusado")
     void deveRecusarTokenExpirado() {
         // Validade negativa produz um token cuja expiração já passou.
         String expirado = new JwtService(SEGREDO, -60).gerarToken(usuario);
@@ -67,7 +67,7 @@ class JwtServiceTest {
     }
 
     @Test
-    @DisplayName("CT14 - Lixo no lugar do token não deve lançar exceção")
+    @DisplayName("CT18 - Lixo no lugar do token não deve lançar exceção")
     void deveTratarTokenMalformado() {
         assertNull(jwtService.emailDoTokenOuNull("isto-nao-e-um-jwt"));
         assertNull(jwtService.emailDoTokenOuNull(""));

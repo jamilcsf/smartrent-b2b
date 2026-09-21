@@ -54,7 +54,7 @@ class AuthServiceTest {
     }
 
     @Test
-    @DisplayName("CT15 - Cadastro deve gravar a senha como hash, nunca em texto puro")
+    @DisplayName("CT19 - Cadastro deve gravar a senha como hash, nunca em texto puro")
     void deveGravarSenhaComoHash() {
         when(usuarioRepository.findByEmail("ana@smartrent.dev")).thenReturn(Optional.empty());
         when(usuarioRepository.save(any(Usuario.class))).thenAnswer(i -> i.getArgument(0));
@@ -74,7 +74,7 @@ class AuthServiceTest {
     }
 
     @Test
-    @DisplayName("CT16 - Cadastro deve normalizar o e-mail para minúsculas")
+    @DisplayName("CT20 - Cadastro deve normalizar o e-mail para minúsculas")
     void deveNormalizarEmail() {
         when(usuarioRepository.findByEmail("ana@smartrent.dev")).thenReturn(Optional.empty());
         when(usuarioRepository.save(any(Usuario.class))).thenAnswer(i -> i.getArgument(0));
@@ -89,7 +89,7 @@ class AuthServiceTest {
     }
 
     @Test
-    @DisplayName("CT17 - Cadastro deve recusar senha e confirmação diferentes")
+    @DisplayName("CT21 - Cadastro deve recusar senha e confirmação diferentes")
     void deveRecusarConfirmacaoDivergente() {
         var req = new CadastroRequest("Ana", "ana@smartrent.dev", "senhaSegura123", "outraCoisa456");
 
@@ -100,7 +100,7 @@ class AuthServiceTest {
     }
 
     @Test
-    @DisplayName("CT18 - Cadastro deve recusar e-mail já existente")
+    @DisplayName("CT22 - Cadastro deve recusar e-mail já existente")
     void deveRecusarEmailDuplicado() {
         when(usuarioRepository.findByEmail("ana@smartrent.dev"))
                 .thenReturn(Optional.of(usuarioComSenha("qualquer")));
@@ -112,7 +112,7 @@ class AuthServiceTest {
     }
 
     @Test
-    @DisplayName("CT19 - Login deve emitir token quando a senha confere")
+    @DisplayName("CT23 - Login deve emitir token quando a senha confere")
     void deveAutenticarComSenhaCorreta() {
         when(usuarioRepository.findByEmail("ana@smartrent.dev"))
                 .thenReturn(Optional.of(usuarioComSenha("senhaSegura123")));
@@ -126,7 +126,7 @@ class AuthServiceTest {
     }
 
     @Test
-    @DisplayName("CT20 - Login deve recusar senha errada sem revelar qual campo falhou")
+    @DisplayName("CT24 - Login deve recusar senha errada sem revelar qual campo falhou")
     void deveRecusarSenhaErrada() {
         when(usuarioRepository.findByEmail("ana@smartrent.dev"))
                 .thenReturn(Optional.of(usuarioComSenha("senhaSegura123")));
@@ -138,7 +138,7 @@ class AuthServiceTest {
     }
 
     @Test
-    @DisplayName("CT21 - Login de e-mail inexistente deve dar a mesma mensagem da senha errada")
+    @DisplayName("CT25 - Login de e-mail inexistente deve dar a mesma mensagem da senha errada")
     void deveRecusarEmailInexistenteComMesmaMensagem() {
         when(usuarioRepository.findByEmail("ninguem@smartrent.dev")).thenReturn(Optional.empty());
 
@@ -151,7 +151,7 @@ class AuthServiceTest {
     }
 
     @Test
-    @DisplayName("CT22 - Login deve recusar usuário inativo")
+    @DisplayName("CT26 - Login deve recusar usuário inativo")
     void deveRecusarUsuarioInativo() {
         Usuario inativo = usuarioComSenha("senhaSegura123");
         inativo.setAtivo(false);

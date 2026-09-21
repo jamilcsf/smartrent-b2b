@@ -31,7 +31,7 @@ class SugestaoPrecoServiceTest {
     private SugestaoPrecoService sugestaoPrecoService;
 
     @Test
-    @DisplayName("CT05 - Deve acionar a contingencia quando a IA falhar")
+    @DisplayName("CT09 - Acionar o cálculo de contingência quando a IA retorna erro")
     void deveAcionarContingenciaQuandoIaFalhar() {
         Imovel imovel = new Imovel();
         imovel.setId(1L);
