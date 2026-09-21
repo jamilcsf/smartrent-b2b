@@ -47,6 +47,17 @@ public class Imovel {
     @Column(name = "numero_banheiros", nullable = false)
     private Integer numeroBanheiros;
 
+    /** Área útil em metros quadrados. Opcional: imóveis antigos não a informam. */
+    @Column(name = "metragem_quadrada")
+    private Integer metragemQuadrada;
+
+    /**
+     * Vagas de garagem. Nulo e zero são situações distintas e ambas válidas:
+     * nulo é "não informado", zero é "não tem". A interface omite as duas.
+     */
+    @Column(name = "vagas_garagem")
+    private Integer vagasGaragem;
+
     @Column(name = "valor_diaria_base", nullable = false, precision = 10, scale = 2)
     private BigDecimal valorDiariaBase;
 
@@ -141,6 +152,22 @@ public class Imovel {
 
     public void setNumeroBanheiros(Integer numeroBanheiros) {
         this.numeroBanheiros = numeroBanheiros;
+    }
+
+    public Integer getMetragemQuadrada() {
+        return metragemQuadrada;
+    }
+
+    public void setMetragemQuadrada(Integer metragemQuadrada) {
+        this.metragemQuadrada = metragemQuadrada;
+    }
+
+    public Integer getVagasGaragem() {
+        return vagasGaragem;
+    }
+
+    public void setVagasGaragem(Integer vagasGaragem) {
+        this.vagasGaragem = vagasGaragem;
     }
 
     public BigDecimal getValorDiariaBase() {
