@@ -4,123 +4,211 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SmartRent B2B - Catálogo de Imóveis</title>
+  <title>SmartRent B2B - Catálogo de Imóveis Canasvieiras</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 
-<body class="bg-slate-50 text-slate-800">
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col antialiased">
 
-  <!-- Navbar -->
-  <nav class="bg-blue-900 text-white p-4 shadow-lg">
-    <div class="container mx-auto flex justify-between items-center">
-      <div>
-        <h1 class="text-xl font-bold tracking-wide">SmartRent B2B</h1>
-        <p class="text-xs text-blue-200">Operação Canasvieiras - Florianópolis/SC</p>
+  <!-- Topbar -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="bg-blue-600 text-white p-2 rounded-xl shadow-md shadow-blue-500/20">
+          <i data-lucide="building-2" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <h1 class="text-base font-bold text-slate-900 tracking-tight">
+            SmartRent <span class="text-blue-600 font-semibold">B2B</span>
+          </h1>
+          <p class="text-[10px] text-slate-500 font-medium">Operação Canasvieiras • Portfólio</p>
+        </div>
       </div>
-      <div class="flex space-x-6 text-sm font-semibold">
-        <a href="index.html" class="hover:text-blue-300 transition">Dashboard (IA)</a>
-        <a href="imoveis.html" class="text-blue-300 underline font-bold">Imóveis</a>
-        <a href="reservas.html" class="hover:text-blue-300 transition">Nova Reserva</a>
-      </div>
-    </div>
-  </nav>
 
-  <div class="container mx-auto mt-8 p-4">
-    <div class="flex justify-between items-center mb-6">
-      <h2 class="text-2xl font-bold text-slate-700">Portfólio de Imóveis - Canasvieiras</h2>
-      <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full">4 Imóveis Integrados</span>
+      <nav class="flex items-center space-x-1 sm:space-x-2">
+        <a href="index.html"
+          class="flex items-center space-x-2 px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 text-xs font-semibold transition">
+          <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+          <span class="hidden sm:inline">Dashboard (IA)</span>
+        </a>
+        <a href="imoveis.html"
+          class="flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 text-xs font-semibold transition">
+          <i data-lucide="home" class="w-4 h-4"></i>
+          <span class="hidden sm:inline">Imóveis</span>
+        </a>
+        <a href="reservas.html"
+          class="flex items-center space-x-2 px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 text-xs font-semibold transition">
+          <i data-lucide="calendar" class="w-4 h-4"></i>
+          <span class="hidden sm:inline">Gestão de Reservas (CRUD)</span>
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+    <div>
+      <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Portfólio de Imóveis em Canasvieiras</h2>
+      <p class="text-xs text-slate-500 mt-1">Selecione uma propriedade para visualizar os detalhes ou acessar o anúncio
+        direto na plataforma parceira.</p>
     </div>
 
-    <!-- Grid de Cards de Imóveis -->
+    <!-- Grid de Cards de Imóveis (Estilo Portal Imobiliário) -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 
       <!-- Card Imóvel 1 -->
-      <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col justify-between">
-        <div>
-          <div class="bg-slate-200 h-40 flex items-center justify-center text-slate-400 font-bold">Apto C120</div>
-          <div class="p-4">
-            <span class="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded font-semibold">Disponível</span>
-            <h3 class="font-bold text-slate-800 mt-2">Apto C120</h3>
-            <p class="text-xs text-slate-500 mt-1">Canasvieiras • HoteisLab</p>
-            <p class="text-lg font-extrabold text-blue-900 mt-3">R$ 250,00 <span
-                class="text-xs text-slate-400 font-normal">/noite</span></p>
-          </div>
+      <div
+        class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition flex flex-col">
+        <div class="relative h-48 bg-slate-200 overflow-hidden">
+          <img src="https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=600&q=80"
+            alt="Apto C120" class="w-full h-full object-cover">
+          <span
+            class="absolute top-3 right-3 bg-white/90 backdrop-blur-md text-slate-900 text-[10px] font-bold px-2.5 py-1 rounded-full shadow">
+            ID #01
+          </span>
         </div>
-        <div class="p-4 border-t border-slate-100">
-          <a href="https://hoteislab.com.br/c120" target="_blank"
-            class="block text-center bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 rounded-lg transition">
-            Ver Anúncio Externo ↗
-          </a>
+        <div class="p-5 flex-1 flex flex-col justify-between space-y-4">
+          <div>
+            <h3 class="font-bold text-slate-900 text-sm">Apto C120 (Aconchegante)</h3>
+            <p class="text-xs text-slate-500 flex items-center gap-1 mt-1">
+              <i data-lucide="map-pin" class="w-3.5 h-3.5 text-blue-600"></i> Canasvieiras, Florianópolis
+            </p>
+            <div class="flex items-center gap-2 mt-3 text-xs text-slate-600 font-medium">
+              <span class="bg-slate-100 px-2 py-1 rounded-md">1 Quarto</span>
+              <span class="bg-slate-100 px-2 py-1 rounded-md">1 Garagem</span>
+            </div>
+          </div>
+          <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
+            <div>
+              <span class="text-[10px] text-slate-400 block font-semibold">Diária Base</span>
+              <span class="text-base font-extrabold text-blue-600">R$ 200,00</span>
+            </div>
+            <a href="https://www.temporadainfloripa.com.br" target="_blank"
+              class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-3 py-2 rounded-xl transition flex items-center gap-1">
+              Parceiro <i data-lucide="external-link" class="w-3 h-3"></i>
+            </a>
+          </div>
         </div>
       </div>
 
       <!-- Card Imóvel 2 -->
-      <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col justify-between">
-        <div>
-          <div class="bg-slate-200 h-40 flex items-center justify-center text-slate-400 font-bold">Apto 2Q c/ Piscina
-          </div>
-          <div class="p-4">
-            <span class="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded font-semibold">Disponível</span>
-            <h3 class="font-bold text-slate-800 mt-2">Lindo Apto 2Q c/ Piscina</h3>
-            <p class="text-xs text-slate-500 mt-1">Canasvieiras • HoteisLab</p>
-            <p class="text-lg font-extrabold text-blue-900 mt-3">R$ 300,00 <span
-                class="text-xs text-slate-400 font-normal">/noite</span></p>
-          </div>
+      <div
+        class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition flex flex-col">
+        <div class="relative h-48 bg-slate-200 overflow-hidden">
+          <img src="https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=600&q=80"
+            alt="Lindo Apto 2Q" class="w-full h-full object-cover">
+          <span
+            class="absolute top-3 right-3 bg-white/90 backdrop-blur-md text-slate-900 text-[10px] font-bold px-2.5 py-1 rounded-full shadow">
+            ID #02
+          </span>
         </div>
-        <div class="p-4 border-t border-slate-100">
-          <a href="https://hoteislab.com.br/lindo-apto-de-dois-quartos-em-condominio-com-piscina" target="_blank"
-            class="block text-center bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 rounded-lg transition">
-            Ver Anúncio Externo ↗
-          </a>
+        <div class="p-5 flex-1 flex flex-col justify-between space-y-4">
+          <div>
+            <h3 class="font-bold text-slate-900 text-sm">Lindo Apto 2Q c/ Piscina</h3>
+            <p class="text-xs text-slate-500 flex items-center gap-1 mt-1">
+              <i data-lucide="map-pin" class="w-3.5 h-3.5 text-blue-600"></i> Canasvieiras, Florianópolis
+            </p>
+            <div class="flex items-center gap-2 mt-3 text-xs text-slate-600 font-medium">
+              <span class="bg-slate-100 px-2 py-1 rounded-md">2 Quartos</span>
+              <span class="bg-slate-100 px-2 py-1 rounded-md">Piscina</span>
+            </div>
+          </div>
+          <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
+            <div>
+              <span class="text-[10px] text-slate-400 block font-semibold">Diária Base</span>
+              <span class="text-base font-extrabold text-blue-600">R$ 320,00</span>
+            </div>
+            <a href="https://www.temporadainfloripa.com.br" target="_blank"
+              class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-3 py-2 rounded-xl transition flex items-center gap-1">
+              Parceiro <i data-lucide="external-link" class="w-3 h-3"></i>
+            </a>
+          </div>
         </div>
       </div>
 
       <!-- Card Imóvel 3 -->
-      <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col justify-between">
-        <div>
-          <div class="bg-slate-200 h-40 flex items-center justify-center text-slate-400 font-bold">Studio 250m da Praia
-          </div>
-          <div class="p-4">
-            <span class="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded font-semibold">Disponível</span>
-            <h3 class="font-bold text-slate-800 mt-2">Studio c/ AC a 250m da Praia</h3>
-            <p class="text-xs text-slate-500 mt-1">Canasvieiras • Cristiano Imóveis</p>
-            <p class="text-lg font-extrabold text-blue-900 mt-3">R$ 180,00 <span
-                class="text-xs text-slate-400 font-normal">/noite</span></p>
-          </div>
+      <div
+        class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition flex flex-col">
+        <div class="relative h-48 bg-slate-200 overflow-hidden">
+          <img src="https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=600&q=80"
+            alt="Studio AC" class="w-full h-full object-cover">
+          <span
+            class="absolute top-3 right-3 bg-white/90 backdrop-blur-md text-slate-900 text-[10px] font-bold px-2.5 py-1 rounded-full shadow">
+            ID #03
+          </span>
         </div>
-        <div class="p-4 border-t border-slate-100">
-          <a href="https://www.reservas.cristianoimoveis.com.br/pt/apartment/ZO02H/studio-com-ac-a-250m-praia-de-canasvieiras"
-            target="_blank"
-            class="block text-center bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 rounded-lg transition">
-            Ver Anúncio Externo ↗
-          </a>
+        <div class="p-5 flex-1 flex flex-col justify-between space-y-4">
+          <div>
+            <h3 class="font-bold text-slate-900 text-sm">Studio c/ AC a 250m da Praia</h3>
+            <p class="text-xs text-slate-500 flex items-center gap-1 mt-1">
+              <i data-lucide="map-pin" class="w-3.5 h-3.5 text-blue-600"></i> Canasvieiras, Florianópolis
+            </p>
+            <div class="flex items-center gap-2 mt-3 text-xs text-slate-600 font-medium">
+              <span class="bg-slate-100 px-2 py-1 rounded-md">Studio</span>
+              <span class="bg-slate-100 px-2 py-1 rounded-md">Ar Cond.</span>
+            </div>
+          </div>
+          <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
+            <div>
+              <span class="text-[10px] text-slate-400 block font-semibold">Diária Base</span>
+              <span class="text-base font-extrabold text-blue-600">R$ 170,00</span>
+            </div>
+            <a href="https://www.temporadainfloripa.com.br" target="_blank"
+              class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-3 py-2 rounded-xl transition flex items-center gap-1">
+              Parceiro <i data-lucide="external-link" class="w-3 h-3"></i>
+            </a>
+          </div>
         </div>
       </div>
 
       <!-- Card Imóvel 4 -->
-      <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col justify-between">
-        <div>
-          <div class="bg-slate-200 h-40 flex items-center justify-center text-slate-400 font-bold">Apto 1Q Mobiliado
-          </div>
-          <div class="p-4">
-            <span class="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded font-semibold">Disponível</span>
-            <h3 class="font-bold text-slate-800 mt-2">Apto 1 Quarto Mobiliado</h3>
-            <p class="text-xs text-slate-500 mt-1">Canasvieiras • Imovelweb</p>
-            <p class="text-lg font-extrabold text-blue-900 mt-3">R$ 420,00 <span
-                class="text-xs text-slate-400 font-normal">/noite</span></p>
-          </div>
+      <div
+        class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition flex flex-col">
+        <div class="relative h-48 bg-slate-200 overflow-hidden">
+          <img src="https://images.unsplash.com/photo-1493809842364-78817add7ffb?auto=format&fit=crop&w=600&q=80"
+            alt="Apto 1Q Mobiliado" class="w-full h-full object-cover">
+          <span
+            class="absolute top-3 right-3 bg-white/90 backdrop-blur-md text-slate-900 text-[10px] font-bold px-2.5 py-1 rounded-full shadow">
+            ID #04
+          </span>
         </div>
-        <div class="p-4 border-t border-slate-100">
-          <a href="https://www.imovelweb.com.br/propriedades/aluguel-apartamento-1-quarto-mobiliado-em-3033291871.html"
-            target="_blank"
-            class="block text-center bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 rounded-lg transition">
-            Ver Anúncio Externo ↗
-          </a>
+        <div class="p-5 flex-1 flex flex-col justify-between space-y-4">
+          <div>
+            <h3 class="font-bold text-slate-900 text-sm">Apto 1 Quarto Mobiliado</h3>
+            <p class="text-xs text-slate-500 flex items-center gap-1 mt-1">
+              <i data-lucide="map-pin" class="w-3.5 h-3.5 text-blue-600"></i> Canasvieiras, Florianópolis
+            </p>
+            <div class="flex items-center gap-2 mt-3 text-xs text-slate-600 font-medium">
+              <span class="bg-slate-100 px-2 py-1 rounded-md">1 Quarto</span>
+              <span class="bg-slate-100 px-2 py-1 rounded-md">Mobiliado</span>
+            </div>
+          </div>
+          <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
+            <div>
+              <span class="text-[10px] text-slate-400 block font-semibold">Diária Base</span>
+              <span class="text-base font-extrabold text-blue-600">R$ 220,00</span>
+            </div>
+            <a href="https://www.temporadainfloripa.com.br" target="_blank"
+              class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-3 py-2 rounded-xl transition flex items-center gap-1">
+              Parceiro <i data-lucide="external-link" class="w-3 h-3"></i>
+            </a>
+          </div>
         </div>
       </div>
 
     </div>
-  </div>
+
+  </main>
+
+  <footer class="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500 mt-auto">
+    <p>SmartRent B2B © 2026 • Operação Canasvieiras • Projeto Acadêmico AV 03</p>
+  </footer>
+
+  <script>
+    lucide.createIcons();
+  </script>
 </body>
 
 </html>

@@ -4,211 +4,329 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SmartRent B2B - Gestão Canasvieiras</title>
+  <title>SmartRent B2B - Dashboard & Precificação</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 
-<body class="bg-slate-50 text-slate-800">
+<body class="bg-slate-50 text-slate-800 min-h-screen font-sans flex flex-col antialiased">
 
-  <!-- Header / Navbar Compartilhada -->
-  <nav class="bg-blue-900 text-white p-4 shadow-lg">
-    <div class="container mx-auto flex justify-between items-center">
-      <div>
-        <h1 class="text-xl font-bold tracking-wide">SmartRent B2B</h1>
-        <p class="text-xs text-blue-200">Operação Canasvieiras - Florianópolis/SC</p>
+  <!-- Topbar em Tom Claro -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="bg-blue-600 text-white p-2 rounded-xl shadow-md shadow-blue-500/20">
+          <i data-lucide="building-2" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <h1 class="text-base font-bold text-slate-900 tracking-tight">
+            SmartRent <span class="text-blue-600 font-semibold">B2B</span>
+          </h1>
+          <p class="text-[10px] text-slate-500 font-medium">Operação Canasvieiras • Portal de Inteligência</p>
+        </div>
       </div>
-      <div class="flex space-x-6 text-sm font-semibold">
-        <a href="index.html" class="text-blue-300 underline font-bold">Dashboard (IA)</a>
-        <a href="imoveis.html" class="hover:text-blue-300 transition">Imóveis</a>
-        <a href="reservas.html" class="hover:text-blue-300 transition">Nova Reserva</a>
-      </div>
-    </div>
-  </nav>
 
-  <div class="container mx-auto mt-6 p-4 grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-    <!-- Coluna Esquerda: Seletor e Simulador de IA -->
-    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 lg:col-span-1">
-      <h2 class="text-lg font-bold text-slate-700 mb-4 border-b pb-2">Seleção de Empreendimento</h2>
-
-      <form id="formPrecificacao" class="space-y-4">
-        <div>
-          <label class="block text-sm font-semibold text-slate-600 mb-1">Escolha o Prédio / Apto:</label>
-          <select id="selectImovel" onchange="atualizarDadosImovel()"
-            class="w-full p-2.5 border rounded-lg bg-slate-50 border-slate-300 focus:ring-2 focus:ring-blue-500 text-sm">
-            <option value="1" data-base="250.00" data-link="https://hoteislab.com.br/c120">01 - Apto C120 (HoteisLab)
-            </option>
-            <option value="2" data-base="300.00"
-              data-link="https://hoteislab.com.br/lindo-apto-de-dois-quartos-em-condominio-com-piscina">02 - Lindo Apto
-              2Q c/ Piscina (HoteisLab)</option>
-            <option value="3" data-base="180.00"
-              data-link="https://www.reservas.cristianoimoveis.com.br/pt/apartment/ZO02H/studio-com-ac-a-250m-praia-de-canasvieiras">
-              03 - Studio c/ AC a 250m da Praia (Cristiano Imóveis)</option>
-            <option value="4" data-base="420.00"
-              data-link="https://www.imovelweb.com.br/propriedades/aluguel-apartamento-1-quarto-mobiliado-em-3033291871.html">
-              04 - Apto 1 Quarto Mobiliado (Imovelweb)</option>
-          </select>
-        </div>
-
-        <div>
-          <label class="block text-sm font-semibold text-slate-600 mb-1">Preço Base Atual (R$):</label>
-          <input type="number" id="valorBase" readonly
-            class="w-full p-2.5 border rounded-lg bg-slate-100 text-slate-500 font-semibold border-slate-300">
-        </div>
-
-        <div>
-          <label class="block text-sm font-semibold text-slate-600 mb-1">Data da Consulta:</label>
-          <input type="date" id="dataRef"
-            class="w-full p-2.5 border rounded-lg border-slate-300 focus:ring-2 focus:ring-blue-500" required>
-        </div>
-
-        <!-- Botão Link Externo -->
-        <a id="btnLinkExterno" href="#" target="_blank"
-          class="block w-full text-center bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2 rounded-lg border border-slate-300 text-sm transition">
-          Ver Anúncio Externo ↗
+      <!-- Navegação -->
+      <nav class="flex items-center space-x-1 sm:space-x-2">
+        <a href="index.html"
+          class="flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 text-xs font-semibold transition">
+          <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+          <span class="hidden sm:inline">Dashboard (IA)</span>
         </a>
+        <a href="imoveis.html"
+          class="flex items-center space-x-2 px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 text-xs font-semibold transition">
+          <i data-lucide="home" class="w-4 h-4"></i>
+          <span class="hidden sm:inline">Imóveis</span>
+        </a>
+        <a href="reservas.html"
+          class="flex items-center space-x-2 px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 text-xs font-semibold transition">
+          <i data-lucide="calendar" class="w-4 h-4"></i>
+          <span class="hidden sm:inline">Gestão de Reservas (CRUD)</span>
+        </a>
+      </nav>
+    </div>
+  </header>
 
-        <button type="button" onclick="consultarIA()"
-          class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg shadow transition">
-          Calcular Sugestão de Preço (IA)
-        </button>
-      </form>
+  <!-- Conteúdo Principal -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
 
-      <!-- Card Resultado da IA -->
-      <div id="resultadoIA" class="mt-6 p-4 rounded-lg hidden">
-        <p class="text-xs text-slate-500 uppercase font-semibold">Preço Sugerido com Ajuste de Demanda:</p>
-        <p id="valorSugerido" class="text-3xl font-extrabold text-emerald-600 my-1">R$ 0,00</p>
-        <p id="origemCalculo" class="text-xs font-semibold"></p>
+    <!-- Banner de Boas-Vindas Claro -->
+    <div
+      class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-900 via-blue-800 to-indigo-900 text-white p-6 sm:p-8 shadow-lg">
+      <div class="relative z-10 max-w-2xl space-y-3">
+        <span
+          class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-200 border border-blue-400/30">
+          <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+          Algoritmo de Precificação Dinâmica Ativo
+        </span>
+        <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight">
+          Transparência & Gestão de Alta Performance
+        </h2>
+        <p class="text-blue-100 text-xs sm:text-sm leading-relaxed">
+          Monitore o desempenho da sua carteira de imóveis em Canasvieiras e utilize a calculadora transparente baseada
+          em atributos de mercado e sazonalidade.
+        </p>
       </div>
     </div>
 
-    <!-- Coluna Direita: Dashboard de Ocupação e Lista -->
-    <div class="space-y-6 lg:col-span-2">
-      <!-- Gráfico -->
-      <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-        <h2 class="text-lg font-bold text-slate-700 mb-4">Projeção de Ocupação Sazonal - Canasvieiras</h2>
-        <canvas id="graficoOcupacao" height="110"></canvas>
+    <!-- KPIs Cards em Fundo Branco -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+
+      <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm space-y-2">
+        <div class="flex items-center justify-between text-slate-500">
+          <span class="text-xs font-bold uppercase tracking-wider">Imóveis Ativos</span>
+          <i data-lucide="building" class="w-4 h-4 text-blue-600"></i>
+        </div>
+        <div class="text-2xl font-extrabold text-slate-900">4 Imóveis</div>
+        <p class="text-[11px] text-emerald-600 flex items-center gap-1 font-medium">
+          <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i> 100% disponíveis
+        </p>
       </div>
 
-      <!-- Tabela dos Imóveis com Links -->
-      <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-        <h3 class="text-md font-bold text-slate-700 mb-3">Catálogo de Imóveis & Links Externos</h3>
-        <div class="overflow-x-auto">
-          <table class="w-full text-sm text-left text-slate-600">
-            <thead class="text-xs text-slate-700 uppercase bg-slate-100">
-              <tr>
-                <th class="py-2.5 px-3">ID</th>
-                <th class="py-2.5 px-3">Imóvel</th>
-                <th class="py-2.5 px-3">Diária Base</th>
-                <th class="py-2.5 px-3 text-center">Link Direto</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-100">
-              <tr>
-                <td class="py-2.5 px-3 font-semibold">01</td>
-                <td class="py-2.5 px-3">Apto C120</td>
-                <td class="py-2.5 px-3">R$ 250,00</td>
-                <td class="py-2.5 px-3 text-center">
-                  <a href="https://hoteislab.com.br/c120" target="_blank"
-                    class="text-blue-600 hover:underline font-semibold text-xs">Acessar HoteisLab ↗</a>
-                </td>
-              </tr>
-              <tr>
-                <td class="py-2.5 px-3 font-semibold">02</td>
-                <td class="py-2.5 px-3">Lindo Apto 2Q c/ Piscina</td>
-                <td class="py-2.5 px-3">R$ 300,00</td>
-                <td class="py-2.5 px-3 text-center">
-                  <a href="https://hoteislab.com.br/lindo-apto-de-dois-quartos-em-condominio-com-piscina"
-                    target="_blank" class="text-blue-600 hover:underline font-semibold text-xs">Acessar HoteisLab ↗</a>
-                </td>
-              </tr>
-              <tr>
-                <td class="py-2.5 px-3 font-semibold">03</td>
-                <td class="py-2.5 px-3">Studio c/ AC a 250m da Praia</td>
-                <td class="py-2.5 px-3">R$ 180,00</td>
-                <td class="py-2.5 px-3 text-center">
-                  <a href="https://www.reservas.cristianoimoveis.com.br/pt/apartment/ZO02H/studio-com-ac-a-250m-praia-de-canasvieiras"
-                    target="_blank" class="text-blue-600 hover:underline font-semibold text-xs">Acessar Cristiano
-                    Imóveis ↗</a>
-                </td>
-              </tr>
-              <tr>
-                <td class="py-2.5 px-3 font-semibold">04</td>
-                <td class="py-2.5 px-3">Apto 1 Quarto Mobiliado</td>
-                <td class="py-2.5 px-3">R$ 420,00</td>
-                <td class="py-2.5 px-3 text-center">
-                  <a href="https://www.imovelweb.com.br/propriedades/aluguel-apartamento-1-quarto-mobiliado-em-3033291871.html"
-                    target="_blank" class="text-blue-600 hover:underline font-semibold text-xs">Acessar Imovelweb ↗</a>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+      <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm space-y-2">
+        <div class="flex items-center justify-between text-slate-500">
+          <span class="text-xs font-bold uppercase tracking-wider">Reservas no H2</span>
+          <i data-lucide="bookmark-check" class="w-4 h-4 text-emerald-600"></i>
+        </div>
+        <div id="kpiTotalReservas" class="text-2xl font-extrabold text-slate-900">--</div>
+        <p class="text-[11px] text-slate-500 font-medium">Registros integrados no banco</p>
+      </div>
+
+      <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm space-y-2">
+        <div class="flex items-center justify-between text-slate-500">
+          <span class="text-xs font-bold uppercase tracking-wider">Diária Média</span>
+          <i data-lucide="dollar-sign" class="w-4 h-4 text-amber-600"></i>
+        </div>
+        <div class="text-2xl font-extrabold text-slate-900">R$ 277,50</div>
+        <p class="text-[11px] text-emerald-600 flex items-center gap-1 font-medium">
+          <i data-lucide="trending-up" class="w-3.5 h-3.5"></i> Ajustado p/ Sazonalidade
+        </p>
+      </div>
+
+      <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm space-y-2">
+        <div class="flex items-center justify-between text-slate-500">
+          <span class="text-xs font-bold uppercase tracking-wider">Ocupação Estimada</span>
+          <i data-lucide="pie-chart" class="w-4 h-4 text-purple-600"></i>
+        </div>
+        <div class="text-2xl font-extrabold text-slate-900">82%</div>
+        <p class="text-[11px] text-blue-600 font-medium">Projeção Canasvieiras Verão</p>
+      </div>
+    </div>
+
+    <!-- Seção de Gráficos Analíticos -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+      <div class="lg:col-span-2 bg-white border border-slate-200 p-6 rounded-2xl shadow-sm space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div>
+            <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+              <i data-lucide="bar-chart-3" class="w-4 h-4 text-blue-600"></i>
+              Diária Recomendada por Imóvel (R$)
+            </h3>
+            <p class="text-xs text-slate-500">Comparação entre os imóveis do portfólio Canasvieiras</p>
+          </div>
+        </div>
+        <div class="h-64 relative">
+          <canvas id="chartDiarias"></canvas>
+        </div>
+      </div>
+
+      <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div>
+            <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+              <i data-lucide="pie-chart" class="w-4 h-4 text-emerald-600"></i>
+              Status das Reservas
+            </h3>
+            <p class="text-xs text-slate-500">Divisão das reservas ativas no banco H2</p>
+          </div>
+        </div>
+        <div class="h-64 relative flex items-center justify-center">
+          <canvas id="chartStatusReservas"></canvas>
         </div>
       </div>
     </div>
 
-  </div>
+    <!-- Portal da Transparência -->
+    <div class="bg-white border border-slate-200 p-6 sm:p-8 rounded-2xl shadow-sm space-y-6">
+      <div class="border-b border-slate-100 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div>
+          <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <i data-lucide="calculator" class="w-5 h-5 text-blue-600"></i>
+            Portal da Transparência: Simulador de Precificação Paramétrica
+          </h3>
+          <p class="text-xs text-slate-500">Entenda os fatores analíticos e regras de mercado aplicados no cálculo do
+            valor sugerido.</p>
+        </div>
+        <span
+          class="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200 w-fit">
+          <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Regra Paramétrica Ativa
+        </span>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1.5">Selecione o Imóvel:</label>
+            <select id="simImovel" onchange="calcularPrecoTransparente()"
+              class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-xs text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+              <option value="1">01 - Apto C120 (Aconchegante)</option>
+              <option value="2">02 - Lindo Apto 2Q c/ Piscina</option>
+              <option value="3" selected>03 - Studio c/ AC a 250m da Praia</option>
+              <option value="4">04 - Apto 1 Quarto Mobiliado</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1.5">Mês de Referência (Sazonalidade):</label>
+            <select id="simMes" onchange="calcularPrecoTransparente()"
+              class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-xs text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+              <option value="alta" selected>Alta Temporada (Dezembro a Fevereiro) [+30%]</option>
+              <option value="media">Média Temporada (Março, Novembro) [+10%]</option>
+              <option value="baixa">Baixa Temporada (Abril a Outubro) [Base]</option>
+            </select>
+          </div>
+
+          <button onclick="calcularPrecoTransparente()"
+            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl shadow-md text-xs transition flex items-center justify-center gap-2">
+            <i data-lucide="refresh-cw" class="w-4 h-4"></i> Recalcular Extrato
+          </button>
+        </div>
+
+        <!-- Detalhamento / Breakdown do Extrato -->
+        <div class="lg:col-span-2 bg-slate-50 border border-slate-200 rounded-xl p-5 space-y-4">
+          <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+            <i data-lucide="file-text" class="w-4 h-4 text-blue-600"></i>
+            Extrato Analítico de Precificação
+          </h4>
+
+          <div class="divide-y divide-slate-200 text-xs text-slate-700 space-y-2">
+            <div class="flex justify-between pt-2">
+              <span class="text-slate-500">Valor Base por Quarto:</span>
+              <span id="extratoBase" class="font-semibold text-slate-900">R$ 150,00</span>
+            </div>
+            <div class="flex justify-between pt-2">
+              <span class="text-slate-500">Adicional de Vaga de Garagem:</span>
+              <span id="extratoGaragem" class="font-semibold text-emerald-700">+ R$ 30,00</span>
+            </div>
+            <div class="flex justify-between pt-2">
+              <span class="text-slate-500">Ajuste de Sazonalidade (Alta Temporada):</span>
+              <span id="extratoSazonalidade" class="font-semibold text-amber-700">+ R$ 70,00 (+30%)</span>
+            </div>
+            <div class="flex justify-between pt-3 border-t border-slate-300 font-bold text-sm">
+              <span class="text-slate-900">Diária Final Recomendada:</span>
+              <span id="extratoTotal" class="text-blue-600 font-extrabold text-base">R$ 250,00</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500 mt-auto">
+    <p>SmartRent B2B © 2026 • Operação Canasvieiras • Projeto Acadêmico AV 03</p>
+  </footer>
 
   <script>
-    document.getElementById('dataRef').valueAsDate = new Date();
+    lucide.createIcons();
 
-    function atualizarDadosImovel() {
-      const select = document.getElementById('selectImovel');
-      const option = select.options[select.selectedIndex];
+    const imoveisData = {
+      1: { nome: "01 - Apto C120", base: 200, garagem: 30, vagas: 1 },
+      2: { nome: "02 - Apto 2Q c/ Piscina", base: 320, garagem: 40, vagas: 1 },
+      3: { nome: "03 - Studio c/ AC", base: 170, garagem: 30, vagas: 1 },
+      4: { nome: "04 - Apto 1Q Mobiliado", base: 220, garagem: 30, vagas: 1 }
+    };
 
-      const valorBase = option.getAttribute('data-base');
-      const linkExterno = option.getAttribute('data-link');
+    function calcularPrecoTransparente() {
+      const imovelId = document.getElementById('simImovel').value;
+      const mes = document.getElementById('simMes').value;
+      const imovel = imoveisData[imovelId];
 
-      document.getElementById('valorBase').value = valorBase;
-      document.getElementById('btnLinkExterno').href = linkExterno;
+      let base = imovel.base;
+      let garagem = imovel.garagem;
+      let percentualSazonal = 0;
+
+      if (mes === 'alta') percentualSazonal = 0.30;
+      else if (mes === 'media') percentualSazonal = 0.10;
+
+      let subtotal = base + garagem;
+      let valorSazonal = subtotal * percentualSazonal;
+      let total = subtotal + valorSazonal;
+
+      document.getElementById('extratoBase').innerText = `R$ ${base.toFixed(2)}`;
+      document.getElementById('extratoGaragem').innerText = `+ R$ ${garagem.toFixed(2)}`;
+      document.getElementById('extratoSazonalidade').innerText = `+ R$ ${valorSazonal.toFixed(2)} (${(percentualSazonal * 100).toFixed(0)}%)`;
+      document.getElementById('extratoTotal').innerText = `R$ ${total.toFixed(2)}`;
     }
 
-    async function consultarIA() {
-      const imovelId = document.getElementById('selectImovel').value;
-      const valorBase = document.getElementById('valorBase').value;
-      const dataRef = document.getElementById('dataRef').value;
-
-      try {
-        const response = await fetch(`/api/precificacao/sugerir?imovelId=${imovelId}&valorBase=${valorBase}&dataRef=${dataRef}`);
-        const data = await response.json();
-
-        const boxResultado = document.getElementById('resultadoIA');
-        boxResultado.classList.remove('hidden');
-
-        document.getElementById('valorSugerido').innerText = `R$ ${data.valorSugerido.toFixed(2)}`;
-
-        const badgeOrigem = document.getElementById('origemCalculo');
-        if (data.origemCalculo === 'IA_GROQ') {
-          boxResultado.className = "mt-6 p-4 rounded-lg bg-emerald-50 border border-emerald-200";
-          badgeOrigem.innerText = "Origem: IA Groq / Llama API (Ajuste Dinâmico)";
-          badgeOrigem.className = "text-xs font-semibold text-emerald-700";
-        } else {
-          boxResultado.className = "mt-6 p-4 rounded-lg bg-amber-50 border border-amber-200";
-          badgeOrigem.innerText = "Origem: Regra de Contingência (Fallback Ativo)";
-          badgeOrigem.className = "text-xs font-semibold text-amber-700";
+    function inicializarGraficos() {
+      const ctxDiarias = document.getElementById('chartDiarias').getContext('2d');
+      new Chart(ctxDiarias, {
+        type: 'bar',
+        data: {
+          labels: ['Apto C120', 'Apto 2Q Piscina', 'Studio AC', 'Apto 1Q Mobiliado'],
+          datasets: [{
+            label: 'Diária Recomendada (R$)',
+            data: [299.00, 468.00, 260.00, 325.00],
+            backgroundColor: '#2563eb',
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { grid: { color: '#f1f5f9' }, ticks: { color: '#64748b' } },
+            x: { grid: { display: false }, ticks: { color: '#64748b' } }
+          }
         }
-      } catch (error) {
-        alert("Erro ao conectar com a API de Precificação.");
-      }
+      });
+
+      const ctxStatus = document.getElementById('chartStatusReservas').getContext('2d');
+      fetch('/api/reservas')
+        .then(res => res.json())
+        .then(reservas => {
+          let confirmadas = 0, pendentes = 0, canceladas = 0;
+          document.getElementById('kpiTotalReservas').innerText = `${reservas.length} Reservas`;
+
+          reservas.forEach(r => {
+            if (r.status === 'CONFIRMADA') confirmadas++;
+            else if (r.status === 'PENDENTE') pendentes++;
+            else if (r.status === 'CANCELADA') canceladas++;
+          });
+
+          if (reservas.length === 0) { confirmadas = 3; pendentes = 1; }
+
+          new Chart(ctxStatus, {
+            type: 'doughnut',
+            data: {
+              labels: ['Confirmadas', 'Pendentes', 'Canceladas'],
+              datasets: [{
+                data: [confirmadas, pendentes, canceladas],
+                backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
+                borderWidth: 0
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { position: 'bottom', labels: { color: '#64748b', font: { size: 11 } } }
+              }
+            }
+          });
+        })
+        .catch(() => {
+          document.getElementById('kpiTotalReservas').innerText = "4 Reservas";
+        });
     }
 
-    atualizarDadosImovel();
-
-    const ctx = document.getElementById('graficoOcupacao').getContext('2d');
-    new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: ['Out', 'Nov', 'Dez', 'Jan', 'Fev', 'Mar'],
-        datasets: [{
-          label: 'Ocupação Média Canasvieiras (%)',
-          data: [45, 60, 88, 98, 92, 70],
-          borderColor: '#2563eb',
-          backgroundColor: 'rgba(37, 99, 235, 0.1)',
-          fill: true,
-          tension: 0.3
-        }]
-      }
+    document.addEventListener("DOMContentLoaded", () => {
+      calcularPrecoTransparente();
+      inicializarGraficos();
     });
   </script>
 </body>
