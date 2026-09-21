@@ -26,7 +26,7 @@ fases = [
     ("Semana 1 — Fundação", "Dias 1 a 7",
      "Inicialização do projeto Maven e Spring Boot, modelagem das entidades JPA (Usuario, "
      "Imovel, Reserva, SugestaoPreco), repositórios com a verificação de conflito de datas, "
-     "geração e validação do esquema por migration contra um PostgreSQL real.", "Planejada"),
+     "geração e validação do esquema por migration contra um PostgreSQL real.", "Em andamento"),
     ("Semana 2 — Domínio de negócio", "Dias 8 a 14",
      "Objetos de transferência de dados (Records), camada de serviço com a checagem de "
      "conflito dentro de transações, controladores REST e tratamento centralizado de "
@@ -56,11 +56,14 @@ story.extend(quadro(styles, "Detalhamento das fases do cronograma", quadro_table
     fdata, [32 * mm, 20 * mm, 84 * mm, 20 * mm], header_align_center=[1, 3])))
 
 story.append(Paragraph(
-    "A Semana 1 chegou a ser executada e validada de ponta a ponta — build do Maven, esquema "
-    "aplicado por migration e testado contra uma instância PostgreSQL real, incluindo teste "
-    "de idempotência. A base de código foi posteriormente reiniciada, de modo que a fase "
-    "retorna à situação de planejada. As decisões técnicas tomadas naquela execução "
-    "permanecem registradas na ADR-002 e orientam a reexecução.",
+    "A partir de 21 de setembro o projeto passou a ter como base a implementação "
+    "desenvolvida por Jamil Cherem, o que antecipou entregas previstas para as Semanas 2, "
+    "3 e 4 — camada de serviço, controladores REST, telas com Chart.js, testes unitários e "
+    "esteira de integração contínua já existem. Em contrapartida, a Semana 1 permanece em "
+    "andamento: a persistência já migrou para PostgreSQL com esquema versionado por "
+    "migration e validado contra banco real, mas a modelagem ainda não contempla as "
+    "entidades de usuário e imóvel. As decisões técnicas que orientam essa convergência "
+    "estão registradas na ADR-002.",
     styles["Body"]))
 
 doc = new_doc(os.path.join(BASE, "out", "02_CRONOGRAMA.pdf"), "Cronograma do Projeto")

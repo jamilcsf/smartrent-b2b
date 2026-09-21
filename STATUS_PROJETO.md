@@ -2,7 +2,7 @@
 
 **Projeto:** SmartRent B2B — Sistema de Gestão Inteligente para Aluguel por Temporada  
 **Instituição:** UniSENAI — ADS (Florianópolis/SC)[cite: 1, 4]  
-**Última Atualização:** 2026-09-16 — Base de código reiniciada; documentação e decisões preservadas  
+**Última Atualização:** 2026-09-21 — Consolidação na base de código de Jamil Cherem; PostgreSQL e Flyway adequados aos RNFs  
 
 ---
 
@@ -29,35 +29,40 @@
 - [x] Diagrama de Casos de Uso e Diagramas de Atividades (Mermaid)
 - [x] Modelo Conceitual e Lógico de Banco de Dados (PostgreSQL)
 - [x] Script técnico para o vídeo demonstrativo de 60 segundos[cite: 4]
-- [ ] Inicialização do projeto Maven (Spring Boot 3, Java 17) e Maven Wrapper
-- [ ] Implementação das entidades JPA (`Usuario`, `Imovel`, `Reserva`, `SugestaoPreco`)
-- [ ] Criação dos repositórios Spring Data JPA com query de validação de choque de datas
-- [ ] `SecurityConfig` temporária liberando os endpoints até existir autenticação
-- [ ] Geração do Modelo Físico a partir das entidades — ver [ADR-002](docs/ADR-002-estrategia-de-schema.md)
-- [ ] Versionamento do schema com Flyway (`V1__criacao_schema_inicial.sql`)
+- [x] Inicialização do projeto Maven (Spring Boot 3, Java 17)
+- [ ] Implementação das entidades JPA — parcial: `Reserva` e `SugestaoPreco` existem; faltam `Usuario` e `Imovel`
+- [x] Repositório com query de validação de choque de datas
+- [x] Geração do Modelo Físico a partir das entidades — ver [ADR-002](docs/ADR-002-estrategia-de-schema.md)
+- [x] Versionamento do schema com Flyway (`V1__criacao_schema_inicial.sql`)
+- [x] Camada de Service e Controllers REST
+- [x] Pipeline GitHub Actions (Etapa 3)
+- [ ] Suíte de testes unitários com Mockito — parcial: 2 casos
+- [ ] Configuração do serviço de IA com tratamento de fallback — parcial: fallback existe, a chamada à Groq é um retorno fixo
+- [ ] Objetos de transferência como Records (RNF08)
 - [ ] Primeiro boot contra o Supabase com o schema aplicado
-- [ ] Camada de Service e Controllers REST
-- [ ] Configuração do serviço de IA com tratamento de fallback
-- [ ] Escrita da suíte de testes unitários com Mockito
-- [ ] Pipeline GitHub Actions (Etapa 3)
 
 ---
 
 ## 🔄 Estado da base de código
 
-Em 2026-09-16 a base de código foi **reiniciada**: backend, frontend e arquivos de
-configuração foram removidos para que a implementação recomece do princípio. O
-repositório contém, neste momento, apenas documentação.
+Em 2026-09-21 o projeto passou a usar como base a implementação desenvolvida por
+Jamil Cherem, integrada a partir de `jamilcsf/smartrent-b2b` com o histórico de
+autoria preservado. A base herdada trouxe camada de serviço, controladores REST,
+telas estáticas, testes unitários com Mockito e esteira de integração contínua.
 
-O que foi preservado e continua valendo como ponto de partida:
+O trabalho em curso é adequar essa base aos requisitos desta documentação. Já
+concluído:
 
-- A documentação acadêmica em `docs/relatorios-fonte/` (scripts e os 6 PDFs).
-- A [ADR-002](docs/ADR-002-estrategia-de-schema.md), cuja decisão sobre geração e
-  versionamento de schema permanece como diretriz para a nova implementação.
-- O PRD, o `DESIGN.md` e as capturas dos protótipos em
-  `stitch_smartrent_b2b_precifica_o_ia/`.
+- **RNF02** — o H2 em memória deu lugar ao PostgreSQL.
+- **RNF05** — o esquema saiu de `ddl-auto=update` para migration versionada com
+  Flyway, com o Hibernate apenas validando, conforme a
+  [ADR-002](docs/ADR-002-estrategia-de-schema.md).
+- **RNF03** — as credenciais passaram a vir de variáveis de ambiente.
 
-O código anterior não foi perdido: permanece recuperável no histórico do Git, no
-commit `5385be3` e anteriores.
+Validado contra PostgreSQL 16.15: o Flyway aplica a migration, o Hibernate aceita
+o esquema e um cadastro via API persiste no banco.
 
-As instruções de execução voltarão a esta seção quando o novo projeto tiver build.
+Pendente de adequação: o Modelo de Dados (faltam `Usuario`, `Imovel` e o embutido
+`Endereco`, e os nomes de tabela ainda divergem da Seção 6.2 do Relatório), os
+objetos de transferência como Records (RNF08) e a integração real com a Groq API,
+hoje um retorno fixo no código de produção (RNF01 e RNF04).
