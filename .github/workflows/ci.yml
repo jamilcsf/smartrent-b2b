@@ -15,14 +15,14 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Configurar JDK 17
-      uses: actions/setup-java@v4
+      uses: actions/setup-java@v5
       with:
         java-version: '17'
         distribution: 'temurin'
         cache: maven
 
     - name: Executar Build e Suíte de Testes (JUnit 5)
-      run: ./mvnw clean test
+      run: mvn clean test
 
     - name: Publicar Relatorio de Testes (Evidencias)
       if: always()
