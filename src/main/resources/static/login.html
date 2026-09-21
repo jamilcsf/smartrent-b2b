@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartRent B2B - Entrar</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 min-h-screen flex flex-col">
+
+  <header class="bg-blue-900 text-white shadow">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+      <a href="index.html" class="block">
+        <h1 class="text-lg font-bold leading-tight">SmartRent B2B</h1>
+        <p class="text-[11px] text-white/70">Operação Canasvieiras - Florianópolis/SC</p>
+      </a>
+      <div id="areaAuth" class="flex items-center"></div>
+    </div>
+  </header>
+
+  <!-- Auth Card centralizado -->
+  <main class="flex-1 flex items-center justify-center px-4 py-10">
+    <div class="w-full max-w-sm">
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <h2 class="text-xl font-bold text-slate-800">Entrar</h2>
+        <p class="text-xs text-slate-500 mt-1 mb-5">Acesse para gerenciar seus imóveis e reservas.</p>
+
+        <div id="avisoRedirect" class="hidden mb-4 p-2.5 rounded-lg bg-amber-50 border border-amber-200 text-[11px] font-semibold text-amber-800">
+          Entre para continuar de onde você parou.
+        </div>
+
+        <form id="formAuth" novalidate>
+        <div class="mb-3">
+          <label for="email" class="block text-xs font-semibold text-slate-600 mb-1">E-mail</label>
+          <input type="email" id="email" autocomplete="email"
+            class="w-full p-2.5 border rounded-lg border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="voce@exemplo.com">
+          <p id="erro-email" class="hidden mt-1 text-[11px] font-semibold text-rose-600"></p>
+        </div>
+        <div class="mb-3">
+          <label for="senha" class="block text-xs font-semibold text-slate-600 mb-1">Senha</label>
+          <input type="password" id="senha" autocomplete="current-password"
+            class="w-full p-2.5 border rounded-lg border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Sua senha">
+          <p id="erro-senha" class="hidden mt-1 text-[11px] font-semibold text-rose-600"></p>
+        </div>
+
+          <p id="mensagemGeral" class="hidden mb-3 p-2.5 rounded-lg bg-rose-50 border border-rose-200 text-[11px] font-semibold text-rose-700"></p>
+
+          <button type="submit" id="btnSubmit"
+            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg shadow text-sm transition">
+            Entrar
+          </button>
+        </form>
+
+        <p class="text-center text-xs text-slate-500 mt-4">
+          Não tem conta?
+          <a id="linkCadastro" href="cadastro.html" class="font-bold text-blue-700 hover:underline">Criar conta</a>
+        </p>
+      </div>
+
+      <p class="text-center text-[11px] text-slate-500 mt-4">
+        O site continua aberto para navegação sem login. <a href="index.html" class="underline">Voltar ao início</a>.
+      </p>
+    </div>
+  </main>
+
+  <script src="js/auth.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/header-auth.js"></script>
+  <script>
+    // Volta para onde a pessoa estava. Só aceita caminho relativo do próprio
+    // site: um redirectTo apontando para outro domínio seria um vetor de
+    // phishing depois do login.
+    function destinoDeRetorno() {
+      var alvo = new URLSearchParams(location.search).get('redirectTo');
+      if (!alvo || !alvo.startsWith('/') || alvo.startsWith('//')) {
+        return 'index.html';
+      }
+      return alvo;
+    }
+
+    function mostrarErro(id, mensagem) {
+      var campo = document.getElementById(id);
+      var alvo = document.getElementById('erro-' + id);
+      if (alvo) {
+        alvo.innerText = mensagem;
+        alvo.classList.toggle('hidden', !mensagem);
+      }
+      if (campo) {
+        campo.classList.toggle('border-rose-400', !!mensagem);
+        campo.classList.toggle('border-slate-300', !mensagem);
+      }
+      return !mensagem;
+    }
+
+    function limparErros(ids) {
+      ids.forEach(function (id) { mostrarErro(id, ''); });
+      var caixa = document.getElementById('mensagemGeral');
+      caixa.classList.add('hidden');
+      caixa.innerText = '';
+    }
+
+    function erroGeral(mensagem) {
+      var caixa = document.getElementById('mensagemGeral');
+      caixa.innerText = mensagem;
+      caixa.classList.remove('hidden');
+    }
+
+    function emailValido(valor) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(valor);
+    }
+
+    function carregando(ativo, textoOriginal) {
+      var botao = document.getElementById('btnSubmit');
+      botao.disabled = ativo;
+      botao.className = 'w-full text-white font-bold py-2.5 rounded-lg shadow text-sm transition ' +
+        (ativo ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700');
+      botao.innerHTML = ativo
+        ? '<span class="inline-block w-3.5 h-3.5 mr-2 border-2 border-white/40 border-t-white rounded-full animate-spin align-[-2px]"></span>Aguarde...'
+        : textoOriginal;
+    }
+
+    document.getElementById('formAuth').addEventListener('submit', async function (evento) {
+      evento.preventDefault();
+      limparErros(['email', 'senha']);
+
+      var email = document.getElementById('email').value.trim();
+      var senha = document.getElementById('senha').value;
+
+      var ok = true;
+      if (!email) { ok = mostrarErro('email', 'Informe seu e-mail.') && ok; }
+      else if (!emailValido(email)) { ok = mostrarErro('email', 'E-mail inválido.') && ok; }
+      if (!senha) { ok = mostrarErro('senha', 'Informe sua senha.') && ok; }
+      if (!ok) { return; }
+
+      carregando(true);
+      try {
+        // ignorar401: aqui o 401 é "senha errada", não sessão expirada — deixar
+        // o tratamento global agir redirecionaria o login para ele mesmo.
+        var r = await Api.post('/api/auth/login', { email: email, senha: senha }, { ignorar401: true });
+        Auth.definirSessao(r.token, r.usuario);
+        location.href = destinoDeRetorno();
+      } catch (e) {
+        erroGeral(e.message || 'Não foi possível entrar.');
+        carregando(false, 'Entrar');
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+      var alvo = new URLSearchParams(location.search).get('redirectTo');
+      if (alvo) {
+        var aviso = document.getElementById('avisoRedirect');
+        aviso.classList.remove('hidden');
+      }
+      document.getElementById('linkCadastro').href =
+        'cadastro.html' + (alvo ? '?redirectTo=' + encodeURIComponent(alvo) : '');
+    });
+
+  </script>
+</body>
+</html>

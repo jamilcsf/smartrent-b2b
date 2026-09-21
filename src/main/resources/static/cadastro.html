@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartRent B2B - Criar conta</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 min-h-screen flex flex-col">
+
+  <header class="bg-blue-900 text-white shadow">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+      <a href="index.html" class="block">
+        <h1 class="text-lg font-bold leading-tight">SmartRent B2B</h1>
+        <p class="text-[11px] text-white/70">Operação Canasvieiras - Florianópolis/SC</p>
+      </a>
+      <div id="areaAuth" class="flex items-center"></div>
+    </div>
+  </header>
+
+  <!-- Auth Card centralizado -->
+  <main class="flex-1 flex items-center justify-center px-4 py-10">
+    <div class="w-full max-w-sm">
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <h2 class="text-xl font-bold text-slate-800">Criar conta</h2>
+        <p class="text-xs text-slate-500 mt-1 mb-5">Leva menos de um minuto.</p>
+
+        <form id="formAuth" novalidate>
+        <div class="mb-3">
+          <label for="nome" class="block text-xs font-semibold text-slate-600 mb-1">Nome completo</label>
+          <input type="text" id="nome" autocomplete="name"
+            class="w-full p-2.5 border rounded-lg border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Ex: Ana Beatriz Rocha">
+          <p id="erro-nome" class="hidden mt-1 text-[11px] font-semibold text-rose-600"></p>
+        </div>
+        <div class="mb-3">
+          <label for="email" class="block text-xs font-semibold text-slate-600 mb-1">E-mail</label>
+          <input type="email" id="email" autocomplete="email"
+            class="w-full p-2.5 border rounded-lg border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="voce@exemplo.com">
+          <p id="erro-email" class="hidden mt-1 text-[11px] font-semibold text-rose-600"></p>
+        </div>
+        <div class="mb-3">
+          <label for="senha" class="block text-xs font-semibold text-slate-600 mb-1">Senha</label>
+          <input type="password" id="senha" autocomplete="new-password"
+            class="w-full p-2.5 border rounded-lg border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Ao menos 8 caracteres">
+          <p id="erro-senha" class="hidden mt-1 text-[11px] font-semibold text-rose-600"></p>
+        </div>
+        <div class="mb-3">
+          <label for="confirmacaoSenha" class="block text-xs font-semibold text-slate-600 mb-1">Confirmação de senha</label>
+          <input type="password" id="confirmacaoSenha" autocomplete="new-password"
+            class="w-full p-2.5 border rounded-lg border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Repita a senha">
+          <p id="erro-confirmacaoSenha" class="hidden mt-1 text-[11px] font-semibold text-rose-600"></p>
+        </div>
+
+          <p id="mensagemGeral" class="hidden mb-3 p-2.5 rounded-lg bg-rose-50 border border-rose-200 text-[11px] font-semibold text-rose-700"></p>
+
+          <button type="submit" id="btnSubmit"
+            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg shadow text-sm transition">
+            Criar conta
+          </button>
+        </form>
+
+        <p class="text-center text-xs text-slate-500 mt-4">
+          Já tem conta?
+          <a id="linkLogin" href="login.html" class="font-bold text-blue-700 hover:underline">Entrar</a>
+        </p>
+      </div>
+
+      <p class="text-center text-[11px] text-slate-500 mt-4">
+        Ao criar a conta você poderá gerenciar imóveis e reservas.
+      </p>
+    </div>
+  </main>
+
+  <script src="js/auth.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/header-auth.js"></script>
+  <script>
+    // Volta para onde a pessoa estava. Só aceita caminho relativo do próprio
+    // site: um redirectTo apontando para outro domínio seria um vetor de
+    // phishing depois do login.
+    function destinoDeRetorno() {
+      var alvo = new URLSearchParams(location.search).get('redirectTo');
+      if (!alvo || !alvo.startsWith('/') || alvo.startsWith('//')) {
+        return 'index.html';
+      }
+      return alvo;
+    }
+
+    function mostrarErro(id, mensagem) {
+      var campo = document.getElementById(id);
+      var alvo = document.getElementById('erro-' + id);
+      if (alvo) {
+        alvo.innerText = mensagem;
+        alvo.classList.toggle('hidden', !mensagem);
+      }
+      if (campo) {
+        campo.classList.toggle('border-rose-400', !!mensagem);
+        campo.classList.toggle('border-slate-300', !mensagem);
+      }
+      return !mensagem;
+    }
+
+    function limparErros(ids) {
+      ids.forEach(function (id) { mostrarErro(id, ''); });
+      var caixa = document.getElementById('mensagemGeral');
+      caixa.classList.add('hidden');
+      caixa.innerText = '';
+    }
+
+    function erroGeral(mensagem) {
+      var caixa = document.getElementById('mensagemGeral');
+      caixa.innerText = mensagem;
+      caixa.classList.remove('hidden');
+    }
+
+    function emailValido(valor) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(valor);
+    }
+
+    function carregando(ativo, textoOriginal) {
+      var botao = document.getElementById('btnSubmit');
+      botao.disabled = ativo;
+      botao.className = 'w-full text-white font-bold py-2.5 rounded-lg shadow text-sm transition ' +
+        (ativo ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700');
+      botao.innerHTML = ativo
+        ? '<span class="inline-block w-3.5 h-3.5 mr-2 border-2 border-white/40 border-t-white rounded-full animate-spin align-[-2px]"></span>Aguarde...'
+        : textoOriginal;
+    }
+
+    document.getElementById('formAuth').addEventListener('submit', async function (evento) {
+      evento.preventDefault();
+      var ids = ['nome', 'email', 'senha', 'confirmacaoSenha'];
+      limparErros(ids);
+
+      var nome = document.getElementById('nome').value.trim();
+      var email = document.getElementById('email').value.trim();
+      var senha = document.getElementById('senha').value;
+      var confirmacao = document.getElementById('confirmacaoSenha').value;
+
+      var ok = true;
+      if (!nome) { ok = mostrarErro('nome', 'Informe seu nome.') && ok; }
+      if (!email) { ok = mostrarErro('email', 'Informe seu e-mail.') && ok; }
+      else if (!emailValido(email)) { ok = mostrarErro('email', 'E-mail inválido.') && ok; }
+      if (senha.length < 8) { ok = mostrarErro('senha', 'A senha deve ter ao menos 8 caracteres.') && ok; }
+      if (!confirmacao) { ok = mostrarErro('confirmacaoSenha', 'Confirme a senha.') && ok; }
+      else if (senha !== confirmacao) { ok = mostrarErro('confirmacaoSenha', 'As senhas não conferem.') && ok; }
+      if (!ok) { return; }
+
+      carregando(true);
+      try {
+        var r = await Api.post('/api/auth/cadastro', {
+          nome: nome, email: email, senha: senha, confirmacaoSenha: confirmacao
+        }, { ignorar401: true });
+        Auth.definirSessao(r.token, r.usuario);
+        location.href = destinoDeRetorno();
+      } catch (e) {
+        // O servidor devolve os erros por campo; realça cada um deles.
+        if (e.body && e.body.campos) {
+          Object.keys(e.body.campos).forEach(function (campo) {
+            mostrarErro(campo, e.body.campos[campo]);
+          });
+        }
+        erroGeral(e.message || 'Não foi possível criar a conta.');
+        carregando(false, 'Criar conta');
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+      var alvo = new URLSearchParams(location.search).get('redirectTo');
+      document.getElementById('linkLogin').href =
+        'login.html' + (alvo ? '?redirectTo=' + encodeURIComponent(alvo) : '');
+    });
+
+  </script>
+</body>
+</html>
