@@ -6,6 +6,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SmartRent B2B - Catálogo de Imóveis</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Sliders sobrepostos: a trilha nativa some e só o polegar recebe evento,
+       para que os dois controles convivam no mesmo espaço. */
+    .slider-duplo {
+      position: absolute; top: 0; left: 0; width: 100%; height: 20px;
+      background: none; pointer-events: none; -webkit-appearance: none; appearance: none;
+    }
+    .slider-duplo::-webkit-slider-thumb {
+      -webkit-appearance: none; pointer-events: auto; width: 14px; height: 14px;
+      border-radius: 9999px; background: #fff; border: 2px solid #3b82f6; cursor: pointer;
+      box-shadow: 0 1px 3px rgba(0,0,0,.2);
+    }
+    .slider-duplo::-moz-range-thumb {
+      pointer-events: auto; width: 14px; height: 14px; border-radius: 9999px;
+      background: #fff; border: 2px solid #3b82f6; cursor: pointer;
+    }
+    .slider-duplo::-moz-range-track { background: none; }
+  </style>
 </head>
 
 <body class="bg-slate-50 text-slate-800">
@@ -29,42 +47,122 @@
   <div class="container mx-auto mt-8 p-4">
     <div class="flex justify-between items-center mb-6">
       <h2 class="text-2xl font-bold text-slate-700">Portfólio de Imóveis</h2>
-      <span id="contadorImoveis"
-        class="bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full">carregando...</span>
+      <div class="flex items-center gap-3">
+        <button type="button" id="btnAbrirFiltro"
+          class="lg:hidden text-xs font-bold bg-white border border-slate-300 text-slate-700 px-3 py-1.5 rounded-lg shadow-sm">
+          Filtros
+        </button>
+        <span id="contadorImoveis"
+          class="bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full">carregando...</span>
+      </div>
     </div>
 
-    <div id="gradeImoveis" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"></div>
+    <div class="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6 items-start">
 
-    <p id="mensagemImoveis" class="hidden mt-6 p-3 rounded-lg bg-amber-50 border border-amber-200 text-xs font-semibold text-amber-800"></p>
+      <!-- Sidebar no desktop; vira painel deslizante no mobile. -->
+      <aside id="painelFiltro"
+        class="hidden lg:block bg-white rounded-xl border border-slate-200 shadow-sm px-4 py-3
+               lg:sticky lg:top-6">
+        <div id="filtroImoveis"></div>
+      </aside>
+
+      <div>
+        <div id="gradeImoveis" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6"></div>
+        <p id="mensagemImoveis"
+          class="hidden mt-6 p-3 rounded-lg bg-amber-50 border border-amber-200 text-xs font-semibold text-amber-800"></p>
+      </div>
+    </div>
+
+    <div id="fundoFiltro" class="hidden fixed inset-0 bg-slate-900/40 z-40 lg:hidden"></div>
   </div>
   <script src="js/auth.js"></script>
   <script src="js/api.js"></script>
   <script src="js/header-auth.js"></script>
   <script src="js/imovel-card.js"></script>
+  <script src="js/filtro-imoveis.js"></script>
   <script>
     // Catálogo público: sem token a chamada sai sem Authorization e mesmo
     // assim responde, que é o comportamento do acesso público por padrão.
-    async function carregarImoveis() {
-      const grade = document.getElementById('gradeImoveis');
-      const contador = document.getElementById('contadorImoveis');
-      const aviso = document.getElementById('mensagemImoveis');
-      try {
-        const imoveis = await Api.get('/api/imoveis');
-        grade.innerHTML = imoveis.map(ImovelCard.card).join('');
-        contador.innerText = imoveis.length === 1
-          ? '1 imóvel cadastrado'
-          : imoveis.length + ' imóveis cadastrados';
-        if (imoveis.length === 0) {
-          aviso.innerText = 'Nenhum imóvel cadastrado ainda.';
-          aviso.classList.remove('hidden');
-        }
-      } catch (e) {
-        contador.innerText = 'indisponível';
-        aviso.innerText = 'Não foi possível carregar os imóveis: ' + e.message;
-        aviso.classList.remove('hidden');
+    let catalogo = [];
+    let filtro = null;
+
+    const grade = () => document.getElementById('gradeImoveis');
+    const contador = () => document.getElementById('contadorImoveis');
+    const aviso = () => document.getElementById('mensagemImoveis');
+
+    function desenhar(lista) {
+      grade().innerHTML = lista.map(ImovelCard.card).join('');
+      const total = catalogo.length;
+      contador().innerText = lista.length === total
+        ? (total === 1 ? '1 imóvel' : total + ' imóveis')
+        : lista.length + ' de ' + total + ' imóveis';
+
+      const caixa = aviso();
+      if (lista.length === 0) {
+        caixa.innerText = total === 0
+          ? 'Nenhum imóvel cadastrado ainda.'
+          : 'Nenhum imóvel atende aos filtros selecionados.';
+        caixa.classList.remove('hidden');
+      } else {
+        caixa.classList.add('hidden');
       }
     }
-    document.addEventListener('DOMContentLoaded', carregarImoveis);
+
+    function aplicar(estado) {
+      // O termo ainda não confirmado entra como critério, para a lista
+      // reagir enquanto se digita, sem exigir Enter.
+      const emEdicao = filtro ? filtro.termoEmEdicao() : '';
+      const efetivo = Object.assign({}, estado);
+      if (emEdicao) {
+        efetivo.localizacoes = estado.localizacoes.concat([emEdicao]);
+      }
+      desenhar(FiltroImoveis.filtrar(catalogo, efetivo));
+    }
+
+    /** O slider cobre a faixa real do catálogo, arredondada para fora. */
+    function limitesDePreco(imoveis) {
+      const precos = imoveis.map(i => Number(i.valorDiariaBase)).filter(n => !isNaN(n));
+      if (!precos.length) { return { precoMin: 0, precoMax: 1000 }; }
+      return {
+        precoMin: Math.floor(Math.min(...precos) / 10) * 10,
+        precoMax: Math.ceil(Math.max(...precos) / 10) * 10
+      };
+    }
+
+    async function carregarImoveis() {
+      try {
+        catalogo = await Api.get('/api/imoveis');
+        filtro = FiltroImoveis.montar(
+          document.getElementById('filtroImoveis'), aplicar, limitesDePreco(catalogo));
+        desenhar(catalogo);
+      } catch (e) {
+        contador().innerText = 'indisponível';
+        aviso().innerText = 'Não foi possível carregar os imóveis: ' + e.message;
+        aviso().classList.remove('hidden');
+      }
+    }
+
+    // Painel deslizante no mobile.
+    function alternarPainel(abrir) {
+      const painel = document.getElementById('painelFiltro');
+      const fundo = document.getElementById('fundoFiltro');
+      painel.classList.toggle('hidden', !abrir);
+      fundo.classList.toggle('hidden', !abrir);
+      painel.classList.toggle('fixed', abrir);
+      painel.classList.toggle('inset-x-4', abrir);
+      painel.classList.toggle('top-16', abrir);
+      painel.classList.toggle('bottom-6', abrir);
+      painel.classList.toggle('z-50', abrir);
+      painel.classList.toggle('overflow-y-auto', abrir);
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      carregarImoveis();
+      document.getElementById('btnAbrirFiltro')
+        .addEventListener('click', () => alternarPainel(true));
+      document.getElementById('fundoFiltro')
+        .addEventListener('click', () => alternarPainel(false));
+    });
   </script>
 </body>
 
