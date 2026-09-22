@@ -5,14 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SmartRent B2B - Entrar</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body class="bg-slate-100 min-h-screen flex flex-col">
 
-  <header class="bg-blue-900 text-white shadow">
-    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-      <a href="index.html" class="block">
-        <h1 class="text-lg font-bold leading-tight">SmartRent B2B</h1>
-        <p class="text-[11px] text-white/70">Operação Canasvieiras - Florianópolis/SC</p>
+  <header class="bg-white border-b border-slate-200 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <a href="index.html" class="flex items-center space-x-3">
+        <div class="bg-blue-600 text-white p-2 rounded-xl shadow-md shadow-blue-500/20">
+          <i data-lucide="building-2" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <h1 class="text-base font-bold text-slate-900 tracking-tight">
+            SmartRent <span class="text-blue-600 font-semibold">B2B</span>
+          </h1>
+          <p class="text-[10px] text-slate-500 font-medium">Operação Canasvieiras • Florianópolis/SC</p>
+        </div>
       </a>
       <div id="areaAuth" class="flex items-center"></div>
     </div>
@@ -68,6 +76,7 @@
   <script src="js/auth.js"></script>
   <script src="js/api.js"></script>
   <script src="js/header-auth.js"></script>
+  <script>lucide.createIcons();</script>
   <script>
     // Volta para onde a pessoa estava. Só aceita caminho relativo do próprio
     // site: um redirectTo apontando para outro domínio seria um vetor de
