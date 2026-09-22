@@ -1,0 +1,6 @@
+# PROJETO APLICADO IV — ADS (UniSENAI)
+## Sistema B2B de Gestão Inteligente para Aluguel por Temporada
+- **Curso:** Análise e Desenvolvimento de Sistemas — 4ª Fase
+- **Modalidade:** Documentação Técnica e Acadêmica Completa
+- **Duração:** 30 dias / 14 aulas
+- **Escopo e Foco:** Gestão de Imóveis, Reservas, Precificação Inteligente por IA (Groq/OpenAI) contextualizada para Florianópolis (Jurerê, Canasvieiras, Campeche, etc.), Dashboard Chart.js, Spring Boot 3 + Supabase + Render + Vercel.
