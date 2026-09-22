@@ -333,9 +333,16 @@
           limparFormulario();
           carregarReservas();
         } else {
-          const errorText = await response.text();
-          console.error("Erro no backend:", errorText);
-          exibirMensagem(`Erro (${response.status}): Verifique os dados fornecidos.`, false);
+          // O servidor explica o motivo (choque de datas, imovel inexistente,
+          // campo invalido). Esconder isso atras de um texto generico obriga
+          // quem usa a abrir o console para descobrir o que houve.
+          const corpo = await response.text();
+          let motivo = corpo;
+          try {
+            const json = JSON.parse(corpo);
+            motivo = json.erro || Object.values(json.campos || {}).join(' ') || corpo;
+          } catch (e) { /* resposta em texto puro */ }
+          exibirMensagem(motivo || `Erro (${response.status}) ao salvar a reserva.`, false);
         }
       } catch (err) {
         console.error("Erro na requisição:", err);
