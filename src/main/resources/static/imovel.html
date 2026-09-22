@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartRent B2B - Detalhes do Imóvel</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body class="bg-slate-50 min-h-screen flex flex-col">
+
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <a href="/index.html" class="flex items-center space-x-3">
+        <div class="bg-blue-600 text-white p-2 rounded-xl shadow-md shadow-blue-500/20">
+          <i data-lucide="building-2" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <h1 class="text-base font-bold text-slate-900 tracking-tight">
+            SmartRent <span class="text-blue-600 font-semibold">B2B</span>
+          </h1>
+          <p class="text-[10px] text-slate-500 font-medium">Operação Canasvieiras • Detalhes do Imóvel</p>
+        </div>
+      </a>
+
+      <nav class="flex items-center space-x-1 sm:space-x-2">
+        <a href="/index.html"
+          class="flex items-center space-x-2 px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 text-xs font-semibold transition">
+          <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+          <span class="hidden sm:inline">Dashboard (IA)</span>
+        </a>
+        <a href="/imoveis.html"
+          class="flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 text-xs font-semibold transition">
+          <i data-lucide="home" class="w-4 h-4"></i>
+          <span class="hidden sm:inline">Imóveis</span>
+        </a>
+        <a href="/reservas.html"
+          class="flex items-center space-x-2 px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 text-xs font-semibold transition">
+          <i data-lucide="calendar" class="w-4 h-4"></i>
+          <span class="hidden sm:inline">Gestão de Reservas (CRUD)</span>
+        </a>
+      </nav>
+      <div id="areaAuth" class="flex items-center ml-4"></div>
+    </div>
+  </header>
+
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+    <a href="/imoveis.html"
+      class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 mb-4">
+      <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i> Voltar ao catálogo
+    </a>
+
+    <div id="carregando" class="text-center py-20 text-sm text-slate-500">Carregando imóvel...</div>
+
+    <p id="mensagemErro"
+      class="hidden p-4 rounded-xl bg-amber-50 border border-amber-200 text-sm font-semibold text-amber-800"></p>
+
+    <div id="conteudo" class="hidden">
+
+      <!-- Galeria -->
+      <section class="grid grid-cols-1 sm:grid-cols-4 gap-3 mb-6">
+        <div id="fotoPrincipal"
+          class="sm:col-span-2 sm:row-span-2 h-64 sm:h-80 rounded-2xl bg-gradient-to-br from-slate-200 to-slate-300
+                 flex flex-col items-center justify-center text-slate-500 border border-slate-200">
+        </div>
+        <div class="h-32 sm:h-[9.5rem] rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center">
+          <i data-lucide="image" class="w-6 h-6 text-slate-300"></i>
+        </div>
+        <div class="h-32 sm:h-[9.5rem] rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center">
+          <i data-lucide="image" class="w-6 h-6 text-slate-300"></i>
+        </div>
+        <div class="h-32 sm:h-[9.5rem] rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center">
+          <i data-lucide="image" class="w-6 h-6 text-slate-300"></i>
+        </div>
+        <div class="h-32 sm:h-[9.5rem] rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center
+                    text-[10px] font-semibold text-slate-400">
+          fotos em breve
+        </div>
+      </section>
+
+      <div class="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 items-start">
+
+        <!-- Coluna principal -->
+        <div class="space-y-5">
+
+          <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+            <div class="flex flex-wrap items-center gap-2 mb-3">
+              <span id="badgeTipo"
+                class="text-[10px] uppercase tracking-wide font-bold text-blue-800 bg-blue-50 px-2.5 py-1 rounded"></span>
+              <span id="badgeStatus" class="text-[10px] font-semibold px-2.5 py-1 rounded"></span>
+            </div>
+
+            <h2 id="titulo" class="text-2xl font-bold text-slate-900 leading-tight"></h2>
+
+            <p id="localizacao" class="flex items-center gap-1.5 text-sm text-slate-500 mt-1.5">
+              <i data-lucide="map-pin" class="w-4 h-4 text-slate-400"></i>
+              <span id="enderecoTexto"></span>
+            </p>
+
+            <div id="atributos"
+              class="flex flex-wrap items-center gap-x-6 gap-y-3 mt-5 pt-5 border-t border-slate-100"></div>
+          </section>
+
+          <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+            <h3 class="text-sm font-bold text-slate-800 mb-2">Descrição do imóvel</h3>
+            <p id="descricao" class="text-sm text-slate-600 leading-relaxed"></p>
+          </section>
+
+          <section id="secaoComodidades" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+            <h3 class="text-sm font-bold text-slate-800 mb-4">Comodidades</h3>
+            <div id="comodidades" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
+          </section>
+        </div>
+
+        <!-- Sidebar de acao -->
+        <aside class="lg:sticky lg:top-24">
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+            <div class="flex items-baseline gap-1.5">
+              <span id="valorDiaria" class="text-2xl font-extrabold text-slate-900"></span>
+              <span class="text-xs text-slate-400 font-medium">/ noite</span>
+            </div>
+            <p id="capacidade" class="text-[11px] text-slate-500 mt-1"></p>
+
+            <div class="grid grid-cols-2 gap-2 mt-4">
+              <label class="block">
+                <span class="text-[10px] font-semibold text-slate-500">Check-in</span>
+                <input type="date" id="dataCheckin"
+                  class="w-full mt-1 p-2 border border-slate-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500">
+              </label>
+              <label class="block">
+                <span class="text-[10px] font-semibold text-slate-500">Check-out</span>
+                <input type="date" id="dataCheckout"
+                  class="w-full mt-1 p-2 border border-slate-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500">
+              </label>
+            </div>
+
+            <div id="resumo" class="hidden mt-4 pt-4 border-t border-slate-100 space-y-1.5">
+              <div class="flex justify-between text-xs text-slate-600">
+                <span id="resumoLinha"></span>
+                <span id="resumoSubtotal" class="font-semibold text-slate-800"></span>
+              </div>
+              <div class="flex justify-between text-sm font-bold text-slate-900 pt-1.5 border-t border-slate-100">
+                <span>Total</span>
+                <span id="resumoTotal"></span>
+              </div>
+            </div>
+
+            <button type="button" id="btnReservar"
+              class="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl shadow-sm text-sm transition">
+              Solicitar Reserva
+            </button>
+
+            <p id="avisoSidebar" class="text-[10px] text-slate-400 text-center mt-2">
+              Escolha as datas para ver o total.
+            </p>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </main>
+
+  <footer class="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500 mt-8">
+    <p>SmartRent B2B © 2026 • Operação Canasvieiras • Projeto Acadêmico</p>
+  </footer>
+
+  <script src="/js/auth.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/header-auth.js"></script>
+  <script src="/js/imovel-card.js"></script>
+  <script>
+    lucide.createIcons();
+
+    /** O id vem do caminho /imoveis/{id}; o ?id= continua aceito como alternativa. */
+    function idDoImovel() {
+      const doCaminho = location.pathname.match(/\/imoveis\/(\d+)/);
+      if (doCaminho) { return doCaminho[1]; }
+      return new URLSearchParams(location.search).get('id');
+    }
+
+    function escapar(texto) {
+      const d = document.createElement('div');
+      d.textContent = texto == null ? '' : String(texto);
+      return d.innerHTML;
+    }
+
+    function moeda(valor) {
+      return 'R$ ' + Number(valor || 0).toLocaleString('pt-BR',
+        { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function atributo(icone, valor, rotulo) {
+      return '<div class="flex items-center gap-2">' +
+               '<i data-lucide="' + icone + '" class="w-4 h-4 text-slate-400"></i>' +
+               '<div><div class="text-sm font-bold text-slate-800 leading-none">' + escapar(valor) + '</div>' +
+               '<div class="text-[10px] text-slate-500 mt-0.5">' + rotulo + '</div></div>' +
+             '</div>';
+    }
+
+    let imovelAtual = null;
+
+    function desenhar(imovel) {
+      imovelAtual = imovel;
+      document.title = 'SmartRent B2B - ' + imovel.titulo;
+
+      // Mesma sanitizacao do card: a via sem o numero da residencia.
+      const via = ImovelCard.apenasLogradouro(imovel.logradouro);
+      const local = [imovel.bairro, imovel.cidade].filter(Boolean).join(' • ');
+
+      document.getElementById('titulo').innerText = imovel.titulo;
+      document.getElementById('enderecoTexto').innerText =
+        [via, local].filter(Boolean).join(', ');
+
+      document.getElementById('badgeTipo').innerText = imovel.tipoImovelRotulo || '—';
+
+      const status = document.getElementById('badgeStatus');
+      status.innerText = imovel.ativo ? 'Disponível' : 'Inativo';
+      status.className = 'text-[10px] font-semibold px-2.5 py-1 rounded ' + (imovel.ativo
+        ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-600');
+
+      document.getElementById('fotoPrincipal').innerHTML =
+        '<i data-lucide="image-off" class="w-8 h-8 mb-2 text-slate-400"></i>' +
+        '<span class="text-xs font-semibold">' + escapar(imovel.titulo) + '</span>' +
+        '<span class="text-[10px] text-slate-400 mt-0.5">foto ainda não cadastrada</span>';
+
+      // Os mesmos atributos do card, com a garagem oculta quando nao houver.
+      let attrs = '';
+      if (imovel.metragemQuadrada != null) {
+        attrs += atributo('scaling', imovel.metragemQuadrada + ' m²', 'Área útil');
+      }
+      if (imovel.numeroQuartos != null) {
+        attrs += atributo('bed-double', imovel.numeroQuartos, 'Quartos');
+      }
+      if (imovel.numeroBanheiros != null) {
+        attrs += atributo('bath', imovel.numeroBanheiros, 'Banheiros');
+      }
+      if (imovel.vagasGaragem != null && imovel.vagasGaragem > 0) {
+        attrs += atributo('car-front', imovel.vagasGaragem, 'Vagas de garagem');
+      }
+      if (imovel.capacidadeHospedes != null) {
+        attrs += atributo('users', imovel.capacidadeHospedes, 'Hóspedes');
+      }
+      document.getElementById('atributos').innerHTML = attrs;
+
+      document.getElementById('descricao').innerText =
+        imovel.descricao || 'Este imóvel ainda não possui descrição cadastrada.';
+
+      const comodidades = imovel.comodidades || [];
+      if (comodidades.length === 0) {
+        document.getElementById('secaoComodidades').classList.add('hidden');
+      } else {
+        document.getElementById('comodidades').innerHTML = comodidades.map(c =>
+          '<div class="flex items-center gap-2 text-xs text-slate-700">' +
+            '<i data-lucide="check" class="w-3.5 h-3.5 text-emerald-600"></i>' +
+            escapar(c) +
+          '</div>').join('');
+      }
+
+      document.getElementById('valorDiaria').innerText = moeda(imovel.valorDiariaBase);
+      document.getElementById('capacidade').innerText =
+        'Diária base • até ' + (imovel.capacidadeHospedes || '?') + ' hóspedes';
+
+      document.getElementById('carregando').classList.add('hidden');
+      document.getElementById('conteudo').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    /** Recalcula o total a cada mudança de data; noites negativas não somam. */
+    function recalcular() {
+      const ini = document.getElementById('dataCheckin').value;
+      const fim = document.getElementById('dataCheckout').value;
+      const resumo = document.getElementById('resumo');
+      const aviso = document.getElementById('avisoSidebar');
+
+      if (!ini || !fim || !imovelAtual) { resumo.classList.add('hidden'); return; }
+
+      const noites = Math.round((new Date(fim) - new Date(ini)) / 86400000);
+      if (noites <= 0) {
+        resumo.classList.add('hidden');
+        aviso.innerText = 'O check-out deve ser posterior ao check-in.';
+        aviso.className = 'text-[10px] text-rose-600 text-center mt-2 font-semibold';
+        return;
+      }
+
+      const total = Number(imovelAtual.valorDiariaBase) * noites;
+      document.getElementById('resumoLinha').innerText =
+        moeda(imovelAtual.valorDiariaBase) + ' x ' + noites + (noites === 1 ? ' noite' : ' noites');
+      document.getElementById('resumoSubtotal').innerText = moeda(total);
+      document.getElementById('resumoTotal').innerText = moeda(total);
+      resumo.classList.remove('hidden');
+      aviso.innerText = 'Valor sem taxas adicionais.';
+      aviso.className = 'text-[10px] text-slate-400 text-center mt-2';
+    }
+
+    /**
+     * Leva ao formulário de reservas já com imóvel, datas e total preenchidos.
+     * O cadastro em si continua acontecendo lá, onde a regra de choque de
+     * datas é aplicada: duplicá-la aqui abriria espaço para divergirem.
+     */
+    function solicitarReserva() {
+      const ini = document.getElementById('dataCheckin').value;
+      const fim = document.getElementById('dataCheckout').value;
+      const params = new URLSearchParams({ imovelId: imovelAtual.id });
+      if (ini) { params.set('checkin', ini); }
+      if (fim) { params.set('checkout', fim); }
+      const noites = (ini && fim) ? Math.round((new Date(fim) - new Date(ini)) / 86400000) : 0;
+      if (noites > 0) {
+        params.set('valorTotal', (Number(imovelAtual.valorDiariaBase) * noites).toFixed(2));
+      }
+      location.href = '/reservas.html?' + params.toString();
+    }
+
+    async function carregar() {
+      const id = idDoImovel();
+      if (!id) {
+        document.getElementById('carregando').classList.add('hidden');
+        const erro = document.getElementById('mensagemErro');
+        erro.innerText = 'Imóvel não informado no endereço.';
+        erro.classList.remove('hidden');
+        return;
+      }
+      try {
+        desenhar(await Api.get('/api/imoveis/' + encodeURIComponent(id)));
+      } catch (e) {
+        document.getElementById('carregando').classList.add('hidden');
+        const erro = document.getElementById('mensagemErro');
+        erro.innerText = e.status === 404
+          ? 'Imóvel não encontrado. Ele pode ter sido removido do catálogo.'
+          : 'Não foi possível carregar o imóvel: ' + e.message;
+        erro.classList.remove('hidden');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      carregar();
+      document.getElementById('dataCheckin').addEventListener('change', recalcular);
+      document.getElementById('dataCheckout').addEventListener('change', recalcular);
+      document.getElementById('btnReservar').addEventListener('click', solicitarReserva);
+    });
+  </script>
+</body>
+
+</html>

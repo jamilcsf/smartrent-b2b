@@ -77,8 +77,14 @@
       atributos += atributo('garagem', escapar(imovel.vagasGaragem), 'Vagas de garagem');
     }
 
+    // O card inteiro e o link: <a> em volta mantem o comportamento
+    // nativo do navegador (abrir em nova aba, ver o destino na barra de
+    // status), o que um onclick em <div> nao daria.
     return '' +
-      '<article class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">' +
+      '<a href="/imoveis/' + encodeURIComponent(imovel.id) + '" ' +
+        'class="block focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-xl">' +
+      '<article class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col ' +
+        'hover:shadow-md hover:border-blue-300 transition cursor-pointer h-full">' +
         '<div class="bg-slate-200 h-32 flex items-center justify-center text-slate-400 font-bold text-sm px-3 text-center">' +
           escapar(imovel.titulo) +
         '</div>' +
@@ -99,7 +105,8 @@
             atributos +
           '</div>' +
         '</div>' +
-      '</article>';
+      '</article>' +
+      '</a>';
   }
 
   global.ImovelCard = { card: card, apenasLogradouro: apenasLogradouro };

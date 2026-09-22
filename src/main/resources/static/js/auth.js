@@ -94,7 +94,7 @@
 
     logout: function (destino) {
       Auth.limparSessao();
-      global.location.href = destino || 'index.html';
+      global.location.href = destino || '/index.html';
     },
 
     /** Registra um ouvinte e já o chama com o estado corrente. */

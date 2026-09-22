@@ -402,8 +402,32 @@
       setTimeout(() => boxMsg.classList.add('hidden'), 5000);
     }
 
+    /**
+     * Preenche o formulario a partir da pagina de detalhes, que chega com
+     * imovel, datas e total ja escolhidos. Roda depois de carregarImoveis()
+     * para o select ja ter as opcoes.
+     */
+    function preencherDaUrl() {
+      const p = new URLSearchParams(location.search);
+      const imovelId = p.get('imovelId');
+      if (!imovelId) { return; }
+
+      const selecao = document.getElementById('imovelId');
+      if ([...selecao.options].some(o => o.value === imovelId)) {
+        selecao.value = imovelId;
+      }
+      if (p.get('checkin')) { document.getElementById('checkin').value = p.get('checkin'); }
+      if (p.get('checkout')) { document.getElementById('checkout').value = p.get('checkout'); }
+      if (p.get('valorTotal')) {
+        document.getElementById('valorTotal').value =
+          Number(p.get('valorTotal')).toLocaleString('pt-BR',
+            { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      }
+      document.getElementById('hospedeNome').focus();
+    }
+
     // Carregar registros ao abrir
-    carregarImoveis();
+    carregarImoveis().then(preencherDaUrl);
     carregarReservas();
   </script>
 </body>

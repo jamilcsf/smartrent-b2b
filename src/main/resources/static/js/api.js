@@ -15,7 +15,7 @@
   'use strict';
 
   function urlDeLogin(rotaDestino) {
-    return 'login.html?redirectTo=' + encodeURIComponent(rotaDestino);
+    return '/login.html?redirectTo=' + encodeURIComponent(rotaDestino);
   }
 
   function ApiError(mensagem, status, corpo) {

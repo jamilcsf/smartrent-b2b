@@ -4,6 +4,7 @@ import br.com.unisenai.smartrent.model.Imovel;
 import br.com.unisenai.smartrent.model.enums.TipoImovel;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 /**
  * Imóvel como o catálogo precisa dele.
@@ -15,6 +16,7 @@ import java.math.BigDecimal;
 public record ImovelResponse(
         Long id,
         String titulo,
+        String descricao,
         TipoImovel tipoImovel,
         String tipoImovelRotulo,
         String logradouro,
@@ -26,6 +28,7 @@ public record ImovelResponse(
         Integer vagasGaragem,
         Integer capacidadeHospedes,
         BigDecimal valorDiariaBase,
+        List<String> comodidades,
         boolean ativo) {
 
     public static ImovelResponse de(Imovel i) {
@@ -33,6 +36,7 @@ public record ImovelResponse(
         return new ImovelResponse(
                 i.getId(),
                 i.getTitulo(),
+                i.getDescricao(),
                 i.getTipoImovel(),
                 rotulo(i.getTipoImovel()),
                 end == null ? null : end.getLogradouro(),
@@ -44,6 +48,7 @@ public record ImovelResponse(
                 i.getVagasGaragem(),
                 i.getCapacidadeHospedes(),
                 i.getValorDiariaBase(),
+                i.getComodidades() == null ? List.of() : List.copyOf(i.getComodidades()),
                 i.isAtivo());
     }
 

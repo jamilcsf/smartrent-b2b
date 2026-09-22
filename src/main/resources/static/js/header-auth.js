@@ -25,9 +25,9 @@
         return;
       }
       area.innerHTML =
-        '<a href="login.html?redirectTo=' + encodeURIComponent(Auth.rotaAtual()) + '" ' +
+        '<a href="/login.html?redirectTo=' + encodeURIComponent(Auth.rotaAtual()) + '" ' +
         'class="text-xs font-semibold text-slate-600 hover:text-slate-900 px-2">Entrar</a>' +
-        '<a href="cadastro.html" class="ml-1 text-xs font-bold bg-blue-600 hover:bg-blue-700 ' +
+        '<a href="/cadastro.html" class="ml-1 text-xs font-bold bg-blue-600 hover:bg-blue-700 ' +
         'text-white px-3 py-1.5 rounded-lg transition">Criar conta</a>';
       return;
     }
