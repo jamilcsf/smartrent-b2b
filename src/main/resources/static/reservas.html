@@ -88,10 +88,7 @@
             <select id="imovelId"
               class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none"
               required>
-              <option value="1">01 - Apto C120 (Aconchegante)</option>
-              <option value="2">02 - Lindo Apto 2Q c/ Piscina</option>
-              <option value="3">03 - Studio c/ AC a 250m da Praia</option>
-              <option value="4">04 - Apto 1 Quarto Mobiliado</option>
+              <option value="">Carregando imóveis...</option>
             </select>
           </div>
 
@@ -210,12 +207,31 @@
     lucide.createIcons();
 
     // Mapeamento de IDs para nomes de imóveis
-    const nomesImoveis = {
-      1: "Apto C120",
-      2: "Apto 2Q Piscina",
-      3: "Studio AC",
-      4: "Apto 1Q Mobiliado"
-    };
+    // Preenchido a partir de /api/imoveis: manter nomes fixos aqui fazia a
+    // tabela mostrar rótulo errado assim que o catálogo mudasse.
+    let nomesImoveis = {};
+
+    async function carregarImoveis() {
+      const selecao = document.getElementById('imovelId');
+      try {
+        const imoveis = await Api.get('/api/imoveis');
+        nomesImoveis = {};
+        imoveis.forEach(i => { nomesImoveis[i.id] = i.titulo; });
+
+        if (imoveis.length === 0) {
+          selecao.innerHTML = '<option value="">Nenhum imóvel cadastrado</option>';
+          selecao.disabled = true;
+          return;
+        }
+        selecao.disabled = false;
+        selecao.innerHTML = imoveis.map(i =>
+          `<option value="${i.id}">${String(i.id).padStart(2, '0')} - ${i.titulo}</option>`
+        ).join('');
+      } catch (e) {
+        selecao.innerHTML = '<option value="">Falha ao carregar imóveis</option>';
+        selecao.disabled = true;
+      }
+    }
 
     // Datas iniciais padrão
     document.getElementById('checkin').valueAsDate = new Date();
@@ -380,6 +396,7 @@
     }
 
     // Carregar registros ao abrir
+    carregarImoveis();
     carregarReservas();
   </script>
 </body>

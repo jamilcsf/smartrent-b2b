@@ -79,9 +79,9 @@
           <span class="text-xs font-bold uppercase tracking-wider">Imóveis Ativos</span>
           <i data-lucide="building" class="w-4 h-4 text-blue-600"></i>
         </div>
-        <div class="text-2xl font-extrabold text-slate-900">4 Imóveis</div>
+        <div id="kpiImoveis" class="text-2xl font-extrabold text-slate-900">--</div>
         <p class="text-[11px] text-emerald-600 flex items-center gap-1 font-medium">
-          <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i> 100% disponíveis
+          <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i> <span id="kpiDisponiveis">--</span>
         </p>
       </div>
 
@@ -99,7 +99,7 @@
           <span class="text-xs font-bold uppercase tracking-wider">Diária Média</span>
           <i data-lucide="dollar-sign" class="w-4 h-4 text-amber-600"></i>
         </div>
-        <div class="text-2xl font-extrabold text-slate-900">R$ 277,50</div>
+        <div id="kpiDiariaMedia" class="text-2xl font-extrabold text-slate-900">--</div>
         <p class="text-[11px] text-emerald-600 flex items-center gap-1 font-medium">
           <i data-lucide="trending-up" class="w-3.5 h-3.5"></i> Ajustado p/ Sazonalidade
         </p>
@@ -265,15 +265,41 @@
       document.getElementById('extratoTotal').innerText = `R$ ${total.toFixed(2)}`;
     }
 
+    /** KPIs e grafico de diarias vem do catalogo real, nao de numeros fixos. */
+    async function carregarIndicadores(grafico) {
+      try {
+        const imoveis = await Api.get('/api/imoveis');
+        const ativos = imoveis.filter(i => i.ativo);
+
+        document.getElementById('kpiImoveis').innerText =
+          imoveis.length === 1 ? '1 Imóvel' : imoveis.length + ' Imóveis';
+        document.getElementById('kpiDisponiveis').innerText = imoveis.length === 0
+          ? 'nenhum cadastrado'
+          : Math.round(ativos.length / imoveis.length * 100) + '% disponíveis';
+
+        const precos = imoveis.map(i => Number(i.valorDiariaBase)).filter(n => !isNaN(n));
+        const media = precos.length ? precos.reduce((a, b) => a + b, 0) / precos.length : 0;
+        document.getElementById('kpiDiariaMedia').innerText = 'R$ ' +
+          media.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+        grafico.data.labels = imoveis.map(i => i.titulo);
+        grafico.data.datasets[0].data = imoveis.map(i => Number(i.valorDiariaBase));
+        grafico.update();
+      } catch (e) {
+        document.getElementById('kpiImoveis').innerText = 'indisponível';
+      }
+    }
+
     function inicializarGraficos() {
       const ctxDiarias = document.getElementById('chartDiarias').getContext('2d');
-      new Chart(ctxDiarias, {
+      // Rotulos e valores vem do catalogo real; ver carregarIndicadores().
+      const graficoDiarias = new Chart(ctxDiarias, {
         type: 'bar',
         data: {
-          labels: ['Apto C120', 'Apto 2Q Piscina', 'Studio AC', 'Apto 1Q Mobiliado'],
+          labels: [],
           datasets: [{
             label: 'Diária Recomendada (R$)',
-            data: [299.00, 468.00, 260.00, 325.00],
+            data: [],
             backgroundColor: '#2563eb',
             borderRadius: 6
           }]
@@ -288,6 +314,8 @@
           }
         }
       });
+
+      carregarIndicadores(graficoDiarias);
 
       const ctxStatus = document.getElementById('chartStatusReservas').getContext('2d');
       Api.get('/api/reservas')
@@ -323,7 +351,7 @@
           });
         })
         .catch(() => {
-          document.getElementById('kpiTotalReservas').innerText = "4 Reservas";
+          document.getElementById('kpiTotalReservas').innerText = "indisponivel";
         });
     }
 
