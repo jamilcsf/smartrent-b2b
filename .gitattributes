@@ -11,3 +11,8 @@
 *.docx  binary
 *.xlsx  binary
 *.zip   binary
+
+# Scripts do cmd.exe exigem CRLF; sem isto o Git os entregaria com LF
+# em clones feitos no Linux/macOS e eles falhariam no Windows.
+*.bat   text eol=crlf
+*.cmd   text eol=crlf

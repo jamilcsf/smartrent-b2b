@@ -99,7 +99,7 @@ src/main/java/com/temporada/gestao
 O projeto utiliza JUnit 5 e Mockito, isolando a chamada externa à API de IA para evitar dependência de rede e custos desnecessários durante a suíte de testes:
 
 ```bash
-mvn test
+./mvnw test
 ```
 
 ## 🚀 CI/CD e Deploy
@@ -129,6 +129,24 @@ Projeto acadêmico desenvolvido para fins avaliativos da disciplina Projeto Apli
 
 ## ▶️ Como executar
 
+### Windows: um clique
+
+```
+executar.bat
+```
+
+O script confere os pré-requisitos, sobe o PostgreSQL, compila, inicia a
+aplicação, insere os dados de demonstração e abre o navegador. Para encerrar
+tudo e descartar o banco, use `parar.bat`.
+
+Pré-requisitos: **JDK 17 ou superior** e **Docker Desktop** em execução. Maven
+não é necessário — o projeto traz o Maven Wrapper.
+
+Login de demonstração: `ana@smartrent.dev` / `senhaSegura123`.
+
+### Passo a passo manual
+
+
 ### Pré-requisitos
 
 - **JDK 17** ou superior, com `JAVA_HOME` apontando para ele
@@ -157,7 +175,7 @@ No Windows (PowerShell), use `$env:DATABASE_URL="..."` e assim por diante.
 ### 3. Rode a aplicação
 
 ```bash
-mvn spring-boot:run
+./mvnw spring-boot:run
 ```
 
 No primeiro boot o Flyway aplica as migrations de `src/main/resources/db/migration`
@@ -178,7 +196,7 @@ quem está usando, sem bloquear visitantes.
 ### Testes
 
 ```bash
-mvn test
+./mvnw test
 ```
 
 A suíte não depende de banco nem de rede.
