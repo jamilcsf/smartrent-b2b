@@ -45,9 +45,46 @@
     }).join('');
     if (global.lucide) { global.lucide.createIcons(); }
     document.dispatchEvent(new CustomEvent('navegacao:pronta'));
+    atualizarContador();
   }
 
+  /**
+   * A flag da aba SmartChat vive no backend (nao no navegador): o cliente que acabou
+   * de ter a primeira interacao (ou entrou em outro dispositivo) a ve assim que a
+   * pagina consulta /api/auth/me.
+   */
+  var sincronizado = false;
+  async function sincronizarUsuario() {
+    if (sincronizado || !global.Auth || !Auth.isAuthenticated() || !global.Api) { return; }
+    sincronizado = true;
+    try {
+      var eu = await Api.get('/api/auth/me', { ignorar401: true });
+      var atual = Auth.getUser() || {};
+      if (eu && eu.smartchatLiberado !== atual.smartchatLiberado) {
+        Auth.definirSessao(Auth.getToken(), Object.assign({}, atual, eu));
+      }
+    } catch (e) { /* segue com o que ja se sabe */ }
+  }
+
+  /** Contador de nao lidas no item SmartChat do menu (por polling leve; o chat usa SSE na propria pagina). */
+  async function atualizarContador() {
+    var item = document.getElementById('navSmartChat');
+    if (!item || !global.Api) { return; }
+    try {
+      var r = await Api.get('/api/smartchat/nao-lidas', { ignorar401: true });
+      var marca = item.querySelector('[data-nao-lidas]');
+      if (marca) {
+        marca.innerText = r.total > 99 ? '99+' : String(r.total);
+        marca.classList.toggle('hidden', !r.total);
+        marca.classList.toggle('flex', !!r.total);
+      }
+    } catch (e) { /* sem contador */ }
+  }
+
+  global.Navegacao = { atualizarContador: atualizarContador };
+  setInterval(function () { atualizarContador(); }, 30000);
+
   document.addEventListener('DOMContentLoaded', function () {
-    if (global.Auth) { Auth.onChange(montar); } else { montar({ user: null }); }
+    if (global.Auth) { Auth.onChange(montar); sincronizarUsuario(); } else { montar({ user: null }); }
   });
 })(window);
