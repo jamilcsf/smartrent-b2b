@@ -49,6 +49,11 @@
 
   // ------------------------------------------------------- pré-publicação
 
+  /** Video enviando, processando ou com falha: o servidor tambem impede a publicacao. */
+  function videosPendentes(a) {
+    return (a.midias || []).some(function (m) { return m.tipo === 'VIDEO' && m.estado !== 'REMOVIDA' && m.statusProcessamento && m.statusProcessamento !== 'PRONTO'; });
+  }
+
   function cartaoPre(a) {
     var d = a.dados;
     var semPreco = a.status === 'PRE_PUBLICACAO_SEM_PRECO';
@@ -82,7 +87,9 @@
             '<i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Sugerir com IA</a>' +
         '</div>' + info +
         '<div class="flex flex-wrap gap-2">' +
-          (a.podePublicar ? '<button type="button" data-acao="publicar" data-id="' + a.id + '" class="px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white">Publicar</button>' : '') +
+          (a.podePublicar ? (videosPendentes(a)
+            ? '<span class="px-3 py-2 rounded-xl text-xs font-semibold bg-amber-50 border border-amber-200 text-amber-800">Vídeo em processamento: aguarde para publicar</span>'
+            : '<button type="button" data-acao="publicar" data-id="' + a.id + '" class="px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white">Publicar</button>') : '') +
           '<a href="anuncio-form.html?id=' + a.id + '" class="px-4 py-2 rounded-xl text-xs font-bold border border-slate-300 hover:bg-slate-50">Editar cadastro</a>' +
         '</div>' +
       '</div></article>';
@@ -268,7 +275,7 @@
   /** Impressão digital do que a tela mostra: a recarga periódica só redesenha se algo mudou (não apaga o que está sendo digitado). */
   function assinatura(lista) {
     return JSON.stringify(lista.map(function (a) {
-      return [a.id, a.status, a.republicarEm, a.edicaoIniciadaEm, a.podePublicar, a.dados.valorDiaria, a.totalImagens, a.totalVideos];
+      return [a.id, a.status, a.republicarEm, a.edicaoIniciadaEm, a.podePublicar, a.dados.valorDiaria, a.totalImagens, a.totalVideos, videosPendentes(a)];
     }));
   }
 

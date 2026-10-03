@@ -17,14 +17,14 @@
 (function (global) {
   'use strict';
 
-  var LIM_IMAGENS = 14, LIM_VIDEOS = 2, DURACAO_MAX = 120;
-  var MAX_IMG = 10 * 1024 * 1024, MAX_VID = 100 * 1024 * 1024;
+  var LIM_IMAGENS = 14, LIM_VIDEOS = 2, DURACAO_MAX = 90; // vídeo: até 1:30 (o servidor é quem valida de verdade)
+  var MAX_IMG = 10 * 1024 * 1024, MAX_VID = 500 * 1024 * 1024;
   var SUGESTOES = ['Wi-Fi', 'Ar-condicionado', 'Piscina', 'Churrasqueira', 'Cozinha equipada', 'Vista para o mar',
     'Pet friendly', 'Estacionamento', 'Máquina de lavar', 'TV', 'Varanda', 'Café da manhã'];
   var ROTULOS_TIPO = { APARTAMENTO: 'Apartamento', CASA: 'Casa', KITNET: 'Kitnet', POUSADA: 'Pousada',
     CHALE: 'Chalé', LOFT: 'Loft', OUTRO: 'Outro' };
 
-  var S = { modo: 'criar', id: null, anuncio: null, midias: [], capaKey: null, comodidades: [],
+  var S = { timerVideos: null, modo: 'criar', id: null, anuncio: null, midias: [], capaKey: null, comodidades: [],
             sujo: false, ocupado: false, seq: 0, timerAutosave: null, viewer: null };
 
   function $(id) { return document.getElementById(id); }
@@ -205,7 +205,15 @@
   function deServidor(m) {
     return { key: 's' + m.id, id: m.id, local: false, tipo: m.tipo, estado: m.estado, url: m.url,
       miniaturaUrl: m.miniaturaUrl, capa: m.capa, largura: m.largura, altura: m.altura,
-      duracaoSegundos: m.duracaoSegundos, progresso: 100, erro: null };
+      duracaoSegundos: m.duracaoSegundos, progresso: 100, erro: null,
+      statusProcessamento: m.statusProcessamento || null, motivoFalha: m.motivoFalha || null, posterUrl: m.posterUrl || null,
+      bytesRecebidos: m.bytesRecebidos, tamanhoTotal: m.tamanhoTotal };
+  }
+
+  var ROTULO_VIDEO = { ENVIANDO: 'Enviando', PROCESSANDO: 'Processando', PRONTO: 'Pronto', FALHA: 'Falha' };
+
+  function temVideoPendente() {
+    return efetivas().some(function (m) { return m.tipo === 'VIDEO' && (m.local || m.statusProcessamento !== 'PRONTO'); });
   }
 
   function carregarImagem(url) {
@@ -216,6 +224,9 @@
       img.src = url;
     });
   }
+
+  /** 102 -> "1:42". */
+  function fmtDuracao(seg) { return Math.floor(seg / 60) + ':' + (seg % 60 < 10 ? '0' : '') + (seg % 60); }
 
   function lerDuracao(url) {
     return new Promise(function (ok, falha) {
@@ -238,8 +249,8 @@
       if (['image/jpeg', 'image/png'].indexOf(file.type) < 0) { throw new Error('"' + file.name + '": use imagens JPEG ou PNG.'); }
       if (file.size > MAX_IMG) { throw new Error('"' + file.name + '": a imagem excede 10 MB.'); }
     } else {
-      if (['video/mp4', 'video/quicktime'].indexOf(file.type) < 0) { throw new Error('"' + file.name + '": use vídeo em MP4.'); }
-      if (file.size > MAX_VID) { throw new Error('"' + file.name + '": o vídeo excede 100 MB.'); }
+      if (['video/mp4', 'video/quicktime', 'video/webm'].indexOf(file.type) < 0) { throw new Error('"' + file.name + '": use vídeo em MP4, MOV ou WebM.'); }
+      if (file.size > MAX_VID) { throw new Error('"' + file.name + '": o vídeo excede 500 MB.'); }
     }
     var url = URL.createObjectURL(file);
     try {
@@ -251,8 +262,11 @@
         }
         return { url: url, largura: img.naturalWidth, altura: img.naturalHeight };
       }
+      // Leitura no navegador: so da retorno imediato. O servidor revalida com a ferramenta de video e e quem manda.
       var duracao = await lerDuracao(url);
-      if (duracao > DURACAO_MAX) { throw new Error('"' + file.name + '": o vídeo deve ter no máximo 2 minutos.'); }
+      if (duracao > DURACAO_MAX) {
+        throw new Error('"' + file.name + '": o vídeo tem ' + fmtDuracao(Math.ceil(duracao)) + '; o máximo permitido é ' + fmtDuracao(DURACAO_MAX) + '.');
+      }
       return { url: url, duracaoSegundos: Math.ceil(duracao) };
     } catch (e) {
       URL.revokeObjectURL(url);
@@ -270,6 +284,7 @@
         var item = { key: 'l' + (++S.seq), id: null, local: true, file: file, tipo: tipo, estado: S.modo === 'rascunho' ? 'NOVA' : 'ATIVA',
           url: info.url, miniaturaUrl: null, capa: false, largura: info.largura || null, altura: info.altura || null,
           duracaoSegundos: info.duracaoSegundos || null, progresso: 0, erro: null };
+        if (tipo === 'VIDEO') { item.previewUrl = info.url; } // preview local enquanto o servidor processa
         S.midias.push(item);
         marcarSujo();
         renderMidias();
@@ -284,6 +299,7 @@
 
   /** Upload com XMLHttpRequest: é o que dá progresso real de envio. */
   function enviarItem(item) {
+    if (item.tipo === 'VIDEO') { return enviarVideo(item); }
     return new Promise(function (resolve) {
       item.erro = null;
       item.progresso = 0;
@@ -315,6 +331,110 @@
     });
   }
 
+  // ----------------------------------------------------- vídeo: envio em partes, retomável
+
+  /** Envia uma parte (Blob) com XHR, para ter progresso e poder cancelar. Resolve com a resposta do servidor. */
+  function enviarParte(item, url, blob, aoProgresso) {
+    return new Promise(function (resolve, reject) {
+      var xhr = new XMLHttpRequest();
+      item.xhr = xhr;
+      xhr.open('PUT', url);
+      xhr.setRequestHeader('Content-Type', 'application/octet-stream');
+      var token = Auth.getToken();
+      if (token) { xhr.setRequestHeader('Authorization', 'Bearer ' + token); }
+      xhr.upload.onprogress = function (e) { if (e.lengthComputable) { aoProgresso(e.loaded); } };
+      xhr.onload = function () {
+        var corpo = null;
+        try { corpo = JSON.parse(xhr.responseText); } catch (e) { /* sem corpo */ }
+        if (xhr.status === 401) { Auth.limparSessao(); location.href = Api.urlDeLogin(Auth.rotaAtual()); return; }
+        if (xhr.status >= 200 && xhr.status < 300 && corpo) { resolve(corpo); }
+        else { var er = new Error((corpo && corpo.erro) || 'Falha no envio (HTTP ' + xhr.status + ').'); er.status = xhr.status; er.corpo = corpo; reject(er); }
+      };
+      xhr.onerror = function () { var er = new Error('Falha de conexão durante o envio.'); er.rede = true; reject(er); };
+      xhr.onabort = function () { var er = new Error('Envio cancelado.'); er.cancelado = true; reject(er); };
+      xhr.send(blob);
+    });
+  }
+
+  function esperar(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+
+  /**
+   * Upload direto em partes, com progresso, cancelamento e retomada: se a conexão cair, pergunta ao servidor
+   * quantos bytes ele já tem e continua dali (até 6 tentativas). Ao final o servidor valida e enfileira o processamento.
+   */
+  async function enviarVideo(item) {
+    var base = '/api/gestor/imoveis/' + S.id + '/videos/uploads';
+    item.erro = null;
+    item.progresso = 0;
+    item.statusProcessamento = 'ENVIANDO';
+    try {
+      if (!item.uploadId) {
+        var ini = await Api.post(base, { tamanho: item.file.size, tipo: item.file.type });
+        item.uploadId = ini.midia.id;
+        item.tamanhoParte = ini.tamanhoParte;
+        item.chaveServidor = ini.midia.url;
+      }
+      var tentativas = 0;
+      while (true) {
+        var estado = await Api.get(base + '/' + item.uploadId);
+        var off = estado.bytesRecebidos || 0;
+        try {
+          while (off < item.file.size) {
+            var fim = Math.min(item.file.size, off + item.tamanhoParte);
+            var inicio = off;
+            var r = await enviarParte(item, base + '/' + item.uploadId + '?offset=' + inicio, item.file.slice(inicio, fim), function (carregado) {
+              item.progresso = Math.round((inicio + carregado) / item.file.size * 100);
+              atualizarProgresso(item);
+            });
+            off = r.bytesRecebidos;
+            item.progresso = Math.round(off / item.file.size * 100);
+            atualizarProgresso(item);
+          }
+          break;
+        } catch (e) {
+          if (e.cancelado) { throw e; }
+          if (!(e.rede || e.status === 409) || ++tentativas > 6) { throw e; }
+          item.erro = 'Conexão instável, tentando retomar...';
+          renderMidias();
+          await esperar(1000 * tentativas);
+          item.erro = null;
+        }
+      }
+      var m = await Api.post(base + '/' + item.uploadId + '/concluir', {});
+      item.id = m.id; item.key = 's' + m.id; item.local = false; item.estado = m.estado; item.url = m.url;
+      item.statusProcessamento = m.statusProcessamento; item.duracaoSegundos = m.duracaoSegundos; item.progresso = 100;
+      item.previewUrl = item.url && item.previewUrl ? item.previewUrl : (item.previewUrl || null);
+      vigiarVideos();
+      return true;
+    } catch (e) {
+      if (e.cancelado) { return false; }
+      // o servidor apaga o envio quando o arquivo e invalido (ex.: mais de 1:30): nao ha o que retomar
+      if (e.status === 400 || e.status === 403) { item.uploadId = null; }
+      item.erro = e.message;
+      item.statusProcessamento = null;
+      return false;
+    }
+  }
+
+  function cancelarEnvio(item) {
+    if (item.xhr) { item.xhr.abort(); }
+    if (item.uploadId) {
+      Api.del('/api/gestor/imoveis/' + S.id + '/videos/uploads/' + item.uploadId).catch(function () { /* o job de orfaos limpa */ });
+    }
+    S.midias.splice(S.midias.indexOf(item), 1);
+    renderMidias();
+  }
+
+  /** Acompanha os vídeos em processamento (a cada 3 s) ate todos ficarem PRONTO ou FALHA. */
+  function vigiarVideos() {
+    if (S.timerVideos) { return; }
+    S.timerVideos = setInterval(async function () {
+      var pendentes = S.midias.some(function (m) { return m.tipo === 'VIDEO' && !m.local && (m.statusProcessamento === 'PROCESSANDO' || m.statusProcessamento === 'ENVIANDO'); });
+      if (!pendentes) { clearInterval(S.timerVideos); S.timerVideos = null; return; }
+      try { await recarregarDoServidor(); renderMidias(); atualizarBotaoFinalizar(); } catch (e) { /* tenta no proximo ciclo */ }
+    }, 3000);
+  }
+
   function atualizarProgresso(item) {
     var barra = document.querySelector('[data-barra="' + item.key + '"]');
     if (barra) { barra.style.width = item.progresso + '%'; }
@@ -335,16 +455,33 @@
     var removida = m.estado === 'REMOVIDA';
     var miniatura = imagem
       ? '<img src="' + escapar(m.miniaturaUrl || m.url) + '" alt="" class="w-full h-full object-cover">'
-      : '<div class="w-full h-full flex flex-col items-center justify-center bg-slate-800 text-white text-[10px]"><i data-lucide="play" class="w-6 h-6"></i>' +
-        (m.duracaoSegundos ? m.duracaoSegundos + 's' : '') + '</div>';
+      : (m.posterUrl
+          ? '<img src="' + escapar(m.posterUrl) + '" alt="" class="w-full h-full object-cover">'
+          : (m.previewUrl || (m.local && m.url)
+              ? '<video src="' + escapar(m.previewUrl || m.url) + '" muted preload="metadata" playsinline class="w-full h-full object-cover bg-black"></video>'
+              : '<div class="w-full h-full flex flex-col items-center justify-center bg-slate-800 text-white text-[10px]"><i data-lucide="play" class="w-6 h-6"></i>' +
+                (m.duracaoSegundos ? fmtDuracao(m.duracaoSegundos) : '') + '</div>'));
+    var badgeVideo = '', notaVideo = '';
+    if (!imagem && !removida) {
+      var st = m.local ? 'ENVIANDO' : m.statusProcessamento;
+      var cores = { ENVIANDO: 'bg-blue-100 text-blue-800', PROCESSANDO: 'bg-amber-100 text-amber-800', PRONTO: 'bg-emerald-100 text-emerald-800', FALHA: 'bg-rose-100 text-rose-800' };
+      if (st) {
+        badgeVideo = '<span class="text-[10px] font-bold px-2 py-0.5 rounded ' + cores[st] + '" data-status-video>' + ROTULO_VIDEO[st] + '</span>';
+      }
+      if (st === 'PROCESSANDO') {
+        notaVideo = '<p class="text-[10px] text-slate-500 mt-1">Processando o vídeo (pode levar alguns minutos). Você pode salvar o rascunho; para publicar ou confirmar, espere ficar pronto.</p>';
+      } else if (st === 'FALHA') {
+        notaVideo = '<p class="text-[11px] font-semibold text-rose-600 mt-1">' + escapar(m.motivoFalha || 'Não foi possível processar o vídeo.') + ' Remova e envie de novo.</p>';
+      }
+    }
     var tipoControle = imagem
       ? '<select data-acao="tipo" data-key="' + m.key + '" class="text-[11px] border border-slate-300 rounded-lg px-1.5 py-1 bg-white"' + (removida ? ' disabled' : '') + '>' +
         '<option value="FOTO"' + (m.tipo === 'FOTO' ? ' selected' : '') + '>Foto comum</option>' +
         '<option value="FOTO_360"' + (m.tipo === 'FOTO_360' ? ' selected' : '') + '>Foto 360°</option></select>'
       : '<span class="text-[11px] font-semibold text-slate-600">Vídeo</span>';
-    var selo = (m.estado === 'NOVA' ? '<span class="text-[9px] font-bold bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded">NOVA</span>' : '') +
+    var selo = badgeVideo + (m.estado === 'NOVA' ? '<span class="text-[9px] font-bold bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded">NOVA</span>' : '') +
                (removida ? '<span class="text-[9px] font-bold bg-rose-100 text-rose-700 px-1.5 py-0.5 rounded">REMOVIDA (sai ao confirmar)</span>' : '');
-    var emEnvio = m.local && S.modo !== 'criar' && !m.erro && m.progresso < 100;
+    var emEnvio = m.local && S.modo !== 'criar' && !m.erro && m.progresso < 100 && m.tipo !== 'VIDEO' || (m.tipo === 'VIDEO' && m.local && !m.erro && S.modo !== 'criar');
     var barra = (m.local && S.modo !== 'criar') || (m.progresso > 0 && m.progresso < 100)
       ? '<div class="h-1.5 bg-slate-100 rounded-full overflow-hidden mt-1.5"><div data-barra="' + m.key + '" class="h-full bg-blue-600 transition-all" style="width:' + m.progresso + '%"></div></div>'
       : '';
@@ -352,6 +489,7 @@
       '<div class="w-24 h-20 rounded-lg overflow-hidden bg-slate-200 shrink-0">' + miniatura + '</div>' +
       '<div class="flex-1 min-w-0">' +
         '<div class="flex flex-wrap items-center gap-1.5">' + tipoControle + selo + '</div>' +
+        notaVideo +
         (m.erro ? '<p class="text-[11px] font-semibold text-rose-600 mt-1">' + escapar(m.erro) + '</p>' : '') +
         (emEnvio ? '<p class="text-[10px] text-slate-500 mt-1">Enviando...</p>' : '') + barra +
         '<div class="flex flex-wrap items-center gap-1 mt-2">' +
@@ -361,6 +499,7 @@
           (!removida ? '<button type="button" data-acao="subir" data-key="' + m.key + '" class="px-2 py-1 rounded-lg border border-slate-300 text-xs hover:bg-white"' + (indice === 0 ? ' disabled' : '') + ' aria-label="Mover para cima">↑</button>' +
                        '<button type="button" data-acao="descer" data-key="' + m.key + '" class="px-2 py-1 rounded-lg border border-slate-300 text-xs hover:bg-white"' + (indice === total - 1 ? ' disabled' : '') + ' aria-label="Mover para baixo">↓</button>' : '') +
           (m.erro && m.local && S.modo !== 'criar' ? '<button type="button" data-acao="repetir" data-key="' + m.key + '" class="px-2 py-1 rounded-lg border border-blue-300 text-blue-700 text-xs hover:bg-blue-50">Tentar de novo</button>' : '') +
+          (m.tipo === 'VIDEO' && m.local && !m.erro && S.modo !== 'criar' ? '<button type="button" data-acao="cancelar-envio" data-key="' + m.key + '" class="px-2 py-1 rounded-lg border border-slate-300 text-xs hover:bg-white">Cancelar envio</button>' : '') +
           (!removida ? '<button type="button" data-acao="remover" data-key="' + m.key + '" class="px-2 py-1 rounded-lg border border-rose-300 text-rose-700 text-xs hover:bg-rose-50 ml-auto">Remover</button>' : '') +
         '</div>' +
       '</div></div>';
@@ -392,7 +531,13 @@
   async function recarregarDoServidor() {
     S.anuncio = await Api.get('/api/gestor/imoveis/' + S.id);
     var pendentes = S.midias.filter(function (m) { return m.local && m.erro; });
-    S.midias = S.anuncio.midias.map(deServidor).concat(pendentes);
+    var antigos = {};
+    S.midias.forEach(function (m) { if (m.id) { antigos[m.id] = m; } });
+    S.midias = S.anuncio.midias.map(function (m) {
+      var item = deServidor(m);
+      if (antigos[m.id] && antigos[m.id].previewUrl) { item.previewUrl = antigos[m.id].previewUrl; }
+      return item;
+    }).concat(pendentes);
   }
 
   async function enviarOrdem() {
@@ -428,7 +573,8 @@
       if (S.modo !== 'criar') { await enviarOrdem(); }
       return;
     }
-    if (acao === 'repetir') { await enviarItem(m); return renderMidias(); }
+    if (acao === 'cancelar-envio') { return cancelarEnvio(m); }
+    if (acao === 'repetir') { var feito = enviarItem(m); renderMidias(); await feito; return renderMidias(); }
     if (acao === 'remover') {
       var ok = await UI.confirmar({ titulo: 'Remover mídia?', mensagem: S.modo === 'rascunho' && m.estado === 'ATIVA'
         ? 'A mídia sairá do anúncio quando você confirmar a alteração. Se descartar a edição, ela volta.'
@@ -530,6 +676,14 @@
   function atualizarBotaoFinalizar() {
     var btn = $('btnFinalizar');
     btn.disabled = S.ocupado || (S.modo === 'criar' && !$('f-aceite').checked);
+    // Confirmar a alteracao exige todos os videos prontos (o servidor tambem exige).
+    var conf = $('btnConfirmarAlteracao');
+    if (conf) {
+      var bloqueado = S.modo === 'rascunho' && temVideoPendente();
+      conf.disabled = bloqueado;
+      conf.title = bloqueado ? 'Aguarde o fim do envio e do processamento dos vídeos (ou remova o vídeo).' : '';
+      conf.classList.toggle('opacity-50', bloqueado);
+    }
   }
 
   function agendarAutosave() {
@@ -637,6 +791,7 @@
     var erros = validar(d);
     mostrarErros(erros);
     if (Object.keys(erros).length) { erroGeral('Corrija os campos destacados antes de confirmar a alteração.'); return; }
+    if (temVideoPendente()) { erroGeral('Aguarde o fim do envio e do processamento dos vídeos para confirmar a alteração (ou remova o vídeo).'); return; }
     if (!(await salvarRascunho(true))) { return; }
     var r = await AnuncioAcoes.confirmarAlteracao(S.anuncio);
     if (r) { S.sujo = false; location.href = '/dashboard.html?aba=anuncios&imovel=' + S.id; }
@@ -711,6 +866,7 @@
     preencherForm(dados);
     configurarModo();
     renderMidias();
+    vigiarVideos();
     $('carregando').classList.add('hidden');
     $('conteudo').classList.remove('hidden');
     if (global.lucide) { global.lucide.createIcons(); }

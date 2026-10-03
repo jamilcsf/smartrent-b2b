@@ -160,6 +160,7 @@ public class AnuncioEdicaoService {
         Imovel imovel = acesso.doGestorParaAtualizar(gestor, id);
         exigirEmEdicao(imovel);
         AuditoriaService.exigirAceite(aceiteTermo);
+        midiaService.exigirVideosProntos(id); // video enviando, processando ou com falha impede confirmar
 
         AnuncioRascunho r = rascunhoRepository.findByImovelId(id)
                 .orElseThrow(() -> new TransicaoInvalidaException("Não há rascunho para este anúncio."));

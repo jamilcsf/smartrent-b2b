@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
  * Midias do anuncio: upload, remocao, ordem e capa, com os limites do produto.
  *
  * <p>O limite de 14 e de imagens <em>no total</em>: foto comum e foto 360
- * dividem a mesma cota. Videos (ate 2, de ate 2 minutos) nao entram nela. A
+ * dividem a mesma cota. Videos (ate 2, de ate 1:30 cada) nao entram nela. A
  * contagem e feita no servidor, sobre o conjunto efetivo, com o imovel
  * travado para que dois uploads simultaneos nao estourem o limite.
  *
@@ -51,7 +51,7 @@ public class MidiaService {
 
     public static final int MAX_IMAGENS = 14;
     public static final int MAX_VIDEOS = 2;
-    public static final int MAX_DURACAO_VIDEO_SEGUNDOS = 120;
+    public static final int MAX_DURACAO_VIDEO_SEGUNDOS = 90; // 1:30; substitui o limite anterior de 2 minutos
 
     private static final Logger log = LoggerFactory.getLogger(MidiaService.class);
 
@@ -106,7 +106,10 @@ public class MidiaService {
                     : processador.inspecionarVideo(temporario, arquivo.getContentType(), MAX_DURACAO_VIDEO_SEGUNDOS);
 
             String chave = UUID.randomUUID().toString();
-            nomeArquivo = chave + "." + insp.extensao();
+            // Video vive em pasta propria (original, MP4, poster, HLS); imagem e um arquivo so.
+            nomeArquivo = tipo == TipoMidia.VIDEO
+                    ? "videos/" + chave + "/original." + insp.extensao()
+                    : chave + "." + insp.extensao();
             storage.salvar(nomeArquivo, temporario);
 
             if (tipo.imagem()) {
@@ -133,6 +136,12 @@ public class MidiaService {
             // Fora de edicao a primeira imagem vira capa sozinha; em edicao a capa vive no rascunho.
             m.setCapa(!emEdicao && tipo.imagem() && efetivas.stream().noneMatch(ImovelMidia::isCapa));
             m.setDataEnvio(Agora.de(clock));
+            if (tipo == TipoMidia.VIDEO) { // vai para a fila do processamento assincrono
+                m.setStatusProcessamento(br.com.unisenai.smartrent.model.enums.StatusVideo.PROCESSANDO);
+                m.setOriginalArquivo(nomeArquivo);
+                m.setProximaTentativaEm(clock.instant());
+                m.setAtualizadoEm(clock.instant());
+            }
             ImovelMidia salva = midiaRepository.saveAndFlush(m);
             return MidiaResponse.de(salva);
         } catch (IOException e) {
@@ -148,7 +157,7 @@ public class MidiaService {
     }
 
     /** A regra dos 14: imagens comuns e 360 somadas; videos a parte. */
-    private static void verificarLimite(List<ImovelMidia> efetivas, TipoMidia novo) {
+    static void verificarLimite(List<ImovelMidia> efetivas, TipoMidia novo) {
         long imagens = efetivas.stream().filter(m -> m.getTipo().imagem()).count();
         long videos = efetivas.stream().filter(m -> m.getTipo() == TipoMidia.VIDEO).count();
         if (novo.imagem() && imagens >= MAX_IMAGENS) {
@@ -370,7 +379,7 @@ public class MidiaService {
     }
 
     /** Fora de pre-publicacao e de edicao nao se mexe em midia: e preciso iniciar a edicao. */
-    private static boolean exigirEditavel(Imovel imovel) {
+    static boolean exigirEditavel(Imovel imovel) {
         if (imovel.getStatus() == StatusAnuncio.EM_EDICAO) {
             return true;
         }
@@ -392,7 +401,29 @@ public class MidiaService {
                 .orElseThrow(() -> new TransicaoInvalidaException("Não há edição em andamento para este anúncio."));
     }
 
-    private void excluir(ImovelMidia m) {
+    /**
+     * Publicar ou confirmar uma alteracao exige todos os videos prontos: video
+     * enviando, processando ou com falha impede (o gestor pode remove-lo para seguir).
+     */
+    @Transactional(readOnly = true)
+    public void exigirVideosProntos(Long imovelId) {
+        List<ImovelMidia> pendentes = efetivas(imovelId).stream()
+                .filter(m -> m.getTipo() == TipoMidia.VIDEO
+                        && m.getStatusProcessamento() != br.com.unisenai.smartrent.model.enums.StatusVideo.PRONTO)
+                .toList();
+        if (pendentes.isEmpty()) {
+            return;
+        }
+        boolean falha = pendentes.stream().anyMatch(m -> m.getStatusProcessamento() == br.com.unisenai.smartrent.model.enums.StatusVideo.FALHA);
+        throw new ValidacaoAnuncioException(falha
+                ? "Há vídeo com falha no processamento. Remova-o ou envie novamente para continuar."
+                : "Aguarde o fim do envio e do processamento dos vídeos para continuar.");
+    }
+
+    void excluir(ImovelMidia m) {
+        if (m.getTipo() == TipoMidia.VIDEO) {
+            storage.removerPrefixo("videos/" + m.getChave());
+        }
         storage.remover(m.getArquivo());
         if (m.getMiniatura() != null) {
             storage.remover(m.getMiniatura());

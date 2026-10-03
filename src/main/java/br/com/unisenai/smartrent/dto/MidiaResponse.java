@@ -19,7 +19,13 @@ public record MidiaResponse(
         boolean capa,
         Integer largura,
         Integer altura,
-        Integer duracaoSegundos) {
+        Integer duracaoSegundos,
+        br.com.unisenai.smartrent.model.enums.StatusVideo statusProcessamento,
+        String motivoFalha,
+        String posterUrl,
+        String hlsUrl,
+        Long bytesRecebidos,
+        Long tamanhoTotal) {
 
     public static MidiaResponse de(ImovelMidia m) {
         return de(m, m.getOrdem(), m.isCapa());
@@ -38,6 +44,12 @@ public record MidiaResponse(
                 capa,
                 m.getLargura(),
                 m.getAltura(),
-                m.getDuracaoSegundos());
+                m.getDuracaoSegundos(),
+                m.getStatusProcessamento(),
+                m.getMotivoFalha(),
+                m.getPoster() == null ? null : base + "/poster",
+                m.getHlsMestre() == null ? null : base + "/hls/master.m3u8",
+                m.getBytesRecebidos(),
+                m.getTamanhoTotal());
     }
 }

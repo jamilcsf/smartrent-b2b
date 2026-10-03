@@ -101,13 +101,18 @@ public class MidiaProcessador {
                         "Não foi possível ler a duração do vídeo. Envie um MP4 válido.");
             }
             if (duracao.getAsDouble() > duracaoMaximaSegundos) {
-                throw new ValidacaoAnuncioException("O vídeo deve ter no máximo "
-                        + (duracaoMaximaSegundos / 60) + " minutos.");
+                throw new ValidacaoAnuncioException(mensagemDuracao(duracao.getAsDouble(), duracaoMaximaSegundos));
             }
             return new Inspecao("video/mp4", "mp4", null, null, (int) Math.ceil(duracao.getAsDouble()));
         } catch (IOException e) {
             throw new ValidacaoAnuncioException("Não foi possível ler o vídeo enviado.");
         }
+    }
+
+    /** "O vídeo tem 1:42; o máximo permitido é 1:30." (arredonda para cima: 90,4 s e um video de 1:31). */
+    public static String mensagemDuracao(double segundos, int maximo) {
+        return "O vídeo tem " + br.com.unisenai.smartrent.config.VideoProperties.formatar((long) Math.ceil(segundos))
+                + "; o máximo permitido é " + br.com.unisenai.smartrent.config.VideoProperties.formatar(maximo) + ".";
     }
 
     /** Gera miniatura JPEG de ate 480 px de largura. Devolve false se nao conseguir decodificar. */

@@ -45,13 +45,16 @@ public class AnuncioService {
     private final AnuncioGestorMapper mapper;
     private final AnuncioProperties props;
     private final Clock clock;
+    private final MidiaService midiaService;
 
     public AnuncioService(ImovelRepository imovelRepository,
                           ImovelAcesso acesso,
                           AuditoriaService auditoria,
                           AnuncioGestorMapper mapper,
                           AnuncioProperties props,
-                          Clock clock) {
+                          Clock clock,
+                          MidiaService midiaService) {
+        this.midiaService = midiaService;
         this.imovelRepository = imovelRepository;
         this.acesso = acesso;
         this.auditoria = auditoria;
@@ -183,6 +186,7 @@ public class AnuncioService {
                     "Este anúncio não está pronto para publicação (situação atual: " + imovel.getStatus() + ").");
         }
         AuditoriaService.exigirAceite(aceiteTermo);
+        midiaService.exigirVideosProntos(id); // video enviando, processando ou com falha impede a publicacao
 
         LocalDateTime agora = Agora.de(clock);
         MaquinaDeEstados.mover(imovel, StatusAnuncio.PUBLICADO);

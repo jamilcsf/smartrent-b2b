@@ -252,8 +252,12 @@
       });
 
       if (m.tipo === 'VIDEO') {
-        principal.innerHTML = '<video controls preload="metadata" class="w-full h-full bg-black" src="' +
-          escapar(m.url) + '"></video>';
+        // Sem autoplay e sem som automatico; so carrega o necessario (preload leve + poster). HLS onde o
+        // navegador reproduz nativamente (Safari/iOS); nos demais, o MP4 otimizado para streaming (faststart).
+        // Nao usamos biblioteca de HLS: o MP4 de ate 1:30 cobre os outros navegadores sem dependencia nova.
+        var nativoHls = m.hlsUrl && document.createElement('video').canPlayType('application/vnd.apple.mpegurl');
+        principal.innerHTML = '<video controls playsinline preload="metadata" class="w-full h-full bg-black"' +
+          (m.posterUrl ? ' poster="' + escapar(m.posterUrl) + '"' : '') + ' src="' + escapar(nativoHls ? m.hlsUrl : m.url) + '"></video>';
       } else if (m.tipo === 'FOTO_360') {
         principal.innerHTML = '<div id="visor360" class="w-full h-full"></div>' +
           '<span class="absolute top-3 left-3 text-[10px] font-bold bg-black/70 text-white px-2 py-1 rounded z-10">' +

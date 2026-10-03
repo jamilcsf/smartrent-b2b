@@ -214,9 +214,9 @@
             </div>
           </div>
           <p class="text-[11px] text-slate-500">
-            Limite de <b>14 imagens no total</b> (fotos comuns e 360° contam juntas) e <b>2 vídeos</b> de até 2 minutos
+            Limite de <b>14 imagens no total</b> (fotos comuns e 360° contam juntas) e <b>2 vídeos</b> de até <b>1 minuto e 30 segundos</b> cada
             (não contam nas 14). Imagens JPEG ou PNG de até 10 MB; foto 360° deve ser equirretangular, na proporção 2:1;
-            vídeos em MP4 de até 100 MB.
+            vídeos em MP4, MOV ou WebM de até 500 MB. Depois do envio o vídeo é verificado e processado (pode levar alguns minutos): você pode salvar o rascunho, mas só consegue publicar ou confirmar a alteração com todos os vídeos prontos.
           </p>
           <div class="flex flex-wrap gap-2">
             <button type="button" data-add="FOTO" class="btn-add px-3 py-2 rounded-xl text-xs font-bold border border-slate-300 hover:bg-slate-50 flex items-center gap-1.5"><i data-lucide="image-plus" class="w-4 h-4"></i> Adicionar fotos</button>
@@ -224,7 +224,7 @@
             <button type="button" data-add="VIDEO" class="btn-add px-3 py-2 rounded-xl text-xs font-bold border border-slate-300 hover:bg-slate-50 flex items-center gap-1.5"><i data-lucide="video" class="w-4 h-4"></i> Adicionar vídeo</button>
             <input type="file" id="arquivoFoto" class="hidden" accept="image/jpeg,image/png" multiple>
             <input type="file" id="arquivoFoto360" class="hidden" accept="image/jpeg,image/png" multiple>
-            <input type="file" id="arquivoVideo" class="hidden" accept="video/mp4,video/quicktime">
+            <input type="file" id="arquivoVideo" class="hidden" accept="video/mp4,video/quicktime,video/webm">
           </div>
           <p id="erroMidia" class="hidden text-[11px] font-semibold text-rose-600"></p>
           <div id="listaMidias" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>

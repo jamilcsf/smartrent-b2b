@@ -45,7 +45,7 @@ public record ImovelResponse(
     public static ImovelResponse de(Imovel i, List<ImovelMidia> midias,
                                     boolean comMidias) {
         var ativas = midias.stream()
-                .filter(m -> m.getEstado() == EstadoMidia.ATIVA)
+                .filter(m -> m.getEstado() == EstadoMidia.ATIVA && m.visivelAoPublico())
                 .toList();
         var capa = ativas.stream().filter(ImovelMidia::isCapa).findFirst()
                 .or(() -> ativas.stream().filter(m -> m.getTipo().imagem()).findFirst())

@@ -34,7 +34,7 @@ public class ImovelMidia {
     @Column(name = "estado", nullable = false, length = 10)
     private EstadoMidia estado = EstadoMidia.ATIVA;
 
-    @Column(name = "arquivo", nullable = false, length = 120)
+    @Column(name = "arquivo", nullable = false, length = 160)
     private String arquivo;
 
     @Column(name = "miniatura", length = 120)
@@ -60,6 +60,39 @@ public class ImovelMidia {
 
     @Column(name = "capa", nullable = false)
     private boolean capa;
+
+    /** Etapa do video (nulo nas imagens). So PRONTO aparece para clientes. */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status_processamento", length = 15)
+    private br.com.unisenai.smartrent.model.enums.StatusVideo statusProcessamento;
+
+    @Column(name = "motivo_falha", length = 300)
+    private String motivoFalha;
+
+    @Column(name = "poster", length = 160)
+    private String poster;
+
+    @Column(name = "hls_mestre", length = 160)
+    private String hlsMestre;
+
+    @Column(name = "original_arquivo", length = 160)
+    private String originalArquivo;
+
+    @Column(name = "tentativas", nullable = false)
+    private int tentativas;
+
+    @Column(name = "proxima_tentativa_em")
+    private java.time.Instant proximaTentativaEm;
+
+    /** Envio em partes: tamanho esperado e bytes ja recebidos (permite retomar). */
+    @Column(name = "tamanho_total")
+    private Long tamanhoTotal;
+
+    @Column(name = "bytes_recebidos")
+    private Long bytesRecebidos;
+
+    @Column(name = "atualizado_em")
+    private java.time.Instant atualizadoEm;
 
     @Column(name = "data_envio", nullable = false, updatable = false)
     private LocalDateTime dataEnvio;
@@ -192,5 +225,31 @@ public class ImovelMidia {
 
     public void setDataEnvio(LocalDateTime dataEnvio) {
         this.dataEnvio = dataEnvio;
+    }
+
+    public br.com.unisenai.smartrent.model.enums.StatusVideo getStatusProcessamento() { return statusProcessamento; }
+    public void setStatusProcessamento(br.com.unisenai.smartrent.model.enums.StatusVideo v) { this.statusProcessamento = v; }
+    public String getMotivoFalha() { return motivoFalha; }
+    public void setMotivoFalha(String motivoFalha) { this.motivoFalha = motivoFalha; }
+    public String getPoster() { return poster; }
+    public void setPoster(String poster) { this.poster = poster; }
+    public String getHlsMestre() { return hlsMestre; }
+    public void setHlsMestre(String hlsMestre) { this.hlsMestre = hlsMestre; }
+    public String getOriginalArquivo() { return originalArquivo; }
+    public void setOriginalArquivo(String originalArquivo) { this.originalArquivo = originalArquivo; }
+    public int getTentativas() { return tentativas; }
+    public void setTentativas(int tentativas) { this.tentativas = tentativas; }
+    public java.time.Instant getProximaTentativaEm() { return proximaTentativaEm; }
+    public void setProximaTentativaEm(java.time.Instant v) { this.proximaTentativaEm = v; }
+    public Long getTamanhoTotal() { return tamanhoTotal; }
+    public void setTamanhoTotal(Long tamanhoTotal) { this.tamanhoTotal = tamanhoTotal; }
+    public Long getBytesRecebidos() { return bytesRecebidos; }
+    public void setBytesRecebidos(Long bytesRecebidos) { this.bytesRecebidos = bytesRecebidos; }
+    public java.time.Instant getAtualizadoEm() { return atualizadoEm; }
+    public void setAtualizadoEm(java.time.Instant atualizadoEm) { this.atualizadoEm = atualizadoEm; }
+
+    /** Imagens sempre; video so quando o processamento terminou (PRONTO). */
+    public boolean visivelAoPublico() {
+        return tipo != null && (tipo.imagem() || statusProcessamento == br.com.unisenai.smartrent.model.enums.StatusVideo.PRONTO);
     }
 }

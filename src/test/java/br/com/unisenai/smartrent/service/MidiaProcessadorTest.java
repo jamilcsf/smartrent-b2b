@@ -135,32 +135,32 @@ class MidiaProcessadorTest {
     }
 
     @Test
-    @DisplayName("CT77 - Video de ate 2 minutos e aceito; a duracao e lida do cabecalho")
+    @DisplayName("CT77 - Video de ate 1:30 e aceito; a duracao e lida do cabecalho")
     void videoDentroDoLimite() throws IOException {
-        var insp = processador.inspecionarVideo(mp4("v.mp4", 1000, 90_000, true), "video/mp4", 120);
-        assertEquals(90, insp.duracaoSegundos());
+        var insp = processador.inspecionarVideo(mp4("v.mp4", 1000, 60_000, true), "video/mp4", 90);
+        assertEquals(60, insp.duracaoSegundos());
         assertEquals("mp4", insp.extensao());
     }
 
     @Test
-    @DisplayName("CT78 - Video com exatamente 2 minutos e aceito")
+    @DisplayName("CT78 - Video com exatamente 1:30 (90 s) e aceito")
     void videoNoLimiteExato() throws IOException {
-        assertDoesNotThrow(() -> processador.inspecionarVideo(mp4("v.mp4", 600, 72_000, true), "video/mp4", 120));
+        assertDoesNotThrow(() -> processador.inspecionarVideo(mp4("v.mp4", 1000, 90_000, true), "video/mp4", 90));
     }
 
     @Test
-    @DisplayName("CT79 - Video acima de 2 minutos e recusado pelo servidor")
+    @DisplayName("CT79 - Video acima de 1:30 (91 s) e recusado pelo servidor, com a duracao e o limite na mensagem")
     void videoLongoDemais() throws IOException {
         var erro = assertThrows(ValidacaoAnuncioException.class,
-                () -> processador.inspecionarVideo(mp4("v.mp4", 1000, 121_000, true), "video/mp4", 120));
-        assertTrue(erro.getMessage().contains("2 minutos"));
+                () -> processador.inspecionarVideo(mp4("v.mp4", 1000, 91_000, true), "video/mp4", 90));
+        assertEquals("O vídeo tem 1:31; o máximo permitido é 1:30.", erro.getMessage());
     }
 
     @Test
     @DisplayName("CT80 - Video cuja duracao nao pode ser lida e recusado")
     void videoSemCabecalhoLegivel() throws IOException {
         assertThrows(ValidacaoAnuncioException.class,
-                () -> processador.inspecionarVideo(mp4("v.mp4", 1000, 10_000, false), "video/mp4", 120));
+                () -> processador.inspecionarVideo(mp4("v.mp4", 1000, 10_000, false), "video/mp4", 90));
     }
 
     @Test
@@ -169,13 +169,13 @@ class MidiaProcessadorTest {
         Path falso = pasta.resolve("f.mp4");
         Files.writeString(falso, "nao sou um video, mas tenho mais de oito bytes");
         assertThrows(ValidacaoAnuncioException.class,
-                () -> processador.inspecionarVideo(falso, "video/mp4", 120));
+                () -> processador.inspecionarVideo(falso, "video/mp4", 90));
     }
 
     @Test
     @DisplayName("CT82 - Tipos de video fora de MP4/MOV sao recusados")
     void videoTipoNaoPermitido() throws IOException {
         assertThrows(ValidacaoAnuncioException.class,
-                () -> processador.inspecionarVideo(mp4("v.avi", 1000, 10_000, true), "video/x-msvideo", 120));
+                () -> processador.inspecionarVideo(mp4("v.avi", 1000, 10_000, true), "video/x-msvideo", 90));
     }
 }

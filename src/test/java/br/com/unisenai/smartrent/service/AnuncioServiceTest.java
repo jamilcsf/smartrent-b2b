@@ -46,6 +46,8 @@ class AnuncioServiceTest {
     private AuditoriaService auditoria;
     @Mock
     private AnuncioGestorMapper mapper;
+    @Mock
+    private MidiaService midiaService;
 
     private RelogioFalso relogio;
     private AnuncioService service;
@@ -55,7 +57,7 @@ class AnuncioServiceTest {
     void preparar() {
         relogio = new RelogioFalso(T0);
         service = new AnuncioService(imovelRepository, new ImovelAcesso(imovelRepository), auditoria, mapper,
-                new AnuncioProperties(24, 2, 24, 24, 5), relogio);
+                new AnuncioProperties(24, 2, 24, 24, 5), relogio, midiaService);
         gestor = usuario(10L, PapelUsuario.ANFITRIAO);
         lenient().when(imovelRepository.save(any(Imovel.class))).thenAnswer(i -> i.getArgument(0));
     }
@@ -266,7 +268,7 @@ class AnuncioServiceTest {
     @DisplayName("CT64 - A duracao da janela vem de configuracao")
     void janelaConfiguravel() {
         AnuncioService curto = new AnuncioService(imovelRepository, new ImovelAcesso(imovelRepository), auditoria,
-                mapper, new AnuncioProperties(1, 2, 24, 24, 5), relogio);
+                mapper, new AnuncioProperties(1, 2, 24, 24, 5), relogio, midiaService);
         Imovel i = aguardandoDesde(T0.minusMinutes(61));
 
         curto.publicar(gestor, 1L, true, "ip");

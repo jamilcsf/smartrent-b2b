@@ -20,4 +20,14 @@ public interface MidiaStorage {
 
     /** Remove o arquivo. Nao falha se ele ja nao existir. */
     void remover(String nome);
+
+    /**
+     * Caminho local do arquivo, para o envio em partes e para o FFmpeg. Armazenamentos
+     * remotos (S3) nao implementam isto: usam envio direto com URL pre-assinada e um
+     * worker que baixa/envia os arquivos.
+     */
+    Path caminhoLocal(String nome);
+
+    /** Remove tudo sob o prefixo (pasta de um video e suas variantes). Nao falha se nao existir. */
+    void removerPrefixo(String prefixo);
 }

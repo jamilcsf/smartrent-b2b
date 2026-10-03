@@ -35,8 +35,38 @@ public class MidiaPublicaController {
     @GetMapping("/{chave}")
     public ResponseEntity<Resource> arquivo(@PathVariable String chave) {
         return midiaRepository.findByChave(chave)
+                .filter(ImovelMidia::visivelAoPublico) // video enviando/processando/com falha nao e servido
                 .map(m -> entregar(m.getArquivo(), m.getMime()))
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/{chave}/poster")
+    public ResponseEntity<Resource> poster(@PathVariable String chave) {
+        return midiaRepository.findByChave(chave)
+                .filter(ImovelMidia::visivelAoPublico)
+                .filter(m -> m.getPoster() != null)
+                .map((ImovelMidia m) -> entregar(m.getPoster(), "image/jpeg"))
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    /** Streaming adaptativo (HLS): lista mestre, listas de variante e segmentos de um video pronto. */
+    @GetMapping("/{chave}/hls/{nome:[A-Za-z0-9_.-]+}")
+    public ResponseEntity<Resource> hls(@PathVariable String chave, @PathVariable String nome) {
+        if (nome.startsWith(".") || nome.contains("..")) {
+            return ResponseEntity.notFound().build();
+        }
+        return midiaRepository.findByChave(chave)
+                .filter(ImovelMidia::visivelAoPublico)
+                .filter(m -> m.getHlsMestre() != null)
+                .map((ImovelMidia m) -> entregar("videos/" + chave + "/hls/" + nome, tipoHls(nome)))
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    private static String tipoHls(String nome) {
+        if (nome.endsWith(".m3u8")) {
+            return "application/vnd.apple.mpegurl";
+        }
+        return nome.endsWith(".ts") ? "video/mp2t" : "application/octet-stream";
     }
 
     @GetMapping("/{chave}/miniatura")
