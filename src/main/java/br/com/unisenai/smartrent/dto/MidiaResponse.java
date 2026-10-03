@@ -22,6 +22,11 @@ public record MidiaResponse(
         Integer duracaoSegundos) {
 
     public static MidiaResponse de(ImovelMidia m) {
+        return de(m, m.getOrdem(), m.isCapa());
+    }
+
+    /** Variante com ordem e capa efetivas: durante uma edicao elas vem do rascunho, nao da linha. */
+    public static MidiaResponse de(ImovelMidia m, int ordem, boolean capa) {
         String base = "/api/midias/" + m.getChave();
         return new MidiaResponse(
                 m.getId(),
@@ -29,8 +34,8 @@ public record MidiaResponse(
                 m.getEstado(),
                 base,
                 m.getMiniatura() == null ? null : base + "/miniatura",
-                m.getOrdem(),
-                m.isCapa(),
+                ordem,
+                capa,
                 m.getLargura(),
                 m.getAltura(),
                 m.getDuracaoSegundos());
