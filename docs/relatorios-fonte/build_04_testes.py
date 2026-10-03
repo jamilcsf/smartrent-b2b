@@ -76,29 +76,29 @@ casos = [
     ("CT29", "Permitir login a visitante e devolver o token", "RF01", "Contrato de API", "Alta", "Implementado"),
     ("CT30", "Detalhar o erro de cada campo no cadastro inválido", "RF01", "Contrato de API", "Média", "Implementado"),
     ("CT31", "Responder 409 para e-mail já cadastrado", "RF01", "Contrato de API", "Média", "Implementado"),
-    ("CT50–CT53", "Cadastro de anúncio: nasce sem preço, texto sanitizado, aceite obrigatório, "
+    ("CT50–53", "Cadastro de anúncio: nasce sem preço, texto sanitizado, aceite obrigatório, "
                   "CLIENTE e gestor alheio recusados", "RF15, RF17", "Serviço (simulado)", "Crítica", "Implementado"),
-    ("CT54–CT59", "Preço e janela de 24h: primeira confirmação grava o instante, o relógio não "
+    ("CT54–59", "Preço e janela de 24h: primeira confirmação grava o instante, o relógio não "
                   "reinicia ao alterar o preço (manual ou IA), faixa de valores, preço de publicado só pela edição",
      "RF16, RF21", "Serviço (simulado)", "Crítica", "Implementado"),
-    ("CT60–CT66", "Publicação: bloqueio antes de 24h, liberação mesmo sem o job, novo aceite, sem preço, "
+    ("CT60–66", "Publicação: bloqueio antes de 24h, liberação mesmo sem o job, novo aceite, sem preço, "
                   "janela configurável, promoção em lote idempotente", "RF16", "Serviço (simulado)", "Crítica", "Implementado"),
-    ("CT70–CT82", "Imagens e vídeos: 2:1 das fotos 360, tipo real pelo conteúdo, tamanho, miniatura, "
+    ("CT70–82", "Imagens e vídeos: 2:1 das fotos 360, tipo real pelo conteúdo, tamanho, miniatura, "
                   "duração do vídeo lida no servidor (até 2 min)", "RF15", "Unitário", "Crítica", "Implementado"),
-    ("CT83–CT98", "Limite de 14 imagens somadas e 2 vídeos, capa, estados NOVA/REMOVIDA em edição, "
+    ("CT83–98", "Limite de 14 imagens somadas e 2 vídeos, capa, estados NOVA/REMOVIDA em edição, "
                   "ordem e capa no rascunho, alternância comum/360", "RF15, RF18", "Serviço (simulado)", "Crítica", "Implementado"),
-    ("CT100–CT107", "Autorização por papel (401/403) nos endpoints do gestor e WhatsApp visível só "
+    ("CT100–107", "Autorização por papel (401/403) nos endpoints do gestor e WhatsApp visível só "
                     "a usuários logados", "RF17", "Contrato de API", "Crítica", "Implementado"),
-    ("CT110–CT132", "Edição de anúncio publicado: sai do ar ao iniciar, rascunho isolado, relógio de 2h só "
+    ("CT110–132", "Edição de anúncio publicado: sai do ar ao iniciar, rascunho isolado, relógio de 2h só "
                     "na confirmação, descarte imediato e sem suspensão, bloqueio após confirmar, "
                     "sem prazo máximo, edição sobre republicação agendada", "RF18", "Serviço (simulado)", "Crítica", "Implementado"),
-    ("CT140–CT150", "Lembrete de edição esquecida: não antes de 24h, idempotente, repetição, parada, "
+    ("CT140–150", "Lembrete de edição esquecida: não antes de 24h, idempotente, repetição, parada, "
                     "somente leitura, falha isolada e retentada", "RF19", "Serviço (simulado)", "Alta", "Implementado"),
-    ("CT160–CT168", "Consultas: visibilidade do catálogo, fallback da republicação vencida, promoções "
+    ("CT160–168", "Consultas: visibilidade do catálogo, fallback da republicação vencida, promoções "
                     "idempotentes, EM_EDICAO intocado por jobs, chave única do lembrete", "RF16, RF18", "Repositório (H2)", "Crítica", "Implementado"),
-    ("CT170–CT184", "Snapshot de reserva: preço e dados congelados, valor do cliente ignorado, preço novo só "
+    ("CT170–184", "Snapshot de reserva: preço e dados congelados, valor do cliente ignorado, preço novo só "
                     "para reservas novas, imóvel fora do ar, colunas não atualizáveis", "RF20", "Serviço e repositório", "Crítica", "Implementado"),
-    ("CT190–CT199", "IA de preço: parsing, dados enviados, falhas, lote independente, só sugere", "RF21",
+    ("CT190–199", "IA de preço: parsing, dados enviados, falhas, lote independente, só sugere", "RF21",
      "Serviço (simulado)", "Alta", "Implementado"),
 ]
 cdata = [[Paragraph("ID", styles["CellHeader"]), Paragraph("Caso de teste", styles["CellHeader"]),
@@ -113,7 +113,7 @@ for cid, desc, rf, nivel, prio, situacao in casos:
                   Paragraph(rf, styles["CellCenter"]), Paragraph(nivel, styles["Cell"]),
                   Paragraph(prio, prio_style), Paragraph(situacao, sit_style)])
 story.extend(quadro(styles, "Matriz de casos de teste", quadro_table(
-    cdata, [12 * mm, 52 * mm, 11 * mm, 27 * mm, 16 * mm, 24 * mm], font_size=8.0,
+    cdata, [18 * mm, 46 * mm, 12 * mm, 26 * mm, 16 * mm, 24 * mm], font_size=8.0,
     header_align_center=[2, 4, 5])))
 
 story.append(Paragraph(
