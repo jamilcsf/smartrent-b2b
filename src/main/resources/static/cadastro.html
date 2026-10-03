@@ -7,85 +7,99 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-<body class="bg-slate-100 min-h-screen flex flex-col">
+<body class="bg-blue-900 min-h-screen flex flex-col items-center justify-center gap-3 p-3 sm:p-6">
 
-  <header class="bg-white border-b border-slate-200 shadow-sm">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-      <a href="index.html" class="flex items-center space-x-3">
-        <div class="bg-blue-600 text-white p-2 rounded-xl shadow-md shadow-blue-500/20">
-          <i data-lucide="building-2" class="w-5 h-5"></i>
-        </div>
-        <div>
-          <h1 class="text-base font-bold text-slate-900 tracking-tight">
+  <!-- Painel dividido: formulário à esquerda, foto de Florianópolis à direita -->
+  <main class="w-full max-w-6xl bg-white rounded-2xl shadow-2xl overflow-hidden grid lg:grid-cols-2 lg:min-h-[640px]">
+
+    <section class="flex flex-col justify-center px-6 sm:px-12 lg:px-16 py-10">
+      <div class="w-full max-w-sm mx-auto">
+        <a href="index.html" class="flex items-center justify-center space-x-3 mb-8">
+          <div class="bg-blue-600 text-white p-2 rounded-xl shadow-md shadow-blue-500/20">
+            <i data-lucide="building-2" class="w-5 h-5"></i>
+          </div>
+          <span class="text-xl font-bold text-slate-900 tracking-tight">
             SmartRent <span class="text-blue-600 font-semibold">B2B</span>
-          </h1>
-          <p class="text-[10px] text-slate-500 font-medium">Operação Canasvieiras • Florianópolis/SC</p>
-        </div>
-      </a>
-      <div id="areaAuth" class="flex items-center"></div>
-    </div>
-  </header>
+          </span>
+        </a>
 
-  <!-- Auth Card centralizado -->
-  <main class="flex-1 flex items-center justify-center px-4 py-10">
-    <div class="w-full max-w-sm">
-      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-        <h2 class="text-xl font-bold text-slate-800">Criar conta</h2>
-        <p class="text-xs text-slate-500 mt-1 mb-5">Leva menos de um minuto.</p>
+        <div class="text-center mb-6">
+          <h1 class="text-3xl font-bold text-slate-900">Crie sua conta</h1>
+          <p class="text-sm text-slate-500 mt-2">Leva menos de um minuto.</p>
+        </div>
 
         <form id="formAuth" novalidate>
-        <div class="mb-3">
-          <label for="nome" class="block text-xs font-semibold text-slate-600 mb-1">Nome completo</label>
-          <input type="text" id="nome" autocomplete="name"
-            class="w-full p-2.5 border rounded-lg border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Ex: Ana Beatriz Rocha">
-          <p id="erro-nome" class="hidden mt-1 text-[11px] font-semibold text-rose-600"></p>
-        </div>
-        <div class="mb-3">
-          <label for="email" class="block text-xs font-semibold text-slate-600 mb-1">E-mail</label>
-          <input type="email" id="email" autocomplete="email"
-            class="w-full p-2.5 border rounded-lg border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="voce@exemplo.com">
-          <p id="erro-email" class="hidden mt-1 text-[11px] font-semibold text-rose-600"></p>
-        </div>
-        <div class="mb-3">
-          <label for="senha" class="block text-xs font-semibold text-slate-600 mb-1">Senha</label>
-          <input type="password" id="senha" autocomplete="new-password"
-            class="w-full p-2.5 border rounded-lg border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Ao menos 8 caracteres">
-          <p id="erro-senha" class="hidden mt-1 text-[11px] font-semibold text-rose-600"></p>
-        </div>
-        <div class="mb-3">
-          <label for="confirmacaoSenha" class="block text-xs font-semibold text-slate-600 mb-1">Confirmação de senha</label>
-          <input type="password" id="confirmacaoSenha" autocomplete="new-password"
-            class="w-full p-2.5 border rounded-lg border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Repita a senha">
-          <p id="erro-confirmacaoSenha" class="hidden mt-1 text-[11px] font-semibold text-rose-600"></p>
-        </div>
+          <div class="mb-3">
+            <label for="nome" class="block text-xs font-medium text-slate-500 mb-1.5">Nome completo</label>
+            <input type="text" id="nome" autocomplete="name"
+              class="w-full px-4 py-3 border rounded-xl border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Ex: Ana Beatriz Rocha">
+            <p id="erro-nome" class="hidden mt-1 text-[11px] font-semibold text-rose-600"></p>
+          </div>
+          <div class="mb-3">
+            <label for="email" class="block text-xs font-medium text-slate-500 mb-1.5">E-mail</label>
+            <input type="email" id="email" autocomplete="email"
+              class="w-full px-4 py-3 border rounded-xl border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="voce@exemplo.com">
+            <p id="erro-email" class="hidden mt-1 text-[11px] font-semibold text-rose-600"></p>
+          </div>
+          <div class="mb-3">
+            <label for="senha" class="block text-xs font-medium text-slate-500 mb-1.5">Senha</label>
+            <input type="password" id="senha" autocomplete="new-password"
+              class="w-full px-4 py-3 border rounded-xl border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Ao menos 8 caracteres">
+            <p id="erro-senha" class="hidden mt-1 text-[11px] font-semibold text-rose-600"></p>
+          </div>
+          <div class="mb-5">
+            <label for="confirmacaoSenha" class="block text-xs font-medium text-slate-500 mb-1.5">Confirmação de senha</label>
+            <input type="password" id="confirmacaoSenha" autocomplete="new-password"
+              class="w-full px-4 py-3 border rounded-xl border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Repita a senha">
+            <p id="erro-confirmacaoSenha" class="hidden mt-1 text-[11px] font-semibold text-rose-600"></p>
+          </div>
 
-          <p id="mensagemGeral" class="hidden mb-3 p-2.5 rounded-lg bg-rose-50 border border-rose-200 text-[11px] font-semibold text-rose-700"></p>
+          <p id="mensagemGeral" class="hidden mb-4 p-2.5 rounded-lg bg-rose-50 border border-rose-200 text-[11px] font-semibold text-rose-700"></p>
 
           <button type="submit" id="btnSubmit"
-            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg shadow text-sm transition">
+            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-full shadow-md shadow-blue-600/20 text-sm transition">
             Criar conta
           </button>
         </form>
 
-        <p class="text-center text-xs text-slate-500 mt-4">
+        <div class="flex items-center my-5">
+          <span class="flex-1 border-t border-slate-200"></span>
+          <span class="px-3 text-xs text-slate-400">ou</span>
+          <span class="flex-1 border-t border-slate-200"></span>
+        </div>
+
+        <p class="text-center text-sm text-slate-500">
           Já tem conta?
           <a id="linkLogin" href="login.html" class="font-bold text-blue-700 hover:underline">Entrar</a>
         </p>
+        <p class="text-center text-[11px] text-slate-400 mt-3">
+          Ao criar a conta você poderá gerenciar imóveis e reservas.
+        </p>
       </div>
+    </section>
 
-      <p class="text-center text-[11px] text-slate-500 mt-4">
-        Ao criar a conta você poderá gerenciar imóveis e reservas.
-      </p>
-    </div>
+    <!-- Foto real de Florianópolis (ver img/CREDITOS.md) -->
+    <aside class="hidden lg:block relative m-4 rounded-2xl overflow-hidden bg-blue-100">
+      <img src="img/florianopolis.jpg" alt="Praia de Canasvieiras, em Florianópolis, SC, com os prédios à beira-mar"
+        class="absolute inset-0 w-full h-full object-cover">
+      <div class="absolute inset-0 bg-gradient-to-t from-blue-950/85 via-blue-950/20 to-transparent"></div>
+      <div class="absolute bottom-0 left-0 right-0 p-8 text-white">
+        <p class="text-xs font-semibold uppercase tracking-widest text-blue-200">Operação Canasvieiras • Florianópolis/SC</p>
+        <p class="mt-2 text-2xl font-bold leading-snug">Gestão inteligente de imóveis para temporada.</p>
+      </div>
+    </aside>
   </main>
+
+  <footer class="text-[11px] text-blue-200 text-center">
+    Foto: Canasvieiras, Florianópolis/SC.
+  </footer>
 
   <script src="js/auth.js"></script>
   <script src="js/api.js"></script>
-  <script src="js/header-auth.js"></script>
   <script>lucide.createIcons();</script>
   <script>
     // Volta para onde a pessoa estava. Só aceita caminho relativo do próprio
@@ -133,7 +147,7 @@
     function carregando(ativo, textoOriginal) {
       var botao = document.getElementById('btnSubmit');
       botao.disabled = ativo;
-      botao.className = 'w-full text-white font-bold py-2.5 rounded-lg shadow text-sm transition ' +
+      botao.className = 'w-full text-white font-semibold py-3 rounded-full shadow-md shadow-blue-600/20 text-sm transition ' +
         (ativo ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700');
       botao.innerHTML = ativo
         ? '<span class="inline-block w-3.5 h-3.5 mr-2 border-2 border-white/40 border-t-white rounded-full animate-spin align-[-2px]"></span>Aguarde...'

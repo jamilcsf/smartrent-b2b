@@ -119,7 +119,7 @@ class AuthServiceTest {
         when(jwtService.gerarToken(any())).thenReturn("token-valido");
         when(jwtService.getValidadeSegundos()).thenReturn(86400L);
 
-        AuthResponse r = authService.autenticar(new LoginRequest("ana@smartrent.dev", "senhaSegura123"));
+        AuthResponse r = authService.autenticar(new LoginRequest("ana@smartrent.dev", "senhaSegura123", null));
 
         assertEquals("token-valido", r.token());
         assertEquals("ana@smartrent.dev", r.usuario().email());
@@ -132,7 +132,7 @@ class AuthServiceTest {
                 .thenReturn(Optional.of(usuarioComSenha("senhaSegura123")));
 
         var erro = assertThrows(AuthService.CredenciaisInvalidasException.class,
-                () -> authService.autenticar(new LoginRequest("ana@smartrent.dev", "errada")));
+                () -> authService.autenticar(new LoginRequest("ana@smartrent.dev", "errada", null)));
 
         assertEquals("E-mail ou senha inválidos.", erro.getMessage());
     }
@@ -143,11 +143,54 @@ class AuthServiceTest {
         when(usuarioRepository.findByEmail("ninguem@smartrent.dev")).thenReturn(Optional.empty());
 
         var erro = assertThrows(AuthService.CredenciaisInvalidasException.class,
-                () -> authService.autenticar(new LoginRequest("ninguem@smartrent.dev", "qualquer")));
+                () -> authService.autenticar(new LoginRequest("ninguem@smartrent.dev", "qualquer", null)));
 
         // Mensagem idêntica à da senha errada: distinguir permitiria descobrir
         // quais e-mails estão cadastrados.
         assertEquals("E-mail ou senha inválidos.", erro.getMessage());
+    }
+
+    @Test
+    @DisplayName("CT36 - Google: e-mail novo cria conta ANFITRIAO com senha aleatória")
+    void googleDeveCriarContaNova() {
+        when(usuarioRepository.findByEmail("nova@smartrent.dev")).thenReturn(Optional.empty());
+        when(usuarioRepository.save(any(Usuario.class))).thenAnswer(i -> i.getArgument(0));
+        when(jwtService.gerarToken(any())).thenReturn("token-g");
+
+        authService.entrarComGoogle("  Nova@SmartRent.DEV ", "Nova Pessoa");
+
+        ArgumentCaptor<Usuario> capturado = ArgumentCaptor.forClass(Usuario.class);
+        verify(usuarioRepository).save(capturado.capture());
+        Usuario salvo = capturado.getValue();
+        assertEquals("nova@smartrent.dev", salvo.getEmail());
+        assertEquals("Nova Pessoa", salvo.getNome());
+        assertEquals(PapelUsuario.ANFITRIAO, salvo.getPapel());
+        assertTrue(salvo.getSenhaHash().startsWith("$2"), "deve ser um hash BCrypt");
+    }
+
+    @Test
+    @DisplayName("CT37 - Google: e-mail já cadastrado entra na conta existente, sem duplicar")
+    void googleDeveEntrarEmContaExistente() {
+        when(usuarioRepository.findByEmail("ana@smartrent.dev"))
+                .thenReturn(Optional.of(usuarioComSenha("qualquer")));
+        when(jwtService.gerarToken(any())).thenReturn("token-g");
+
+        AuthResponse r = authService.entrarComGoogle("ana@smartrent.dev", "Outro Nome");
+
+        assertEquals("token-g", r.token());
+        assertEquals("Ana Beatriz Rocha", r.usuario().nome());
+        verify(usuarioRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("CT38 - Google: conta inativa deve ser recusada")
+    void googleDeveRecusarContaInativa() {
+        Usuario inativo = usuarioComSenha("qualquer");
+        inativo.setAtivo(false);
+        when(usuarioRepository.findByEmail("ana@smartrent.dev")).thenReturn(Optional.of(inativo));
+
+        assertThrows(AuthService.CredenciaisInvalidasException.class,
+                () -> authService.entrarComGoogle("ana@smartrent.dev", "Ana"));
     }
 
     @Test
@@ -158,6 +201,6 @@ class AuthServiceTest {
         when(usuarioRepository.findByEmail("ana@smartrent.dev")).thenReturn(Optional.of(inativo));
 
         assertThrows(AuthService.CredenciaisInvalidasException.class,
-                () -> authService.autenticar(new LoginRequest("ana@smartrent.dev", "senhaSegura123")));
+                () -> authService.autenticar(new LoginRequest("ana@smartrent.dev", "senhaSegura123", null)));
     }
 }

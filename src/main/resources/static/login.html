@@ -7,75 +7,108 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-<body class="bg-slate-100 min-h-screen flex flex-col">
+<body class="bg-blue-900 min-h-screen flex flex-col items-center justify-center gap-3 p-3 sm:p-6">
 
-  <header class="bg-white border-b border-slate-200 shadow-sm">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-      <a href="index.html" class="flex items-center space-x-3">
-        <div class="bg-blue-600 text-white p-2 rounded-xl shadow-md shadow-blue-500/20">
-          <i data-lucide="building-2" class="w-5 h-5"></i>
-        </div>
-        <div>
-          <h1 class="text-base font-bold text-slate-900 tracking-tight">
+  <!-- Painel dividido: formulário à esquerda, foto de Florianópolis à direita -->
+  <main class="w-full max-w-6xl bg-white rounded-2xl shadow-2xl overflow-hidden grid lg:grid-cols-2 lg:min-h-[640px]">
+
+    <section class="flex flex-col justify-center px-6 sm:px-12 lg:px-16 py-10">
+      <div class="w-full max-w-sm mx-auto">
+        <a href="index.html" class="flex items-center justify-center space-x-3 mb-10">
+          <div class="bg-blue-600 text-white p-2 rounded-xl shadow-md shadow-blue-500/20">
+            <i data-lucide="building-2" class="w-5 h-5"></i>
+          </div>
+          <span class="text-xl font-bold text-slate-900 tracking-tight">
             SmartRent <span class="text-blue-600 font-semibold">B2B</span>
-          </h1>
-          <p class="text-[10px] text-slate-500 font-medium">Operação Canasvieiras • Florianópolis/SC</p>
-        </div>
-      </a>
-      <div id="areaAuth" class="flex items-center"></div>
-    </div>
-  </header>
+          </span>
+        </a>
 
-  <!-- Auth Card centralizado -->
-  <main class="flex-1 flex items-center justify-center px-4 py-10">
-    <div class="w-full max-w-sm">
-      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-        <h2 class="text-xl font-bold text-slate-800">Entrar</h2>
-        <p class="text-xs text-slate-500 mt-1 mb-5">Acesse para gerenciar seus imóveis e reservas.</p>
+        <div class="text-center mb-8">
+          <h1 class="text-3xl font-bold text-slate-900">Bem-vindo de volta!</h1>
+          <p class="text-sm text-slate-500 mt-2">Entre para gerenciar seus imóveis e reservas.</p>
+        </div>
 
         <div id="avisoRedirect" class="hidden mb-4 p-2.5 rounded-lg bg-amber-50 border border-amber-200 text-[11px] font-semibold text-amber-800">
           Entre para continuar de onde você parou.
         </div>
 
         <form id="formAuth" novalidate>
-        <div class="mb-3">
-          <label for="email" class="block text-xs font-semibold text-slate-600 mb-1">E-mail</label>
-          <input type="email" id="email" autocomplete="email"
-            class="w-full p-2.5 border rounded-lg border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="voce@exemplo.com">
-          <p id="erro-email" class="hidden mt-1 text-[11px] font-semibold text-rose-600"></p>
-        </div>
-        <div class="mb-3">
-          <label for="senha" class="block text-xs font-semibold text-slate-600 mb-1">Senha</label>
-          <input type="password" id="senha" autocomplete="current-password"
-            class="w-full p-2.5 border rounded-lg border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Sua senha">
-          <p id="erro-senha" class="hidden mt-1 text-[11px] font-semibold text-rose-600"></p>
-        </div>
+          <div class="mb-4">
+            <label for="email" class="block text-xs font-medium text-slate-500 mb-1.5">Digite seu e-mail</label>
+            <input type="email" id="email" autocomplete="email"
+              class="w-full px-4 py-3 border rounded-xl border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="voce@exemplo.com">
+            <p id="erro-email" class="hidden mt-1 text-[11px] font-semibold text-rose-600"></p>
+          </div>
+          <div class="mb-5">
+            <label for="senha" class="block text-xs font-medium text-slate-500 mb-1.5">Digite sua senha</label>
+            <input type="password" id="senha" autocomplete="current-password"
+              class="w-full px-4 py-3 border rounded-xl border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Sua senha">
+            <p id="erro-senha" class="hidden mt-1 text-[11px] font-semibold text-rose-600"></p>
+          </div>
 
-          <p id="mensagemGeral" class="hidden mb-3 p-2.5 rounded-lg bg-rose-50 border border-rose-200 text-[11px] font-semibold text-rose-700"></p>
+          <!-- reCAPTCHA: o widget é montado por js após ler /api/auth/config -->
+          <div class="mb-4">
+            <div id="captcha" class="flex justify-center min-h-[78px]"></div>
+            <p id="erro-captcha" class="hidden mt-1 text-center text-[11px] font-semibold text-rose-600"></p>
+          </div>
+
+          <p id="mensagemGeral" class="hidden mb-4 p-2.5 rounded-lg bg-rose-50 border border-rose-200 text-[11px] font-semibold text-rose-700"></p>
 
           <button type="submit" id="btnSubmit"
-            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg shadow text-sm transition">
+            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-full shadow-md shadow-blue-600/20 text-sm transition">
             Entrar
           </button>
         </form>
 
-        <p class="text-center text-xs text-slate-500 mt-4">
-          Não tem conta?
+        <div class="flex items-center my-6">
+          <span class="flex-1 border-t border-slate-200"></span>
+          <span class="px-3 text-xs text-slate-400">ou</span>
+          <span class="flex-1 border-t border-slate-200"></span>
+        </div>
+
+        <!-- Botão oficial do Google (quando há client ID); senão, o botão abaixo só avisa -->
+        <div id="googleBotao" class="flex justify-center"></div>
+        <button type="button" id="googleFallback"
+          class="w-full flex items-center justify-center gap-2 border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold py-3 rounded-full text-sm transition">
+          <svg class="w-4 h-4" viewBox="0 0 48 48" aria-hidden="true">
+            <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.9 2.4 30.4 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"/>
+            <path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.7 6c4.5-4.2 6.9-10.3 6.9-17.7z"/>
+            <path fill="#FBBC05" d="M10.5 28.7c-.5-1.4-.8-3-.8-4.7s.3-3.3.8-4.7l-7.9-6.1C.9 16.4 0 20.1 0 24s.9 7.6 2.6 10.8l7.9-6.1z"/>
+            <path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.7-6c-2.1 1.4-4.9 2.3-8.2 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/>
+          </svg>
+          Entrar com o Google
+        </button>
+
+        <p class="text-center text-sm text-slate-500">
+          Ainda não tem conta?
           <a id="linkCadastro" href="cadastro.html" class="font-bold text-blue-700 hover:underline">Criar conta</a>
         </p>
+        <p class="text-center text-[11px] text-slate-400 mt-3">
+          O site continua aberto para navegação sem login. <a href="index.html" class="underline">Voltar ao início</a>.
+        </p>
       </div>
+    </section>
 
-      <p class="text-center text-[11px] text-slate-500 mt-4">
-        O site continua aberto para navegação sem login. <a href="index.html" class="underline">Voltar ao início</a>.
-      </p>
-    </div>
+    <!-- Foto real de Florianópolis (ver img/CREDITOS.md) -->
+    <aside class="hidden lg:block relative m-4 rounded-2xl overflow-hidden bg-blue-100">
+      <img src="img/florianopolis.jpg" alt="Praia de Canasvieiras, em Florianópolis, SC, com os prédios à beira-mar"
+        class="absolute inset-0 w-full h-full object-cover">
+      <div class="absolute inset-0 bg-gradient-to-t from-blue-950/85 via-blue-950/20 to-transparent"></div>
+      <div class="absolute bottom-0 left-0 right-0 p-8 text-white">
+        <p class="text-xs font-semibold uppercase tracking-widest text-blue-200">Operação Canasvieiras • Florianópolis/SC</p>
+        <p class="mt-2 text-2xl font-bold leading-snug">Gestão inteligente de imóveis para temporada.</p>
+      </div>
+    </aside>
   </main>
+
+  <footer class="text-[11px] text-blue-200 text-center">
+    Foto: Canasvieiras, Florianópolis/SC.
+  </footer>
 
   <script src="js/auth.js"></script>
   <script src="js/api.js"></script>
-  <script src="js/header-auth.js"></script>
   <script>lucide.createIcons();</script>
   <script>
     // Volta para onde a pessoa estava. Só aceita caminho relativo do próprio
@@ -123,7 +156,7 @@
     function carregando(ativo, textoOriginal) {
       var botao = document.getElementById('btnSubmit');
       botao.disabled = ativo;
-      botao.className = 'w-full text-white font-bold py-2.5 rounded-lg shadow text-sm transition ' +
+      botao.className = 'w-full text-white font-semibold py-3 rounded-full shadow-md shadow-blue-600/20 text-sm transition ' +
         (ativo ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700');
       botao.innerHTML = ativo
         ? '<span class="inline-block w-3.5 h-3.5 mr-2 border-2 border-white/40 border-t-white rounded-full animate-spin align-[-2px]"></span>Aguarde...'
@@ -137,24 +170,117 @@
       var email = document.getElementById('email').value.trim();
       var senha = document.getElementById('senha').value;
 
+      var captchaToken = captchaWidgetId === null ? '' : grecaptcha.getResponse(captchaWidgetId);
+
       var ok = true;
       if (!email) { ok = mostrarErro('email', 'Informe seu e-mail.') && ok; }
       else if (!emailValido(email)) { ok = mostrarErro('email', 'E-mail inválido.') && ok; }
       if (!senha) { ok = mostrarErro('senha', 'Informe sua senha.') && ok; }
+      if (!captchaToken) {
+        var alvoCaptcha = document.getElementById('erro-captcha');
+        alvoCaptcha.innerText = captchaWidgetId === null
+          ? 'A verificação de segurança não carregou. Recarregue a página.'
+          : 'Confirme que você não é um robô.';
+        alvoCaptcha.classList.remove('hidden');
+        ok = false;
+      }
       if (!ok) { return; }
 
       carregando(true);
       try {
         // ignorar401: aqui o 401 é "senha errada", não sessão expirada — deixar
         // o tratamento global agir redirecionaria o login para ele mesmo.
-        var r = await Api.post('/api/auth/login', { email: email, senha: senha }, { ignorar401: true });
-        Auth.definirSessao(r.token, r.usuario);
-        location.href = destinoDeRetorno();
+        var r = await Api.post('/api/auth/login',
+          { email: email, senha: senha, captchaToken: captchaToken }, { ignorar401: true });
+        entrar(r);
       } catch (e) {
         erroGeral(e.message || 'Não foi possível entrar.');
         carregando(false, 'Entrar');
+        // O token do reCAPTCHA vale uma única verificação: após qualquer
+        // tentativa é preciso resolver de novo.
+        if (captchaWidgetId !== null) { grecaptcha.reset(captchaWidgetId); }
       }
     });
+
+    function entrar(resposta) {
+      Auth.definirSessao(resposta.token, resposta.usuario);
+      location.href = destinoDeRetorno();
+    }
+
+    // ---------------------------------------------------------------
+    // reCAPTCHA e login com Google. As chaves públicas vêm do servidor
+    // (/api/auth/config); o segredo do captcha nunca chega ao navegador.
+    // ---------------------------------------------------------------
+    var captchaWidgetId = null;
+
+    function carregarScript(src) {
+      var s = document.createElement('script');
+      s.src = src;
+      s.async = true;
+      s.defer = true;
+      document.head.appendChild(s);
+    }
+
+    // Chamado pelo próprio script do reCAPTCHA quando termina de carregar.
+    window.aoCarregarCaptcha = function () {
+      captchaWidgetId = grecaptcha.render('captcha', {
+        sitekey: window.__siteKeyCaptcha,
+        hl: 'pt-BR',
+        callback: function () {
+          document.getElementById('erro-captcha').classList.add('hidden');
+        }
+      });
+    };
+
+    async function aoReceberCredencialGoogle(resposta) {
+      limparErros(['email', 'senha']);
+      try {
+        var r = await Api.post('/api/auth/google', { credential: resposta.credential }, { ignorar401: true });
+        entrar(r);
+      } catch (e) {
+        erroGeral(e.message || 'Não foi possível entrar com o Google.');
+      }
+    }
+
+    function iniciarGoogle(clientId) {
+      var fallback = document.getElementById('googleFallback');
+      if (!clientId) {
+        // Sem client ID o recurso não está configurado: o botão existe, mas avisa.
+        fallback.addEventListener('click', function () {
+          erroGeral('Login com o Google ainda não está configurado neste ambiente (GOOGLE_CLIENT_ID).');
+        });
+        return;
+      }
+      fallback.classList.add('hidden');
+      var iniciar = function () {
+        google.accounts.id.initialize({ client_id: clientId, callback: aoReceberCredencialGoogle });
+        var largura = Math.min(400, Math.max(200, document.getElementById('googleBotao').offsetWidth));
+        google.accounts.id.renderButton(document.getElementById('googleBotao'), {
+          theme: 'outline', size: 'large', shape: 'pill', text: 'signin_with',
+          locale: 'pt-BR', width: largura
+        });
+      };
+      var s = document.createElement('script');
+      s.src = 'https://accounts.google.com/gsi/client';
+      s.async = true;
+      s.defer = true;
+      s.onload = iniciar;
+      document.head.appendChild(s);
+    }
+
+    async function carregarConfiguracao() {
+      try {
+        var cfg = await Api.get('/api/auth/config');
+        if (cfg.recaptchaSiteKey) {
+          window.__siteKeyCaptcha = cfg.recaptchaSiteKey;
+          carregarScript('https://www.google.com/recaptcha/api.js?onload=aoCarregarCaptcha&render=explicit&hl=pt-BR');
+        }
+        iniciarGoogle(cfg.googleClientId);
+      } catch (e) {
+        erroGeral('Não foi possível carregar a verificação de segurança. Recarregue a página.');
+      }
+    }
+    carregarConfiguracao();
 
     document.addEventListener('DOMContentLoaded', function () {
       var alvo = new URLSearchParams(location.search).get('redirectTo');

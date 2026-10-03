@@ -8,6 +8,8 @@ import br.com.unisenai.smartrent.repository.UsuarioRepository;
 import br.com.unisenai.smartrent.security.JwtAuthenticationFilter;
 import br.com.unisenai.smartrent.security.JwtService;
 import br.com.unisenai.smartrent.service.AuthService;
+import br.com.unisenai.smartrent.service.CaptchaService;
+import br.com.unisenai.smartrent.service.GoogleTokenVerifier;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -21,6 +23,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -41,6 +46,12 @@ class AuthControllerTest {
 
     @MockBean
     private AuthService authService;
+
+    @MockBean
+    private CaptchaService captchaService;
+
+    @MockBean
+    private GoogleTokenVerifier googleTokenVerifier;
 
     @MockBean
     private JwtService jwtService;
@@ -125,5 +136,61 @@ class AuthControllerTest {
                                 Map.of("email", "ana@smartrent.dev", "senha", "errada"))))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.erro").value("E-mail ou senha inválidos."));
+    }
+
+    @Test
+    @DisplayName("CT32 - Login sem captcha válido deve responder 400 sem consultar a senha")
+    void loginSemCaptchaDeveSerRecusado() throws Exception {
+        doThrow(new CaptchaService.CaptchaInvalidoException("Confirme que você não é um robô."))
+                .when(captchaService).verificar(any());
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                Map.of("email", "ana@smartrent.dev", "senha", "senhaSegura123"))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.erro").value("Confirme que você não é um robô."));
+
+        verify(authService, never()).autenticar(any());
+    }
+
+    @Test
+    @DisplayName("CT33 - Login com Google válido deve devolver o token")
+    void loginGoogleDeveDevolverToken() throws Exception {
+        when(googleTokenVerifier.verificar("credencial-google"))
+                .thenReturn(new GoogleTokenVerifier.IdentidadeGoogle("ana@smartrent.dev", "Ana"));
+        when(authService.entrarComGoogle("ana@smartrent.dev", "Ana")).thenReturn(new AuthResponse("token-g", 86400L,
+                new UsuarioResponse(1L, "Ana", "ana@smartrent.dev", PapelUsuario.ANFITRIAO)));
+
+        mockMvc.perform(post("/api/auth/google")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("credential", "credencial-google"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").value("token-g"));
+    }
+
+    @Test
+    @DisplayName("CT34 - Credencial do Google inválida deve responder 401")
+    void credencialGoogleInvalidaDeveResponder401() throws Exception {
+        when(googleTokenVerifier.verificar(any()))
+                .thenThrow(new GoogleTokenVerifier.TokenGoogleInvalidoException("Credencial do Google inválida ou expirada."));
+
+        mockMvc.perform(post("/api/auth/google")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("credential", "lixo"))))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.erro").exists());
+    }
+
+    @Test
+    @DisplayName("CT35 - /config expõe só as chaves públicas, a visitantes")
+    void configDeveSerPublica() throws Exception {
+        when(captchaService.getSiteKey()).thenReturn("site-key");
+        when(googleTokenVerifier.getClientId()).thenReturn("client-id");
+
+        mockMvc.perform(get("/api/auth/config"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.recaptchaSiteKey").value("site-key"))
+                .andExpect(jsonPath("$.googleClientId").value("client-id"));
     }
 }

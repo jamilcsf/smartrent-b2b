@@ -12,6 +12,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.UUID;
+
 @Service
 public class AuthService {
 
@@ -58,6 +60,39 @@ public class AuthService {
                 .orElseThrow(() -> new CredenciaisInvalidasException("E-mail ou senha inválidos."));
 
         return responder(usuario);
+    }
+
+    /**
+     * Entra com uma identidade já validada pelo Google. O e-mail verificado
+     * pelo Google identifica a conta: se existir, entra nela; se não, cria uma.
+     */
+    @Transactional
+    public AuthResponse entrarComGoogle(String emailGoogle, String nomeGoogle) {
+        String email = emailGoogle.trim().toLowerCase();
+
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseGet(() -> usuarioRepository.save(novoUsuarioGoogle(email, nomeGoogle)));
+
+        if (!usuario.isAtivo()) {
+            throw new CredenciaisInvalidasException("Esta conta está inativa.");
+        }
+        return responder(usuario);
+    }
+
+    private Usuario novoUsuarioGoogle(String email, String nomeGoogle) {
+        String nome = (nomeGoogle == null || nomeGoogle.isBlank())
+                ? email.substring(0, email.indexOf('@'))
+                : nomeGoogle.trim();
+
+        Usuario usuario = new Usuario();
+        usuario.setNome(nome.length() > 120 ? nome.substring(0, 120) : nome);
+        usuario.setEmail(email);
+        // A coluna exige hash. Conta criada pelo Google recebe o hash de uma
+        // senha aleatória que ninguém conhece: só entra pelo Google.
+        usuario.setSenhaHash(passwordEncoder.encode(UUID.randomUUID().toString()));
+        usuario.setPapel(PapelUsuario.ANFITRIAO);
+        usuario.setAtivo(true);
+        return usuario;
     }
 
     private AuthResponse responder(Usuario usuario) {
