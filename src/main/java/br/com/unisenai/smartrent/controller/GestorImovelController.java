@@ -8,6 +8,7 @@ import br.com.unisenai.smartrent.dto.CriarAnuncioRequest;
 import br.com.unisenai.smartrent.dto.MidiaResponse;
 import br.com.unisenai.smartrent.dto.OrdemMidiasRequest;
 import br.com.unisenai.smartrent.dto.PrecoRequest;
+import br.com.unisenai.smartrent.dto.TipoMidiaRequest;
 import br.com.unisenai.smartrent.model.Usuario;
 import br.com.unisenai.smartrent.model.enums.TipoMidia;
 import br.com.unisenai.smartrent.service.AnuncioEdicaoService;
@@ -100,6 +101,12 @@ public class GestorImovelController {
                                             @PathVariable Long id, @PathVariable Long midiaId) {
         midiaService.definirCapa(gestor, id, midiaId);
         return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{id}/midias/{midiaId}/tipo")
+    public MidiaResponse alterarTipo(@AuthenticationPrincipal Usuario gestor, @PathVariable Long id,
+                                     @PathVariable Long midiaId, @RequestBody TipoMidiaRequest req) {
+        return midiaService.alterarTipo(gestor, id, midiaId, req.tipo());
     }
 
     // ------------------------------------------------------ preco e publicacao

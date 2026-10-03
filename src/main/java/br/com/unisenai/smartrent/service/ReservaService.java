@@ -92,7 +92,7 @@ public class ReservaService {
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Imovel nao encontrado: " + req.imovelId()));
         acesso.conferir(gestor, imovel);
 
-        LocalDateTime agora = LocalDateTime.now(clock);
+        LocalDateTime agora = Agora.de(clock);
         if (!AnuncioGestorMapper.noCatalogo(imovel, agora)) {
             throw new TransicaoInvalidaException(
                     "Este imovel esta fora do ar e nao recebe novas reservas no momento (situacao: "

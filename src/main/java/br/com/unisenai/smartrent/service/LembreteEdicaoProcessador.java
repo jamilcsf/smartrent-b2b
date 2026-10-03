@@ -92,7 +92,7 @@ public class LembreteEdicaoProcessador {
             return;
         }
 
-        LocalDateTime agora = LocalDateTime.now(clock);
+        LocalDateTime agora = Agora.de(clock);
         int numero = numeroDevido(imovel.getEdicaoIniciadaEm(), agora);
         if (numero == 0) {
             return;

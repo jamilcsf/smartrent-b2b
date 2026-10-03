@@ -41,7 +41,7 @@ public class AnuncioGestorMapper {
     }
 
     public AnuncioGestorResponse montar(Imovel i) {
-        LocalDateTime agora = LocalDateTime.now(clock);
+        LocalDateTime agora = Agora.de(clock);
         AnuncioRascunho rascunho = i.getStatus() == StatusAnuncio.EM_EDICAO
                 ? rascunhoRepository.findByImovelId(i.getId()).orElse(null)
                 : null;

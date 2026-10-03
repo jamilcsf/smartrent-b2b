@@ -329,4 +329,49 @@ class MidiaServiceTest {
         assertTrue(nova.isCapa());
         assertFalse(viva.isCapa());
     }
+
+    // -------------------------------------------------- alternar comum/360
+
+    @Test
+    @DisplayName("CT97 - Marcar imagem como 360 exige proporcao 2:1; voltar a comum sempre pode")
+    void alternarTipoValidaProporcao() {
+        ImovelMidia larga = midia(TipoMidia.FOTO, EstadoMidia.ATIVA);
+        larga.setLargura(400);
+        larga.setAltura(200);
+        ImovelMidia quadrada = midia(TipoMidia.FOTO, EstadoMidia.ATIVA);
+        quadrada.setLargura(300);
+        quadrada.setAltura(200);
+        existentes.add(larga);
+        existentes.add(quadrada);
+        when(midiaRepository.findById(larga.getId())).thenReturn(Optional.of(larga));
+        when(midiaRepository.findById(quadrada.getId())).thenReturn(Optional.of(quadrada));
+        lenient().when(midiaRepository.save(any(ImovelMidia.class))).thenAnswer(i -> i.getArgument(0));
+
+        assertEquals(TipoMidia.FOTO_360, service.alterarTipo(gestor, 1L, larga.getId(), TipoMidia.FOTO_360).tipo());
+        assertThrows(ValidacaoAnuncioException.class,
+                () -> service.alterarTipo(gestor, 1L, quadrada.getId(), TipoMidia.FOTO_360));
+        assertEquals(TipoMidia.FOTO, service.alterarTipo(gestor, 1L, larga.getId(), TipoMidia.FOTO).tipo());
+        assertThrows(ValidacaoAnuncioException.class,
+                () -> service.alterarTipo(gestor, 1L, larga.getId(), TipoMidia.VIDEO));
+    }
+
+    @Test
+    @DisplayName("CT98 - Em edicao, imagem do anuncio vivo nao muda de tipo (descarte ficaria inexato); a NOVA pode")
+    void alternarTipoEmEdicao() {
+        imovel.setStatus(StatusAnuncio.EM_EDICAO);
+        ImovelMidia viva = midia(TipoMidia.FOTO, EstadoMidia.ATIVA);
+        ImovelMidia nova = midia(TipoMidia.FOTO, EstadoMidia.NOVA);
+        viva.setLargura(400);
+        viva.setAltura(200);
+        nova.setLargura(400);
+        nova.setAltura(200);
+        when(midiaRepository.findById(viva.getId())).thenReturn(Optional.of(viva));
+        when(midiaRepository.findById(nova.getId())).thenReturn(Optional.of(nova));
+        lenient().when(midiaRepository.save(any(ImovelMidia.class))).thenAnswer(i -> i.getArgument(0));
+
+        assertThrows(TransicaoInvalidaException.class,
+                () -> service.alterarTipo(gestor, 1L, viva.getId(), TipoMidia.FOTO_360));
+        assertEquals(TipoMidia.FOTO_360, service.alterarTipo(gestor, 1L, nova.getId(), TipoMidia.FOTO_360).tipo());
+        assertEquals(TipoMidia.FOTO, viva.getTipo());
+    }
 }

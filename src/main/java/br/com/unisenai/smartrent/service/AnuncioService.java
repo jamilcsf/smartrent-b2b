@@ -137,7 +137,7 @@ public class AnuncioService {
         }
 
         if (imovel.getStatus() == StatusAnuncio.PRE_PUBLICACAO_SEM_PRECO) {
-            LocalDateTime agora = LocalDateTime.now(clock);
+            LocalDateTime agora = Agora.de(clock);
             if (imovel.getPrecoPrimeiraConfirmacaoEm() == null) {
                 imovel.setPrecoPrimeiraConfirmacaoEm(agora);
             }
@@ -182,7 +182,7 @@ public class AnuncioService {
         }
         AuditoriaService.exigirAceite(aceiteTermo);
 
-        LocalDateTime agora = LocalDateTime.now(clock);
+        LocalDateTime agora = Agora.de(clock);
         MaquinaDeEstados.mover(imovel, StatusAnuncio.PUBLICADO);
         imovel.setPublicadoEm(agora);
         imovel.setAtivo(true);
@@ -202,7 +202,7 @@ public class AnuncioService {
      */
     boolean promoverSeVencido(Imovel imovel) {
         if (imovel.getStatus() == StatusAnuncio.PRE_PUBLICACAO_AGUARDANDO
-                && janelaCumprida(imovel, LocalDateTime.now(clock))) {
+                && janelaCumprida(imovel, Agora.de(clock))) {
             MaquinaDeEstados.mover(imovel, StatusAnuncio.PRONTO_PARA_PUBLICAR);
             imovelRepository.save(imovel);
             return true;
@@ -219,7 +219,7 @@ public class AnuncioService {
     private Duration restanteDaJanela(Imovel imovel) {
         LocalDateTime fim = imovel.getPrecoPrimeiraConfirmacaoEm()
                 .plus(Duration.ofHours(props.janelaPrePublicacaoHoras()));
-        return Duration.between(LocalDateTime.now(clock), fim);
+        return Duration.between(Agora.de(clock), fim);
     }
 
     private static String descrever(Duration d) {
@@ -235,7 +235,7 @@ public class AnuncioService {
      */
     @Transactional
     public int promoverVencidos() {
-        LocalDateTime agora = LocalDateTime.now(clock);
+        LocalDateTime agora = Agora.de(clock);
         int republicados = imovelRepository.promoverRepublicacoesVencidas(agora);
         int prontos = imovelRepository.promoverProntosParaPublicar(
                 agora.minus(Duration.ofHours(props.janelaPrePublicacaoHoras())));

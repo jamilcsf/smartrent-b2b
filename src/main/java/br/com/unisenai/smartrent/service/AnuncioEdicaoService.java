@@ -92,7 +92,7 @@ public class AnuncioEdicaoService {
                     "Confirme que o anúncio sairá do ar durante a edição para continuar.");
         }
         Imovel imovel = acesso.doGestorParaAtualizar(gestor, id);
-        LocalDateTime agora = LocalDateTime.now(clock);
+        LocalDateTime agora = Agora.de(clock);
         republicarSeVencido(imovel, agora);
 
         StatusAnuncio origem = imovel.getStatus();
@@ -143,7 +143,7 @@ public class AnuncioEdicaoService {
             AnuncioService.validarPreco(dados.valorDiaria());
         }
         r.setDados(serializar(AnuncioCampos.sanitizar(dados)));
-        r.setAtualizadoEm(LocalDateTime.now(clock));
+        r.setAtualizadoEm(Agora.de(clock));
         rascunhoRepository.save(r);
         return mapper.montar(imovel);
     }
@@ -169,7 +169,7 @@ public class AnuncioEdicaoService {
         BigDecimal precoAnterior = imovel.getValorDiariaBase();
         BigDecimal precoNovo = dados.valorDiaria() == null ? precoAnterior : AnuncioService.validarPreco(dados.valorDiaria());
 
-        LocalDateTime agora = LocalDateTime.now(clock);
+        LocalDateTime agora = Agora.de(clock);
         AnuncioCampos.aplicar(imovel, dados);
         imovel.setValorDiariaBase(precoNovo);
         midiaService.aplicarRascunho(imovel, r);
@@ -213,7 +213,7 @@ public class AnuncioEdicaoService {
         }
         exigirEmEdicao(imovel);
 
-        LocalDateTime agora = LocalDateTime.now(clock);
+        LocalDateTime agora = Agora.de(clock);
         StatusAnuncio origem = imovel.getEdicaoEstadoOrigem();
         LocalDateTime republicarOriginal = imovel.getRepublicarOriginalEm();
         boolean restauraAgendamento = origem == StatusAnuncio.REPUBLICACAO_AGENDADA

@@ -34,7 +34,7 @@ public class NotificacaoService {
         n.setMensagem(mensagem.length() > 600 ? mensagem.substring(0, 600) : mensagem);
         n.setLink(link);
         n.setLida(false);
-        n.setCriadaEm(LocalDateTime.now(clock));
+        n.setCriadaEm(Agora.de(clock));
         return repository.save(n);
     }
 

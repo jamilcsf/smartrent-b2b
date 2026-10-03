@@ -132,7 +132,7 @@ public class MidiaService {
             m.setOrdem(efetivas.stream().mapToInt(ImovelMidia::getOrdem).max().orElse(-1) + 1);
             // Fora de edicao a primeira imagem vira capa sozinha; em edicao a capa vive no rascunho.
             m.setCapa(!emEdicao && tipo.imagem() && efetivas.stream().noneMatch(ImovelMidia::isCapa));
-            m.setDataEnvio(LocalDateTime.now(clock));
+            m.setDataEnvio(Agora.de(clock));
             ImovelMidia salva = midiaRepository.saveAndFlush(m);
             return MidiaResponse.de(salva);
         } catch (IOException e) {
@@ -211,7 +211,7 @@ public class MidiaService {
         if (emEdicao) {
             AnuncioRascunho r = rascunhoDe(imovelId);
             r.setMidiaOrdem(idsNaOrdem.stream().map(String::valueOf).collect(Collectors.joining(",")));
-            r.setAtualizadoEm(LocalDateTime.now(clock));
+            r.setAtualizadoEm(Agora.de(clock));
             rascunhoRepository.save(r);
             return;
         }
@@ -237,13 +237,38 @@ public class MidiaService {
         if (emEdicao) {
             AnuncioRascunho r = rascunhoDe(imovelId);
             r.setCapaMidiaId(midiaId);
-            r.setAtualizadoEm(LocalDateTime.now(clock));
+            r.setAtualizadoEm(Agora.de(clock));
             rascunhoRepository.save(r);
             return;
         }
         List<ImovelMidia> todas = efetivas(imovelId);
         todas.forEach(m -> m.setCapa(m.getId().equals(midiaId)));
         midiaRepository.saveAll(todas);
+    }
+
+    /**
+     * Marca uma imagem como comum ou 360. Imagem para 360 precisa ter proporcao
+     * 2:1. Durante uma edicao, so midia NOVA pode mudar de tipo: mudar uma
+     * midia do anuncio vivo tornaria o descarte inexato.
+     */
+    @Transactional
+    public MidiaResponse alterarTipo(Usuario gestor, Long imovelId, Long midiaId, TipoMidia novoTipo) {
+        Imovel imovel = acesso.doGestorParaAtualizar(gestor, imovelId);
+        boolean emEdicao = exigirEditavel(imovel);
+        ImovelMidia m = daqui(imovelId, midiaId);
+        if (novoTipo == null || !novoTipo.imagem() || !m.getTipo().imagem()) {
+            throw new ValidacaoAnuncioException("Só é possível alternar uma imagem entre foto comum e foto 360.");
+        }
+        if (emEdicao && m.getEstado() == EstadoMidia.ATIVA) {
+            throw new TransicaoInvalidaException(
+                    "Esta imagem já faz parte do anúncio publicado. Remova-a e envie novamente com o tipo desejado.");
+        }
+        if (novoTipo == TipoMidia.FOTO_360 && !MidiaProcessador.proporcao360(m.getLargura(), m.getAltura())) {
+            throw new ValidacaoAnuncioException("Foto 360 deve ter proporção 2:1 (imagem equirretangular). Esta tem "
+                    + m.getLargura() + "x" + m.getAltura() + ".");
+        }
+        m.setTipo(novoTipo);
+        return MidiaResponse.de(midiaRepository.save(m));
     }
 
     // ------------------------------------------------ edicao: efetivar/desfazer

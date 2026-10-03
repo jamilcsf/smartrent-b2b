@@ -57,6 +57,19 @@
     return div.innerHTML;
   }
 
+  /** Foto de capa; sem foto, o placeholder com o titulo. */
+  function capa(imovel) {
+    if (imovel.capaUrl) {
+      return '<div class="h-32 bg-slate-200 overflow-hidden">' +
+               '<img src="' + escapar(imovel.capaUrl) + '" alt="' + escapar(imovel.titulo) + '" loading="lazy" ' +
+               'class="w-full h-full object-cover">' +
+             '</div>';
+    }
+    return '<div class="bg-slate-200 h-32 flex items-center justify-center text-slate-400 font-bold text-sm px-3 text-center">' +
+             escapar(imovel.titulo) +
+           '</div>';
+  }
+
   /** Monta o card. `imovel` é um ImovelResponse vindo de /api/imoveis. */
   function card(imovel) {
     var via = apenasLogradouro(imovel.logradouro);
@@ -85,9 +98,7 @@
         'class="block focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-xl">' +
       '<article class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col ' +
         'hover:shadow-md hover:border-blue-300 transition cursor-pointer h-full">' +
-        '<div class="bg-slate-200 h-32 flex items-center justify-center text-slate-400 font-bold text-sm px-3 text-center">' +
-          escapar(imovel.titulo) +
-        '</div>' +
+        capa(imovel) +
         '<div class="p-4 flex-1 flex flex-col">' +
           '<div class="flex items-start justify-between gap-2">' +
             '<span class="text-[10px] uppercase tracking-wide font-bold text-blue-800 bg-blue-50 px-2 py-0.5 rounded">' +

@@ -56,7 +56,7 @@ public class AuditoriaService {
         a.setImovel(imovel);
         a.setVersaoTermo(TermoUso.VERSAO);
         a.setContexto(contexto);
-        a.setDataHora(LocalDateTime.now(clock));
+        a.setDataHora(Agora.de(clock));
         a.setIp(ip);
         aceiteRepository.save(a);
     }
@@ -68,7 +68,7 @@ public class AuditoriaService {
         a.setUsuarioId(usuarioId);
         a.setAcao(acao);
         a.setDetalhes(detalhes == null || detalhes.length() <= 500 ? detalhes : detalhes.substring(0, 500));
-        a.setDataHora(LocalDateTime.now(clock));
+        a.setDataHora(Agora.de(clock));
         auditoriaRepository.save(a);
     }
 
@@ -80,7 +80,7 @@ public class AuditoriaService {
         h.setValorNovo(novo);
         h.setAutor(autor);
         h.setOrigem(origem);
-        h.setDataHora(LocalDateTime.now(clock));
+        h.setDataHora(Agora.de(clock));
         historicoPrecoRepository.save(h);
     }
 }

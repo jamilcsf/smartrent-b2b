@@ -142,7 +142,7 @@
     function destinoDeRetorno() {
       var alvo = new URLSearchParams(location.search).get('redirectTo');
       if (!alvo || !alvo.startsWith('/') || alvo.startsWith('//')) {
-        return 'index.html';
+        return Auth.destinoPadrao();
       }
       return alvo;
     }

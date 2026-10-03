@@ -50,9 +50,23 @@
     }
   }
 
+  /**
+   * Itens de navegação marcados com data-somente-gestor só aparecem para
+   * gestores. É conveniência de interface: o servidor é quem nega o acesso.
+   */
+  function ajustarNavegacao(estado) {
+    var gestor = global.Auth && Auth.isGestor();
+    document.querySelectorAll('[data-somente-gestor]').forEach(function (el) {
+      el.classList.toggle('hidden', !gestor);
+    });
+  }
+
   document.addEventListener('DOMContentLoaded', function () {
     if (global.Auth) {
-      Auth.onChange(render);
+      Auth.onChange(function (estado) {
+        render(estado);
+        ajustarNavegacao(estado);
+      });
     }
   });
 })(window);

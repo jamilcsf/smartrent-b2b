@@ -65,8 +65,7 @@ public class MidiaProcessador {
                 throw new ValidacaoAnuncioException("A resolução da imagem é alta demais (máximo 60 megapixels).");
             }
             if (panoramica) {
-                double razao = (double) dim[0] / dim[1];
-                if (Math.abs(razao - 2.0) > 2.0 * TOLERANCIA_360) {
+                if (!proporcao360(dim[0], dim[1])) {
                     throw new ValidacaoAnuncioException(
                             "Foto 360 deve ter proporção 2:1 (imagem equirretangular). Esta tem "
                                     + dim[0] + "x" + dim[1] + ".");
@@ -76,6 +75,14 @@ public class MidiaProcessador {
         } catch (IOException e) {
             throw new ValidacaoAnuncioException("Não foi possível ler a imagem enviada.");
         }
+    }
+
+    /** Foto 360 equirretangular: largura = 2 x altura, com 2% de tolerancia. */
+    public static boolean proporcao360(Integer largura, Integer altura) {
+        if (largura == null || altura == null || altura == 0) {
+            return false;
+        }
+        return Math.abs((double) largura / altura - 2.0) <= 2.0 * TOLERANCIA_360;
     }
 
     public Inspecao inspecionarVideo(Path arquivo, String mimeDeclarado, int duracaoMaximaSegundos) {
