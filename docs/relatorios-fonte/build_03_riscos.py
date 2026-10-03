@@ -49,6 +49,18 @@ riscos = [
     ("R08", "Falhas expostas durante a demonstração ao vivo para a banca.", "Média", "Alto",
      "Alta", "Ensaio da apresentação com o ambiente já implantado, com antecedência mínima de "
      "dois dias, e gravação prévia de um vídeo de segurança da demonstração."),
+    ("R09", "Mídias dos anúncios guardadas em disco local não sobreviverem a uma troca de "
+            "instância nem escalarem para mais de um servidor.", "Média", "Médio", "Média",
+     "O armazenamento está atrás da interface MidiaStorage; migrar para armazenamento de "
+     "objetos (S3) exige apenas uma nova implementação."),
+    ("R10", "Lembretes de edição esquecida não chegarem por e-mail, hoje apenas registrados "
+            "em log, e o gestor deixar anúncios fora do ar sem perceber.", "Média", "Médio",
+     "Média", "O aviso in-app, o selo de destaque no painel e a contagem de tempo em edição já "
+     "funcionam; o canal de e-mail é um ponto de extensão (NotificadorEmail) a ser ligado a um SMTP."),
+    ("R11", "O texto do termo de uso, hoje um modelo de trabalho, não ter validade jurídica "
+            "quando o sistema for usado de verdade.", "Média", "Alto", "Alta",
+     "O aceite é versionado e auditado (usuário, imóvel, versão, data, hora e IP); o texto "
+     "deve ser revisado por assessoria jurídica antes da produção."),
 ]
 rdata = [[Paragraph("ID", styles["CellHeader"]), Paragraph("Risco", styles["CellHeader"]),
           Paragraph("Prob.", styles["CellHeaderCenter"]), Paragraph("Impacto", styles["CellHeaderCenter"]),
@@ -67,7 +79,7 @@ story.extend(quadro(styles, "Registro de riscos do projeto", quadro_table(
     header_align_center=[2, 3, 4])))
 
 story.append(Paragraph(
-    "Os riscos R04, R07 e R08 concentram a maior severidade combinada. Recomenda-se revisão "
+    "Os riscos R04, R07, R08 e R11 concentram a maior severidade combinada. Recomenda-se revisão "
     "semanal deste documento pela equipe, com o registro explícito de qualquer risco novo "
     "identificado ao longo do desenvolvimento.", styles["Body"]))
 

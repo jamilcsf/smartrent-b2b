@@ -179,6 +179,34 @@ rf_list = [
     ("RF13", "Sincronização bidirecional de reservas com plataformas externas via iCal.",
      "Won't (Visão Futura)"),
     ("RF14", "Processamento de pagamentos reais por meio de um gateway.", "Won't (Visão Futura)"),
+    ("RF15", "O sistema deve permitir ao gestor cadastrar um anúncio com título, descrição, "
+             "características, endereço completo, até 14 imagens (fotos comuns e em 360 graus "
+             "somadas), até 2 vídeos de no máximo 2 minutos, link de WhatsApp e aceite "
+             "obrigatório do termo de uso, validando limites e formatos também no servidor.",
+     "Must"),
+    ("RF16", "O anúncio deve seguir um ciclo de vida com transições validadas no servidor: "
+             "pré-publicação sem preço, janela de 24 horas contada da primeira confirmação de "
+             "preço (que não reinicia quando o preço muda), pronto para publicar e publicado, "
+             "este último exigindo novo aceite do termo.", "Must"),
+    ("RF17", "O sistema deve validar no servidor que o usuário comum acessa apenas o catálogo, "
+             "que o gestor vê e altera somente os próprios imóveis e que o link de WhatsApp é "
+             "enviado apenas a usuários autenticados.", "Must"),
+    ("RF18", "O sistema deve permitir editar um anúncio publicado: ele sai do catálogo ao "
+             "iniciar a edição, o progresso fica em rascunho, a confirmação o republica "
+             "automaticamente após 2 horas e o descarte o devolve ao ar imediatamente, sem "
+             "prazo máximo de edição.", "Must"),
+    ("RF19", "O sistema deve notificar o gestor, sem alterar o anúncio, quando uma edição "
+             "completar 24 horas aberta, repetindo o lembrete em intervalo configurável.",
+     "Should"),
+    ("RF20", "Cada reserva deve gravar um registro imutável do preço e dos dados do imóvel no "
+             "momento da criação, de modo que alterações posteriores de preço ou de anúncio "
+             "não afetem reservas existentes.", "Must"),
+    ("RF21", "O sistema deve permitir solicitar sugestão de preço por IA para vários imóveis em "
+             "pré-publicação, com revisão e confirmação explícitas do gestor e histórico de "
+             "origem (manual ou IA) de cada alteração de preço.", "Should"),
+    ("RF22", "O sistema deve manter trilha de auditoria dos aceites do termo (usuário, imóvel, "
+             "versão, data, hora e IP), das alterações de preço e das ações sobre o anúncio.",
+     "Should"),
 ]
 rf_data = [[Paragraph("ID", styles["CellHeader"]), Paragraph("Descrição", styles["CellHeader"]),
             Paragraph("MoSCoW", styles["CellHeaderCenter"])]]
@@ -278,6 +306,11 @@ resumo_list = [
                           "sugerido."),
     ("Cancelar ou concluir reserva", "Atualização da situação de uma reserva; reservas "
                                       "canceladas liberam o período para uma nova reserva."),
+    ("Criar e publicar anúncio", "Cadastro com mídias e termo de uso, definição de preço "
+                                  "(manual ou por IA), janela de 24 horas e publicação com novo "
+                                  "aceite (RF15, RF16, RF21)."),
+    ("Editar anúncio publicado", "Início da edição (anúncio sai do ar), rascunho, confirmação "
+                                  "com republicação em 2 horas ou descarte imediato (RF18)."),
 ]
 rdata2 = [[Paragraph("Caso de uso", styles["CellHeader"]), Paragraph("Resumo", styles["CellHeader"])]]
 for uc, res in resumo_list:
@@ -319,7 +352,9 @@ story.append(Paragraph(
     "O modelo lógico corresponde ao diagrama de classes apresentado na Seção 5.1: quatro "
     "entidades principais (usuário, imóvel, reserva e sugestão de preço) e um objeto de valor "
     "incorporado (endereço). Todos os relacionamentos entre as entidades principais são de um "
-    "para muitos.", styles["Body"]))
+    "para muitos. O fluxo de anúncios acrescentou entidades de apoio (mídias, rascunho de "
+    "edição, histórico de preço, aceites do termo, auditoria, lembretes e notificações), "
+    "descritas na Seção 6.2 e ainda não representadas no diagrama da Seção 5.1.", styles["Body"]))
 
 story.append(Paragraph("6.2 Modelo físico", styles["H2"]))
 story.append(Paragraph(
@@ -344,11 +379,16 @@ tables_ddl = [
         ("titulo", "varchar(150)", "obrigatório"), ("descricao", "text", "opcional"),
         ("tipo_imovel", "varchar(20)", "obrigatório"),
         ("endereço (logradouro, bairro, cidade, estado, cep)", "varchar", "obrigatório"),
-        ("latitude, longitude", "numeric(10,7)", "obrigatório — microgeografia"),
+        ("latitude, longitude", "numeric(10,7)", "opcional — microgeografia"),
         ("capacidade_hospedes, numero_quartos, numero_banheiros", "integer", "obrigatório"),
         ("metragem_quadrada", "integer", "opcional — área útil em m²"),
         ("vagas_garagem", "integer", "opcional — nulo e zero são distintos"),
-        ("valor_diaria_base", "numeric(10,2)", "obrigatório"),
+        ("valor_diaria_base", "numeric(10,2)", "opcional até a confirmação do preço"),
+        ("status", "varchar(30)", "obrigatório — ciclo de vida do anúncio"),
+        ("preco_primeira_confirmacao_em", "timestamp", "âncora da janela de 24h; gravado uma única vez"),
+        ("publicado_em, edicao_iniciada_em, edicao_estado_origem, republicar_original_em, "
+         "edicao_confirmada_em, republicar_em", "timestamp / varchar", "fases de edição e republicação"),
+        ("whatsapp_link", "varchar(300)", "opcional — só exposto a usuários logados"),
         ("ativo", "boolean", "obrigatório"), ("data_cadastro", "timestamp", "obrigatório"),
     ]),
     ("reservas", [
@@ -360,6 +400,10 @@ tables_ddl = [
         ("status, origem", "varchar(20)", "obrigatório"),
         ("observacoes", "text", "opcional"), ("data_criacao", "timestamp", "obrigatório"),
         ("versao", "bigint", "controle de concorrência otimista"),
+        ("moeda, numero_diarias, preco_diaria_snapshot, taxas_snapshot, total_snapshot",
+         "varchar / integer / numeric", "snapshot imutável das condições financeiras"),
+        ("imovel_titulo_snapshot, imovel_endereco_snapshot, imovel_caracteristicas_snapshot",
+         "varchar", "snapshot dos dados do imóvel na criação"),
     ]),
     ("sugestoes_preco", [
         ("id", "bigserial", "chave primária"), ("imovel_id", "bigint", "obrigatório, referencia imoveis"),
@@ -369,6 +413,53 @@ tables_ddl = [
         ("justificativa_ia", "text", "opcional"), ("modelo_ia_utilizado", "varchar(80)", "opcional"),
         ("origem_calculo", "varchar(30)", "obrigatório — IA generativa ou contingência"),
         ("data_geracao", "timestamp", "obrigatório"),
+    ]),
+    ("reserva_precos_diarios", [
+        ("reserva_id, data", "bigint, date", "chave composta — valor de cada diária da reserva"),
+        ("valor", "numeric(10,2)", "obrigatório — gravado uma única vez"),
+    ]),
+    ("imovel_midias", [
+        ("id", "bigserial", "chave primária"), ("imovel_id", "bigint", "obrigatório, referencia imoveis"),
+        ("chave", "varchar(36)", "obrigatório, único — UUID da URL pública"),
+        ("tipo", "varchar(10)", "FOTO, FOTO_360 ou VIDEO"),
+        ("estado", "varchar(10)", "ATIVA, NOVA ou REMOVIDA (edição em andamento)"),
+        ("arquivo, miniatura, mime, tamanho_bytes", "varchar / bigint", "metadados do arquivo guardado"),
+        ("largura, altura, duracao_segundos", "integer", "opcionais — lidos no servidor"),
+        ("ordem, capa, data_envio", "integer / boolean / timestamp", "obrigatório"),
+    ]),
+    ("anuncio_rascunhos", [
+        ("id", "bigserial", "chave primária"), ("imovel_id", "bigint", "obrigatório, único"),
+        ("dados", "text", "campos do formulário em JSON"),
+        ("midia_ordem, capa_midia_id", "text / bigint", "ordem e capa escolhidas na edição"),
+        ("criado_em, atualizado_em", "timestamp", "obrigatório"),
+    ]),
+    ("historico_preco", [
+        ("id", "bigserial", "chave primária"), ("imovel_id, autor_id", "bigint", "obrigatório"),
+        ("valor_anterior, valor_novo", "numeric(10,2)", "valor_anterior é nulo na primeira definição"),
+        ("origem", "varchar(10)", "MANUAL ou IA"), ("data_hora", "timestamp", "obrigatório"),
+    ]),
+    ("aceites_termo", [
+        ("id", "bigserial", "chave primária"), ("usuario_id, imovel_id", "bigint", "obrigatório"),
+        ("versao_termo", "varchar(20)", "obrigatório"),
+        ("contexto", "varchar(30)", "CADASTRO, PUBLICACAO ou CONFIRMACAO_EDICAO"),
+        ("data_hora, ip", "timestamp / varchar(45)", "auditoria do aceite"),
+    ]),
+    ("auditoria_anuncio", [
+        ("id", "bigserial", "chave primária"), ("imovel_id", "bigint", "obrigatório"),
+        ("usuario_id", "bigint", "nulo quando a ação parte do sistema"),
+        ("acao, detalhes, data_hora", "varchar / timestamp", "trilha das ações sobre o anúncio"),
+    ]),
+    ("lembretes_edicao", [
+        ("id", "bigserial", "chave primária"), ("imovel_id", "bigint", "obrigatório"),
+        ("edicao_iniciada_em, numero, canal", "timestamp / integer / varchar",
+         "chave única — garante o envio sem duplicidade"),
+        ("criado_em, enviado_em, tentativas, erro", "timestamp / integer / varchar",
+         "enviado_em nulo indica entrega pendente de nova tentativa"),
+    ]),
+    ("notificacoes", [
+        ("id", "bigserial", "chave primária"), ("usuario_id", "bigint", "obrigatório"),
+        ("imovel_id", "bigint", "opcional"), ("titulo, mensagem, link", "varchar", "obrigatório (link opcional)"),
+        ("lida, criada_em", "boolean / timestamp", "obrigatório"),
     ]),
 ]
 for tname, cols in tables_ddl:
@@ -385,7 +476,9 @@ story.append(Paragraph(
     "idx_imoveis_ativo, idx_reservas_imovel, idx_reservas_periodo (usado pela verificação "
     "de conflito de datas) e idx_sugestoes_imovel_data. A unicidade do endereço de e-mail "
     "do usuário é garantida por restrição de unicidade na própria coluna, não por índice "
-    "nomeado.", styles["Body"]))
+    "nomeado. O fluxo de anúncios acrescentou os índices idx_imoveis_status, "
+    "idx_midias_imovel, idx_hist_preco_imovel, idx_aceites_imovel, idx_auditoria_imovel e "
+    "idx_notificacoes_usuario, além da restrição de unicidade uk_lembrete.", styles["Body"]))
 story.append(PageBreak())
 
 # ---------------------------------------------------------------------
