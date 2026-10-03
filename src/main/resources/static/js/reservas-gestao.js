@@ -9,6 +9,9 @@
 (function (global) {
   'use strict';
 
+  var ROTULO_STATUS = { PENDENTE: 'Pendente', CONFIRMADA: 'Confirmada', CONCLUIDA: 'Concluída',
+    CANCELADA_COM_REEMBOLSO: 'Cancelada (reembolsada)', CANCELADA_SEM_REEMBOLSO: 'Cancelada (sem reembolso)', CANCELADA_PELO_GESTOR: 'Cancelada pelo gestor' };
+
   var R = { raiz: null, anuncios: [], reservas: [], editando: null, params: {}, montado: false };
 
   function $(id) { return document.getElementById(id); }
@@ -23,6 +26,7 @@
 
   function montar() {
     R.raiz.innerHTML =
+      '<div id="rg-calendario" class="mb-6"></div>' +
       '<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">' +
         '<div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm lg:col-span-1 space-y-4 self-start">' +
           '<h3 id="rg-titulo" class="text-sm font-bold text-slate-900">Cadastrar nova reserva</h3>' +
@@ -38,7 +42,7 @@
             '<div><label class="block text-xs font-semibold text-slate-700 mb-1.5" for="rg-email">E-mail do hóspede</label><input type="email" id="rg-email" class="rg-campo" maxlength="150"></div>' +
             '<div><label class="block text-xs font-semibold text-slate-700 mb-1.5" for="rg-hospedes">Hóspedes</label><input type="number" id="rg-hospedes" class="rg-campo" min="1" value="1"></div>' +
             '<div><label class="block text-xs font-semibold text-slate-700 mb-1.5" for="rg-status">Status</label>' +
-              '<select id="rg-status" class="rg-campo"><option value="CONFIRMADA">CONFIRMADA</option><option value="PENDENTE">PENDENTE</option><option value="CANCELADA">CANCELADA</option></select></div>' +
+              '<select id="rg-status" class="rg-campo"><option value="CONFIRMADA">Confirmada</option><option value="PENDENTE">Pendente</option></select></div>' +
             '<div id="rg-total" class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-600"></div>' +
             '<p id="rg-erro" class="hidden p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-xs font-semibold text-rose-700"></p>' +
             '<div class="space-y-2">' +
@@ -67,6 +71,7 @@
     ['rg-imovel', 'rg-checkin', 'rg-checkout'].forEach(function (id) { $(id).addEventListener('change', atualizarTotal); });
     $('rg-tabela').addEventListener('click', aoClicarTabela);
     R.montado = true;
+    Calendario.montar($('rg-calendario'), R.anuncios, { aoAlterar: carregarReservas, aoCancelarReserva: cancelarPorId });
   }
 
   function preencherImoveis(valorAtual) {
@@ -168,21 +173,55 @@
       return;
     }
     tbody.innerHTML = R.reservas.map(function (r) {
+      var cancelada = /^CANCELADA/.test(r.status);
       var cls = r.status === 'PENDENTE' ? 'bg-amber-50 text-amber-700 border-amber-200'
-        : (r.status === 'CANCELADA' ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200');
+        : (cancelada ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200');
+      var rotulo = ROTULO_STATUS[r.status] || r.status;
       return '<tr class="hover:bg-slate-50/80">' +
         '<td class="p-3 font-bold text-slate-900">#' + r.id + '</td>' +
         '<td class="p-3"><span class="text-slate-800">' + esc(r.imovelTitulo) + '</span><br><span class="text-[10px] font-normal text-slate-500">' + esc(r.hospedeNome) + '</span>' +
           (r.imovelCaracteristicas ? '<br><span class="text-[10px] font-normal text-slate-400">' + esc(r.imovelCaracteristicas) + '</span>' : '') + '</td>' +
         '<td class="p-3 text-slate-600">' + esc(r.dataCheckin) + ' até ' + esc(r.dataCheckout) + '</td>' +
         '<td class="p-3 font-bold text-slate-900">' + moeda(r.valorTotal) +
-          '<br><span class="text-[10px] font-normal text-slate-500">' + r.numeroDiarias + ' × ' + moeda(r.precoDiaria) + ' (preço da reserva)</span></td>' +
-        '<td class="p-3"><span class="px-2.5 py-1 rounded-full text-[10px] font-bold border ' + cls + '">' + esc(r.status) + '</span></td>' +
+          '<br><span class="text-[10px] font-normal text-slate-500">' + r.numeroDiarias + ' × ' + moeda(r.precoDiaria) + (Number(r.taxaLimpeza) > 0 ? ' + limpeza ' + moeda(r.taxaLimpeza) : '') + ' · ' + r.numeroHospedes + ' hóspede(s)</span></td>' +
+        '<td class="p-3"><span class="px-2.5 py-1 rounded-full text-[10px] font-bold border ' + cls + '">' + esc(rotulo) + '</span></td>' +
         '<td class="p-3 text-center space-x-1">' +
-          '<button type="button" data-rg="editar" data-id="' + r.id + '" class="bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 px-2.5 py-1 rounded-lg text-xs font-semibold">Editar</button>' +
+          (cancelada ? '' : '<button type="button" data-rg="cancelar" data-id="' + r.id + '" class="bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 px-2.5 py-1 rounded-lg text-xs font-semibold">Cancelar</button>') +
+          (cancelada ? '' : '<button type="button" data-rg="editar" data-id="' + r.id + '" class="bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 px-2.5 py-1 rounded-lg text-xs font-semibold">Editar</button>') +
           '<button type="button" data-rg="excluir" data-id="' + r.id + '" class="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 px-2.5 py-1 rounded-lg text-xs font-semibold">Excluir</button>' +
         '</td></tr>';
     }).join('');
+  }
+
+  /** Cancelamento pelo gestor: motivo obrigatorio e reembolso integral ao cliente (regra do servidor). */
+  async function cancelarPorId(id) {
+    var r = R.reservas.filter(function (x) { return x.id === id; })[0];
+    var titulo = r ? 'Reserva #' + r.id + ' de ' + r.hospedeNome : 'Reserva #' + id;
+    var m = UI.modal({
+      titulo: 'Cancelar reserva',
+      corpo: '<p class="mb-3 text-xs"><b>' + esc(titulo) + '</b></p>' +
+        '<p class="mb-3 text-xs p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-900">Ao cancelar como gestor, o cliente recebe <b>reembolso integral</b> (quando a reserva foi paga na plataforma), as datas são liberadas na hora e o cancelamento fica registrado em auditoria.</p>' +
+        '<label class="block"><span class="text-xs font-semibold text-slate-700">Motivo do cancelamento (obrigatório)</span>' +
+        '<textarea id="cg-motivo" rows="3" maxlength="300" class="mt-1 w-full border border-slate-300 rounded-lg p-2 text-xs"></textarea></label>' +
+        '<p id="cg-erro" class="hidden mt-2 text-xs font-semibold text-rose-700"></p>',
+      botoes: [
+        { texto: 'Voltar', classe: UI.BTN_NEUTRO, aoClicar: function (fechar) { fechar(); } },
+        { texto: 'Cancelar reserva', classe: UI.BTN_PERIGO, aoClicar: async function (fechar, el, btn) {
+            var motivo = el.querySelector('#cg-motivo').value.trim();
+            var p = el.querySelector('#cg-erro');
+            if (!motivo) { p.innerText = 'Informe o motivo do cancelamento.'; p.classList.remove('hidden'); return; }
+            btn.disabled = true;
+            try {
+              await Api.post('/api/reservas/' + id + '/cancelar', { motivo: motivo });
+              UI.toast('Reserva cancelada. As datas foram liberadas.');
+              fechar();
+              await carregarReservas();
+              if (global.Calendario) { Calendario.recarregar(); }
+            } catch (er) { p.innerText = er.message; p.classList.remove('hidden'); btn.disabled = false; }
+          } }
+      ]
+    });
+    m.el.addEventListener('click', function (e) { if (e.target === m.el) { m.fechar(); } });
   }
 
   async function aoClicarTabela(e) {
@@ -190,6 +229,7 @@
     if (!b) { return; }
     var r = R.reservas.filter(function (x) { return x.id === Number(b.dataset.id); })[0];
     if (!r) { return; }
+    if (b.dataset.rg === 'cancelar') { return cancelarPorId(r.id); }
     if (b.dataset.rg === 'editar') {
       R.editando = r;
       preencherImoveis();
@@ -219,6 +259,7 @@
       if (!R.montado) {
         montar();
         R.params = params || {};
+        if (R.params.imovelId) { Calendario.selecionarImovel(Number(R.params.imovelId)); }
         preencherImoveis(R.params.imovelId);
         if (R.params.checkin) { $('rg-checkin').value = R.params.checkin; }
         if (R.params.checkout) { $('rg-checkout').value = R.params.checkout; }
@@ -228,6 +269,7 @@
     },
     atualizarImoveis: function (anuncios) {
       R.anuncios = anuncios;
+      if (global.Calendario) { Calendario.atualizarImoveis(anuncios); }
       if (R.montado && !R.editando) { preencherImoveis($('rg-imovel').value); atualizarTotal(); }
     }
   };

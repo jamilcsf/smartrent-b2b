@@ -22,6 +22,9 @@
       lista.push({ href: '/estatisticas.html', icone: 'bar-chart-3', texto: 'Dashboard' });
       lista.push({ href: '/dashboard.html', icone: 'calendar', texto: 'Painel do Gestor' });
     }
+    if (estado.isAuthenticated && !gestor) {
+      lista.push({ href: '/reserva.html', icone: 'ticket', texto: 'Minhas reservas' });
+    }
     if (estado.isAuthenticated && (gestor || u.smartchatLiberado)) {
       lista.push({ href: '/smartchat.html', icone: 'message-circle', texto: 'SmartChat', id: 'navSmartChat' });
     }

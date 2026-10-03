@@ -160,6 +160,12 @@
     } else if (opcoes.gestor) {
       botaoReserva = '<button type="button" id="btnReservar" class="w-full mt-4 bg-blue-600 hover:bg-blue-700 ' +
                      'text-white font-bold py-2.5 rounded-xl shadow-sm text-sm transition">Registrar reserva</button>';
+    } else if (opcoes.logado) {
+      botaoReserva = '<button type="button" id="btnReservarCliente" class="w-full mt-4 bg-blue-600 hover:bg-blue-700 ' +
+                     'text-white font-bold py-2.5 rounded-xl shadow-sm text-sm transition">Reservar</button>';
+    } else {
+      botaoReserva = '<a href="/login.html?redirectTo=' + encodeURIComponent(location.pathname + location.search) + '" id="btnReservarCliente" ' +
+                     'class="block text-center w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl shadow-sm text-sm transition">Entre para reservar</a>';
     }
 
     return '' +
@@ -196,6 +202,8 @@
             '<li>Mínimo de <b>' + minimo + (minimo === 1 ? ' diária' : ' diárias') + '</b> por reserva</li>' +
             '<li>Taxa de limpeza: <b>' + (taxa > 0 ? moeda(taxa) + '</b> (cobrada uma vez por reserva)' : 'sem taxa</b>') + '</li>' +
           '</ul>' +
+          '<div id="politicaResumo" class="mt-2 text-[10px] text-slate-500 leading-relaxed">' +
+            (opcoes.preview ? 'A política de cancelamento (reembolso integral até 2 dias antes do check-in) aparece aqui no anúncio publicado.' : '') + '</div>' +
           '<div class="grid grid-cols-2 gap-2 mt-4">' +
             '<label class="block"><span class="text-[10px] font-semibold text-slate-500">Check-in</span>' +
               '<input type="date" id="dataCheckin" class="w-full mt-1 p-2 border border-slate-300 rounded-lg text-xs ' +
@@ -271,6 +279,12 @@
       mostrar(capa >= 0 ? capa : 0);
     }
 
+    var faixas = [];
+    function indisponivel(ini, fim) {
+      // noites [ini, fim) que caem em alguma faixa indisponivel (inclusiva nas duas pontas)
+      return faixas.some(function (f) { return ini <= f.fim && fim > f.inicio; });
+    }
+
     function recalcular() {
       var ini = raiz.querySelector('#dataCheckin').value;
       var fim = raiz.querySelector('#dataCheckout').value;
@@ -289,6 +303,7 @@
       if (!ini || !fim || isNaN(preco) || imovel.valorDiariaBase == null) { resumo.classList.add('hidden'); return; }
       var noites = Math.round((new Date(fim) - new Date(ini)) / 86400000);
       if (noites <= 0) { return erro('O check-out deve ser posterior ao check-in.'); }
+      if (indisponivel(ini, fim)) { return erro('Estas datas estão indisponíveis para este imóvel.'); }
       if (noites < minimo) { return erro('Este imóvel exige no mínimo ' + minimo + (minimo === 1 ? ' diária.' : ' diárias.')); }
       if (hospedes < 1) { return erro('Informe ao menos 1 hóspede.'); }
       if (limite && hospedes > limite) { return erro('Este imóvel aceita no máximo ' + limite + ' hóspedes.'); }
@@ -309,6 +324,25 @@
     if (btn && opcoes.aoRegistrarReserva) {
       btn.addEventListener('click', function () {
         opcoes.aoRegistrarReserva({
+          checkin: raiz.querySelector('#dataCheckin').value,
+          checkout: raiz.querySelector('#dataCheckout').value,
+          hospedes: Number(raiz.querySelector('#numHospedes').value) || 1
+        });
+      });
+    }
+
+    if (!opcoes.preview && !opcoes.gestor && imovel.id && global.Api) {
+      global.Api.get('/api/config/agora', { ignorar401: true }).then(function (a) {
+        var de = a.hoje, p = de.split('-'), ate = (Number(p[0]) + 1) + '-' + p[1] + '-' + p[2]; // ate 1 ano (o servidor limita a janela)
+        return global.Api.get('/api/imoveis/' + imovel.id + '/indisponibilidade?de=' + de + '&ate=' + ate, { ignorar401: true });
+      }).then(function (f) { faixas = f || []; recalcular(); }).catch(function () { /* sem faixas: o servidor valida de qualquer forma */ });
+      var alvoPolitica = raiz.querySelector('#politicaResumo');
+      if (alvoPolitica && global.Reservar) { global.Reservar.resumoDaPolitica(alvoPolitica); }
+    }
+    var btnReservarCliente = raiz.querySelector('#btnReservarCliente');
+    if (btnReservarCliente && btnReservarCliente.tagName === 'BUTTON' && global.Reservar) {
+      btnReservarCliente.addEventListener('click', function () {
+        global.Reservar.iniciar(imovel, {
           checkin: raiz.querySelector('#dataCheckin').value,
           checkout: raiz.querySelector('#dataCheckout').value,
           hospedes: Number(raiz.querySelector('#numHospedes').value) || 1
