@@ -33,9 +33,6 @@ public class Reserva {
     @Column(name = "hospede_email", nullable = false, length = 150)
     private String hospedeEmail;
 
-    @Column(name = "hospede_telefone", length = 20)
-    private String hospedeTelefone;
-
     @Column(name = "data_checkin", nullable = false)
     private LocalDate dataCheckin;
 
@@ -186,14 +183,6 @@ public class Reserva {
 
     public void setHospedeEmail(String hospedeEmail) {
         this.hospedeEmail = hospedeEmail;
-    }
-
-    public String getHospedeTelefone() {
-        return hospedeTelefone;
-    }
-
-    public void setHospedeTelefone(String hospedeTelefone) {
-        this.hospedeTelefone = hospedeTelefone;
     }
 
     public LocalDate getDataCheckin() {

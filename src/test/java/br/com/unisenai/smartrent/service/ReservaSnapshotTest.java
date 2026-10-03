@@ -88,7 +88,7 @@ class ReservaSnapshotTest {
     }
 
     private ReservaRequest pedido(BigDecimal valorEnviadoPeloCliente) {
-        return new ReservaRequest(1L, "Maria", "maria@exemplo.com", null, IN, OUT,
+        return new ReservaRequest(1L, "Maria", "maria@exemplo.com", IN, OUT,
                 valorEnviadoPeloCliente, StatusReserva.CONFIRMADA, null, null);
     }
 
@@ -154,7 +154,7 @@ class ReservaSnapshotTest {
         when(reservaRepository.findById(7L)).thenReturn(Optional.of(r));
         imovel.setValorDiariaBase(new BigDecimal("999.00")); // preco subiu depois
 
-        ReservaRequest novasDatas = new ReservaRequest(1L, "Maria", "maria@exemplo.com", null,
+        ReservaRequest novasDatas = new ReservaRequest(1L, "Maria", "maria@exemplo.com",
                 IN, IN.plusDays(5), new BigDecimal("1.00"), null, null, null);
         Reserva atualizada = service.atualizar(gestor, 7L, novasDatas);
 
@@ -171,7 +171,7 @@ class ReservaSnapshotTest {
         r.setId(7L);
         when(reservaRepository.findById(7L)).thenReturn(Optional.of(r));
 
-        ReservaRequest outroImovel = new ReservaRequest(2L, "Maria", "m@e.com", null, IN, OUT, null, null, null, null);
+        ReservaRequest outroImovel = new ReservaRequest(2L, "Maria", "m@e.com", IN, OUT, null, null, null, null);
         assertThrows(IllegalArgumentException.class, () -> service.atualizar(gestor, 7L, outroImovel));
     }
 
@@ -207,8 +207,8 @@ class ReservaSnapshotTest {
     @Test
     @DisplayName("CT178 - Check-out igual ou anterior ao check-in e recusado")
     void periodoInvalido() {
-        ReservaRequest invertido = new ReservaRequest(1L, "Maria", "m@e.com", null, OUT, IN, null, null, null, null);
-        ReservaRequest igual = new ReservaRequest(1L, "Maria", "m@e.com", null, IN, IN, null, null, null, null);
+        ReservaRequest invertido = new ReservaRequest(1L, "Maria", "m@e.com", OUT, IN, null, null, null, null);
+        ReservaRequest igual = new ReservaRequest(1L, "Maria", "m@e.com", IN, IN, null, null, null, null);
         assertThrows(IllegalArgumentException.class, () -> service.criar(gestor, invertido));
         assertThrows(IllegalArgumentException.class, () -> service.criar(gestor, igual));
     }
@@ -249,7 +249,7 @@ class ReservaSnapshotTest {
     }
 
     private ReservaRequest pedidoCom(LocalDate in, LocalDate out, Integer hospedes) {
-        return new ReservaRequest(1L, "Maria", "maria@exemplo.com", null, in, out, null,
+        return new ReservaRequest(1L, "Maria", "maria@exemplo.com", in, out, null,
                 StatusReserva.CONFIRMADA, null, null, hospedes);
     }
 

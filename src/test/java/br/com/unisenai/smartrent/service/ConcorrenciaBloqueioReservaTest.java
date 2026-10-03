@@ -102,7 +102,7 @@ class ConcorrenciaBloqueioReservaTest {
         Callable<Boolean> reservar = () -> {
             largada.await();
             try {
-                reservaService.criar(gestor, new ReservaRequest(imovel.getId(), "Hospede", "h@e.com", null, in, out,
+                reservaService.criar(gestor, new ReservaRequest(imovel.getId(), "Hospede", "h@e.com", in, out,
                         null, StatusReserva.CONFIRMADA, null, null, 2));
                 return true;
             } catch (IllegalArgumentException e) {

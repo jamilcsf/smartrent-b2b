@@ -18,7 +18,6 @@ public record ReservaRequest(
         Long imovelId,
         String hospedeNome,
         String hospedeEmail,
-        String hospedeTelefone,
         @JsonFormat(pattern = "yyyy-MM-dd") LocalDate dataCheckin,
         @JsonFormat(pattern = "yyyy-MM-dd") LocalDate dataCheckout,
         /** Ignorado pelo servidor: o total sai do snapshot de preco, nunca do cliente. */
@@ -30,10 +29,10 @@ public record ReservaRequest(
         Integer numeroHospedes) {
 
     /** Forma sem numero de hospedes (assume 1), mantida para chamadores antigos. */
-    public ReservaRequest(Long imovelId, String hospedeNome, String hospedeEmail, String hospedeTelefone,
+    public ReservaRequest(Long imovelId, String hospedeNome, String hospedeEmail,
                           LocalDate dataCheckin, LocalDate dataCheckout, BigDecimal valorTotal,
                           StatusReserva status, OrigemReserva origem, String observacoes) {
-        this(imovelId, hospedeNome, hospedeEmail, hospedeTelefone, dataCheckin, dataCheckout, valorTotal,
+        this(imovelId, hospedeNome, hospedeEmail, dataCheckin, dataCheckout, valorTotal,
                 status, origem, observacoes, null);
     }
 }

@@ -23,6 +23,7 @@ import java.util.List;
  * preco ({@code valorDiaria}) so e lido no rascunho de um anuncio publicado;
  * no cadastro ele nasce nulo e e definido depois, pela lista de pre-publicacao.
  */
+@com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true) // rascunhos antigos com campos ja removidos continuam legiveis
 public record AnuncioDados(
         @NotBlank(message = "Informe o título do anúncio.")
         @Size(max = 150, message = "O título deve ter no máximo 150 caracteres.")

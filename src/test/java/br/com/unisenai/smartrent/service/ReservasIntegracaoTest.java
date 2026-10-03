@@ -404,7 +404,7 @@ class ReservasIntegracaoTest {
         assertEquals(ReservaService.MSG_INDISPONIVEL, erro.getMessage());
         assertFalse(erro.getMessage().toLowerCase().contains("bloque"), "o cliente nao descobre que e bloqueio manual");
         var gestorErro = assertThrows(IllegalArgumentException.class, () -> reservaService.criar(gestor,
-                new ReservaRequest(imovel.getId(), "Hospede", "h@e.com", null, LONGE, LONGE_FIM, null,
+                new ReservaRequest(imovel.getId(), "Hospede", "h@e.com", LONGE, LONGE_FIM, null,
                         StatusReserva.CONFIRMADA, null, null, 2)));
         assertEquals(ReservaService.MSG_INDISPONIVEL, gestorErro.getMessage());
 
@@ -516,17 +516,16 @@ class ReservasIntegracaoTest {
     @Test
     @DisplayName("CT340 - Reserva do gestor para e-mail de um cliente cadastrado vincula o cliente; cancelar exige a acao propria")
     void reservaDoGestorVinculaClienteEBloqueiaStatusCancelado() {
-        Reserva r = reservaService.criar(gestor, new ReservaRequest(imovel.getId(), "Cliente Um", cliente.getEmail(),
-                null, LONGE, LONGE_FIM, null, StatusReserva.CONFIRMADA, null, null, 2));
+        Reserva r = reservaService.criar(gestor, new ReservaRequest(imovel.getId(), "Cliente Um", cliente.getEmail(), LONGE, LONGE_FIM, null, StatusReserva.CONFIRMADA, null, null, 2));
         assertNotNull(r.getCliente());
         assertEquals(cliente.getId(), r.getCliente().getId());
         assertEquals(new BigDecimal("980.00"), r.getTotalSnapshot());
 
         assertThrows(IllegalArgumentException.class, () -> reservaService.atualizar(gestor, r.getId(),
-                new ReservaRequest(imovel.getId(), "Cliente Um", cliente.getEmail(), null, LONGE, LONGE_FIM, null,
+                new ReservaRequest(imovel.getId(), "Cliente Um", cliente.getEmail(), LONGE, LONGE_FIM, null,
                         StatusReserva.CANCELADA_PELO_GESTOR, null, null, 2)));
         assertThrows(IllegalArgumentException.class, () -> reservaService.criar(gestor,
-                new ReservaRequest(imovel.getId(), "Fulano", "f@e.com", null, LONGE.plusDays(20), LONGE.plusDays(22), null,
+                new ReservaRequest(imovel.getId(), "Fulano", "f@e.com", LONGE.plusDays(20), LONGE.plusDays(22), null,
                         StatusReserva.CANCELADA_SEM_REEMBOLSO, null, null, 1)));
     }
 

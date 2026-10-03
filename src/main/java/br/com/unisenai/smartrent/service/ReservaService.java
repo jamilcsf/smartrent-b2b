@@ -338,7 +338,6 @@ public class ReservaService {
     private static void copiarDadosDoHospede(ReservaRequest req, Reserva reserva) {
         reserva.setHospedeNome(Sanitizador.linha(req.hospedeNome()));
         reserva.setHospedeEmail(Sanitizador.linha(req.hospedeEmail()));
-        reserva.setHospedeTelefone(Sanitizador.linha(req.hospedeTelefone()));
     }
 
     static String descreverEndereco(Imovel i) {
