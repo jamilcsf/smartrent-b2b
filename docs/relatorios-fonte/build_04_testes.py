@@ -113,7 +113,7 @@ for cid, desc, rf, nivel, prio, situacao in casos:
                   Paragraph(rf, styles["CellCenter"]), Paragraph(nivel, styles["Cell"]),
                   Paragraph(prio, prio_style), Paragraph(situacao, sit_style)])
 story.extend(quadro(styles, "Matriz de casos de teste", quadro_table(
-    cdata, [18 * mm, 46 * mm, 12 * mm, 26 * mm, 16 * mm, 24 * mm], font_size=8.0,
+    cdata, [22 * mm, 43 * mm, 12 * mm, 25 * mm, 16 * mm, 24 * mm], font_size=8.0,
     header_align_center=[2, 4, 5])))
 
 story.append(Paragraph(
