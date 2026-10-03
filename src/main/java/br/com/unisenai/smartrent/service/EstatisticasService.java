@@ -83,7 +83,7 @@ public class EstatisticasService {
     /** Agregacao pura (sem banco), para testar com dados em memoria. */
     static EstatisticasResponse agregar(List<Imovel> imoveis, List<Reserva> reservas,
                                         YearMonth primeiro, YearMonth ultimo) {
-        return agregar(imoveis, reservas, primeiro, ultimo, Set.of(), List.of(), List.of());
+        return agregar(imoveis, reservas, primeiro, ultimo, new HashSet<>(), List.of(), List.of());
     }
 
     /**
