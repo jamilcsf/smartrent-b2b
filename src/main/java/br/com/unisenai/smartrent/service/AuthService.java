@@ -43,7 +43,7 @@ public class AuthService {
         usuario.setNome(req.nome().trim());
         usuario.setEmail(email);
         usuario.setSenhaHash(passwordEncoder.encode(req.senha()));
-        usuario.setPapel(PapelUsuario.ANFITRIAO);
+        usuario.setPapel(papelDoPerfil(req.perfil()));
         usuario.setAtivo(true);
 
         return responder(usuarioRepository.save(usuario));
@@ -68,10 +68,15 @@ public class AuthService {
      */
     @Transactional
     public AuthResponse entrarComGoogle(String emailGoogle, String nomeGoogle) {
+        return entrarComGoogle(emailGoogle, nomeGoogle, null);
+    }
+
+    @Transactional
+    public AuthResponse entrarComGoogle(String emailGoogle, String nomeGoogle, String perfil) {
         String email = emailGoogle.trim().toLowerCase();
 
         Usuario usuario = usuarioRepository.findByEmail(email)
-                .orElseGet(() -> usuarioRepository.save(novoUsuarioGoogle(email, nomeGoogle)));
+                .orElseGet(() -> usuarioRepository.save(novoUsuarioGoogle(email, nomeGoogle, perfil)));
 
         if (!usuario.isAtivo()) {
             throw new CredenciaisInvalidasException("Esta conta está inativa.");
@@ -79,7 +84,7 @@ public class AuthService {
         return responder(usuario);
     }
 
-    private Usuario novoUsuarioGoogle(String email, String nomeGoogle) {
+    private Usuario novoUsuarioGoogle(String email, String nomeGoogle, String perfil) {
         String nome = (nomeGoogle == null || nomeGoogle.isBlank())
                 ? email.substring(0, email.indexOf('@'))
                 : nomeGoogle.trim();
@@ -90,9 +95,19 @@ public class AuthService {
         // A coluna exige hash. Conta criada pelo Google recebe o hash de uma
         // senha aleatória que ninguém conhece: só entra pelo Google.
         usuario.setSenhaHash(passwordEncoder.encode(UUID.randomUUID().toString()));
-        usuario.setPapel(PapelUsuario.ANFITRIAO);
+        usuario.setPapel(papelDoPerfil(perfil));
         usuario.setAtivo(true);
         return usuario;
+    }
+
+    /**
+     * O cadastro publico nunca cria ADMIN. Perfil ausente ou desconhecido vira
+     * CLIENTE: errar para o lado do menor privilegio.
+     */
+    private static PapelUsuario papelDoPerfil(String perfil) {
+        return "GESTOR".equalsIgnoreCase(perfil == null ? "" : perfil.trim())
+                ? PapelUsuario.ANFITRIAO
+                : PapelUsuario.CLIENTE;
     }
 
     private AuthResponse responder(Usuario usuario) {

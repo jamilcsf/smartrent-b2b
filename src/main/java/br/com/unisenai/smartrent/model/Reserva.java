@@ -7,6 +7,8 @@ import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /** Reserva de um imovel por um periodo. */
 @Entity
@@ -56,6 +58,46 @@ public class Reserva {
 
     @Column(name = "data_criacao", nullable = false, updatable = false)
     private LocalDateTime dataCriacao;
+
+    /*
+     * Snapshot das condicoes no instante da criacao. Nenhuma destas colunas e
+     * atualizavel: alterar o preco ou editar o anuncio depois nao muda o que
+     * o cliente reservou nem o que paga. Calculos, cobranca, cancelamento,
+     * reembolso e relatorios leem daqui, nunca do preco atual do imovel.
+     */
+
+    @Column(name = "moeda", nullable = false, length = 3, updatable = false)
+    private String moeda = "BRL";
+
+    @Column(name = "numero_diarias", nullable = false, updatable = false)
+    private int numeroDiarias;
+
+    @Column(name = "preco_diaria_snapshot", nullable = false, precision = 10, scale = 2, updatable = false)
+    private BigDecimal precoDiariaSnapshot;
+
+    @Column(name = "taxas_snapshot", nullable = false, precision = 10, scale = 2, updatable = false)
+    private BigDecimal taxasSnapshot = BigDecimal.ZERO;
+
+    @Column(name = "total_snapshot", nullable = false, precision = 10, scale = 2, updatable = false)
+    private BigDecimal totalSnapshot;
+
+    @Column(name = "imovel_titulo_snapshot", nullable = false, length = 150, updatable = false)
+    private String imovelTituloSnapshot;
+
+    @Column(name = "imovel_endereco_snapshot", length = 400, updatable = false)
+    private String imovelEnderecoSnapshot;
+
+    @Column(name = "imovel_caracteristicas_snapshot", length = 500, updatable = false)
+    private String imovelCaracteristicasSnapshot;
+
+    /** Valor de cada diaria por data, gravado uma unica vez (o preco pode variar por data). */
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "reserva_precos_diarios",
+            joinColumns = @JoinColumn(name = "reserva_id",
+                    foreignKey = @ForeignKey(name = "fk_preco_diario_reserva")))
+    @MapKeyColumn(name = "data")
+    @Column(name = "valor", nullable = false, precision = 10, scale = 2)
+    private Map<LocalDate, BigDecimal> precosDiarios = new LinkedHashMap<>();
 
     /** Travamento otimista: protege contra reservas concorrentes no mesmo imovel. */
     @Version
@@ -172,5 +214,77 @@ public class Reserva {
 
     public void setVersao(Long versao) {
         this.versao = versao;
+    }
+
+    public String getMoeda() {
+        return moeda;
+    }
+
+    public void setMoeda(String moeda) {
+        this.moeda = moeda;
+    }
+
+    public int getNumeroDiarias() {
+        return numeroDiarias;
+    }
+
+    public void setNumeroDiarias(int numeroDiarias) {
+        this.numeroDiarias = numeroDiarias;
+    }
+
+    public BigDecimal getPrecoDiariaSnapshot() {
+        return precoDiariaSnapshot;
+    }
+
+    public void setPrecoDiariaSnapshot(BigDecimal precoDiariaSnapshot) {
+        this.precoDiariaSnapshot = precoDiariaSnapshot;
+    }
+
+    public BigDecimal getTaxasSnapshot() {
+        return taxasSnapshot;
+    }
+
+    public void setTaxasSnapshot(BigDecimal taxasSnapshot) {
+        this.taxasSnapshot = taxasSnapshot;
+    }
+
+    public BigDecimal getTotalSnapshot() {
+        return totalSnapshot;
+    }
+
+    public void setTotalSnapshot(BigDecimal totalSnapshot) {
+        this.totalSnapshot = totalSnapshot;
+    }
+
+    public String getImovelTituloSnapshot() {
+        return imovelTituloSnapshot;
+    }
+
+    public void setImovelTituloSnapshot(String imovelTituloSnapshot) {
+        this.imovelTituloSnapshot = imovelTituloSnapshot;
+    }
+
+    public String getImovelEnderecoSnapshot() {
+        return imovelEnderecoSnapshot;
+    }
+
+    public void setImovelEnderecoSnapshot(String imovelEnderecoSnapshot) {
+        this.imovelEnderecoSnapshot = imovelEnderecoSnapshot;
+    }
+
+    public String getImovelCaracteristicasSnapshot() {
+        return imovelCaracteristicasSnapshot;
+    }
+
+    public void setImovelCaracteristicasSnapshot(String imovelCaracteristicasSnapshot) {
+        this.imovelCaracteristicasSnapshot = imovelCaracteristicasSnapshot;
+    }
+
+    public Map<LocalDate, BigDecimal> getPrecosDiarios() {
+        return precosDiarios;
+    }
+
+    public void setPrecosDiarios(Map<LocalDate, BigDecimal> precosDiarios) {
+        this.precosDiarios = precosDiarios;
     }
 }

@@ -1,7 +1,11 @@
 package br.com.unisenai.smartrent.dto;
 
 import br.com.unisenai.smartrent.model.Imovel;
+import br.com.unisenai.smartrent.model.ImovelMidia;
+import br.com.unisenai.smartrent.model.enums.EstadoMidia;
 import br.com.unisenai.smartrent.model.enums.TipoImovel;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -12,6 +16,9 @@ import java.util.List;
  * <p>O logradouro vai separado do número porque o cartão exibe apenas o nome
  * da via. Como a entidade já guarda os dois em colunas distintas, não há o que
  * extrair de uma string: basta não enviar o número.
+ *
+ * <p>{@code whatsappLink} só é preenchido para quem está logado e, nulo, nem
+ * sequer entra no JSON: o dado não sai do servidor para visitantes anônimos.
  */
 public record ImovelResponse(
         Long id,
@@ -29,9 +36,25 @@ public record ImovelResponse(
         Integer capacidadeHospedes,
         BigDecimal valorDiariaBase,
         List<String> comodidades,
-        boolean ativo) {
+        boolean ativo,
+        String capaUrl,
+        List<MidiaResponse> midias,
+        @JsonInclude(JsonInclude.Include.NON_NULL) String whatsappLink) {
 
-    public static ImovelResponse de(Imovel i) {
+    /**
+     * @param midias           midias do imóvel; só as ATIVAS são expostas
+     * @param incluirWhatsapp  verdadeiro apenas para requisições autenticadas
+     * @param comMidias        falso no catálogo: lá só a capa interessa
+     */
+    public static ImovelResponse de(Imovel i, List<ImovelMidia> midias,
+                                    boolean incluirWhatsapp, boolean comMidias) {
+        var ativas = midias.stream()
+                .filter(m -> m.getEstado() == EstadoMidia.ATIVA)
+                .toList();
+        var capa = ativas.stream().filter(ImovelMidia::isCapa).findFirst()
+                .or(() -> ativas.stream().filter(m -> m.getTipo().imagem()).findFirst())
+                .map(MidiaResponse::de)
+                .orElse(null);
         var end = i.getEndereco();
         return new ImovelResponse(
                 i.getId(),
@@ -49,7 +72,10 @@ public record ImovelResponse(
                 i.getCapacidadeHospedes(),
                 i.getValorDiariaBase(),
                 i.getComodidades() == null ? List.of() : List.copyOf(i.getComodidades()),
-                i.isAtivo());
+                i.isAtivo(),
+                capa == null ? null : (capa.miniaturaUrl() != null ? capa.miniaturaUrl() : capa.url()),
+                comMidias ? ativas.stream().map(MidiaResponse::de).toList() : List.of(),
+                incluirWhatsapp ? i.getWhatsappLink() : null);
     }
 
     /** Nome legível do tipo; o enum em caixa alta não serve para exibição. */

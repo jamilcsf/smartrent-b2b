@@ -57,7 +57,7 @@ public class AuthController {
     @PostMapping("/google")
     public ResponseEntity<AuthResponse> loginGoogle(@Valid @RequestBody GoogleLoginRequest req) {
         var identidade = googleTokenVerifier.verificar(req.credential());
-        return ResponseEntity.ok(authService.entrarComGoogle(identidade.email(), identidade.nome()));
+        return ResponseEntity.ok(authService.entrarComGoogle(identidade.email(), identidade.nome(), req.perfil()));
     }
 
     /**

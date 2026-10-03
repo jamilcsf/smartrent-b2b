@@ -159,7 +159,7 @@ class AuthControllerTest {
     void loginGoogleDeveDevolverToken() throws Exception {
         when(googleTokenVerifier.verificar("credencial-google"))
                 .thenReturn(new GoogleTokenVerifier.IdentidadeGoogle("ana@smartrent.dev", "Ana"));
-        when(authService.entrarComGoogle("ana@smartrent.dev", "Ana")).thenReturn(new AuthResponse("token-g", 86400L,
+        when(authService.entrarComGoogle("ana@smartrent.dev", "Ana", null)).thenReturn(new AuthResponse("token-g", 86400L,
                 new UsuarioResponse(1L, "Ana", "ana@smartrent.dev", PapelUsuario.ANFITRIAO)));
 
         mockMvc.perform(post("/api/auth/google")

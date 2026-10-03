@@ -3,11 +3,16 @@ package br.com.unisenai.smartrent.controller;
 import br.com.unisenai.smartrent.service.AuthService;
 import br.com.unisenai.smartrent.service.CaptchaService;
 import br.com.unisenai.smartrent.service.GoogleTokenVerifier;
+import br.com.unisenai.smartrent.service.erro.AcessoNegadoException;
+import br.com.unisenai.smartrent.service.erro.RecursoNaoEncontradoException;
+import br.com.unisenai.smartrent.service.erro.TransicaoInvalidaException;
+import br.com.unisenai.smartrent.service.erro.ValidacaoAnuncioException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -49,6 +54,34 @@ public class TratadorDeErros {
     @ExceptionHandler(GoogleTokenVerifier.LoginGoogleIndisponivelException.class)
     public ResponseEntity<Map<String, Object>> googleIndisponivel(RuntimeException e) {
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(Map.of("erro", e.getMessage()));
+    }
+
+    @ExceptionHandler(AcessoNegadoException.class)
+    public ResponseEntity<Map<String, Object>> acessoNegado(RuntimeException e) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("erro", e.getMessage()));
+    }
+
+    @ExceptionHandler(RecursoNaoEncontradoException.class)
+    public ResponseEntity<Map<String, Object>> naoEncontrado(RuntimeException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("erro", e.getMessage()));
+    }
+
+    @ExceptionHandler(TransicaoInvalidaException.class)
+    public ResponseEntity<Map<String, Object>> transicaoInvalida(RuntimeException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("erro", e.getMessage()));
+    }
+
+    @ExceptionHandler(ValidacaoAnuncioException.class)
+    public ResponseEntity<Map<String, Object>> anuncioInvalido(ValidacaoAnuncioException e) {
+        return ResponseEntity.badRequest().body(Map.of(
+                "erro", e.getMessage(),
+                "campos", e.getCampos()));
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<Map<String, Object>> arquivoGrande(MaxUploadSizeExceededException e) {
+        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
+                .body(Map.of("erro", "O arquivo excede o tamanho maximo permitido."));
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

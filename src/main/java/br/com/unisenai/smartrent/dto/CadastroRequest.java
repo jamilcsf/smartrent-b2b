@@ -23,5 +23,13 @@ public record CadastroRequest(
         String confirmacaoSenha,
 
         /** Token do reCAPTCHA; validado no servidor antes de criar a conta. */
-        String captchaToken) {
+        String captchaToken,
+
+        /** "GESTOR" ou "CLIENTE". Ausente ou desconhecido vale CLIENTE (menor privilégio). */
+        String perfil) {
+
+    public CadastroRequest(String nome, String email, String senha, String confirmacaoSenha,
+                           String captchaToken) {
+        this(nome, email, senha, confirmacaoSenha, captchaToken, null);
+    }
 }

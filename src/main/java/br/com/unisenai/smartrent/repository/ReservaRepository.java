@@ -25,4 +25,6 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
                                   @Param("checkout") LocalDate checkout);
 
     List<Reserva> findByImovelId(Long imovelId);
+
+    List<Reserva> findByImovelUsuarioIdOrderByDataCheckinDesc(Long usuarioId);
 }

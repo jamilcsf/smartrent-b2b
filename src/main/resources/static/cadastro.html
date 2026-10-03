@@ -58,6 +58,20 @@
             <p id="erro-confirmacaoSenha" class="hidden mt-1 text-[11px] font-semibold text-rose-600"></p>
           </div>
 
+          <fieldset class="mb-5">
+            <legend class="block text-xs font-medium text-slate-500 mb-1.5">Como você vai usar a plataforma?</legend>
+            <div class="grid grid-cols-2 gap-2">
+              <label class="flex items-center gap-2 border border-slate-300 rounded-xl px-3 py-2.5 text-sm text-slate-700 cursor-pointer has-[:checked]:border-blue-600 has-[:checked]:bg-blue-50">
+                <input type="radio" name="perfil" value="CLIENTE" checked class="accent-blue-600">
+                Quero alugar
+              </label>
+              <label class="flex items-center gap-2 border border-slate-300 rounded-xl px-3 py-2.5 text-sm text-slate-700 cursor-pointer has-[:checked]:border-blue-600 has-[:checked]:bg-blue-50">
+                <input type="radio" name="perfil" value="GESTOR" class="accent-blue-600">
+                Sou gestor de imóveis
+              </label>
+            </div>
+          </fieldset>
+
           <!-- reCAPTCHA: o widget é montado por js após ler /api/auth/config -->
           <div class="mb-4">
             <div id="captcha" class="flex justify-center min-h-[78px]"></div>
@@ -96,7 +110,7 @@
           <a id="linkLogin" href="login.html" class="font-bold text-blue-700 hover:underline">Entrar</a>
         </p>
         <p class="text-center text-[11px] text-slate-400 mt-3">
-          Ao criar a conta você poderá gerenciar imóveis e reservas.
+          Gestores de imóveis acessam um painel para anunciar e gerenciar reservas.
         </p>
       </div>
     </section>
@@ -160,6 +174,11 @@
       caixa.classList.remove('hidden');
     }
 
+    function perfilEscolhido() {
+      var marcado = document.querySelector('input[name="perfil"]:checked');
+      return marcado ? marcado.value : 'CLIENTE';
+    }
+
     function emailValido(valor) {
       return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(valor);
     }
@@ -200,7 +219,7 @@
       try {
         var r = await Api.post('/api/auth/cadastro', {
           nome: nome, email: email, senha: senha, confirmacaoSenha: confirmacao,
-          captchaToken: captchaToken
+          captchaToken: captchaToken, perfil: perfilEscolhido()
         }, { ignorar401: true });
         Auth.definirSessao(r.token, r.usuario);
         location.href = destinoDeRetorno();
@@ -224,6 +243,7 @@
 
     AuthExterno.iniciar({
       textoGoogle: 'signup_with',
+      perfil: perfilEscolhido,
       limpar: function () { limparErros(['nome', 'email', 'senha', 'confirmacaoSenha']); },
       aoEntrar: entrar,
       aoErro: erroGeral

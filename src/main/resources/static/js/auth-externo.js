@@ -37,7 +37,8 @@
     opcoes.limpar();
     try {
       var r = await global.Api.post('/api/auth/google',
-        { credential: resposta.credential }, { ignorar401: true });
+        { credential: resposta.credential,
+          perfil: opcoes.perfil ? opcoes.perfil() : undefined }, { ignorar401: true });
       opcoes.aoEntrar(r);
     } catch (e) {
       opcoes.aoErro(e.message || 'Não foi possível continuar com o Google.');
@@ -67,7 +68,7 @@
 
   global.AuthExterno = {
     /**
-     * opcoes: { textoGoogle, limpar(), aoEntrar(resposta), aoErro(mensagem) }
+     * opcoes: { textoGoogle, perfil() opcional, limpar(), aoEntrar(resposta), aoErro(mensagem) }
      */
     iniciar: async function (o) {
       opcoes = o;
