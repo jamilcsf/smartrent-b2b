@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartRent B2B - Anúncio</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col antialiased">
+
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <a href="/dashboard.html" class="flex items-center space-x-3">
+        <div class="bg-blue-600 text-white p-2 rounded-xl shadow-md shadow-blue-500/20">
+          <i data-lucide="building-2" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <h1 class="text-base font-bold text-slate-900 tracking-tight">
+            SmartRent <span class="text-blue-600 font-semibold">B2B</span>
+          </h1>
+          <p class="text-[10px] text-slate-500 font-medium">Operação Canasvieiras • Anúncio de imóvel</p>
+        </div>
+      </a>
+      <nav class="flex items-center space-x-1 sm:space-x-2">
+        <a href="/imoveis.html"
+          class="flex items-center space-x-2 px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 text-xs font-semibold transition">
+          <i data-lucide="home" class="w-4 h-4"></i><span class="hidden sm:inline">Imóveis</span>
+        </a>
+        <a href="/dashboard.html"
+          class="flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 text-xs font-semibold transition">
+          <i data-lucide="layout-dashboard" class="w-4 h-4"></i><span class="hidden sm:inline">Painel do Gestor</span>
+        </a>
+      </nav>
+      <div id="areaAuth" class="flex items-center ml-4"></div>
+    </div>
+  </header>
+
+  <main class="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+    <a href="/dashboard.html" class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 mb-4">
+      <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i> Voltar ao painel
+    </a>
+
+    <div id="carregando" class="text-center py-20 text-sm text-slate-500">Carregando...</div>
+    <p id="erroPagina" class="hidden p-4 rounded-xl bg-rose-50 border border-rose-200 text-sm font-semibold text-rose-700"></p>
+
+    <div id="conteudo" class="hidden">
+
+      <!-- Faixa de edição de anúncio publicado -->
+      <div id="faixaEdicao" class="hidden mb-4 p-4 rounded-2xl bg-amber-50 border border-amber-300 text-sm text-amber-900 space-y-3">
+        <div class="flex items-start gap-3">
+          <i data-lucide="pencil-off" class="w-5 h-5 shrink-0 mt-0.5"></i>
+          <div>
+            <p class="font-bold" id="faixaTitulo">Em edição</p>
+            <p class="text-xs mt-0.5" id="faixaTexto"></p>
+          </div>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <button type="button" id="btnConfirmarAlteracao"
+            class="px-4 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white">Confirmar alteração</button>
+          <button type="button" id="btnDescartarEdicao"
+            class="px-4 py-2 rounded-xl text-xs font-bold bg-white border border-rose-300 text-rose-700 hover:bg-rose-50">Descartar edição</button>
+          <span id="statusRascunho" class="self-center text-[11px] text-amber-800"></span>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <h2 id="tituloPagina" class="text-2xl font-extrabold text-slate-900 tracking-tight">Criar anúncio</h2>
+        <span id="selosEstado" class="text-[11px] font-semibold"></span>
+      </div>
+
+      <!-- Abas -->
+      <div class="flex gap-2 mb-5 border-b border-slate-200" role="tablist">
+        <button type="button" id="abaCadastro" role="tab" aria-selected="true"
+          class="px-4 py-2.5 text-sm font-bold border-b-2 border-blue-600 text-blue-700 -mb-px">Cadastro do imóvel</button>
+        <button type="button" id="abaPreview" role="tab" aria-selected="false"
+          class="px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 -mb-px">Preview do anúncio</button>
+      </div>
+
+      <!-- ===================== CADASTRO ===================== -->
+      <form id="painelCadastro" novalidate class="space-y-5">
+
+        <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
+          <h3 class="text-sm font-bold text-slate-900">Dados do anúncio</h3>
+          <div>
+            <label for="f-titulo" class="block text-xs font-semibold text-slate-700 mb-1.5">Título (nome do imóvel)</label>
+            <input type="text" id="f-titulo" maxlength="150" class="campo" placeholder="Ex: Apartamento 2 quartos a 200 m da praia">
+            <p class="erro" data-erro="titulo"></p>
+          </div>
+          <div>
+            <label for="f-descricao" class="block text-xs font-semibold text-slate-700 mb-1.5">Descrição</label>
+            <textarea id="f-descricao" rows="5" maxlength="5000" class="campo" placeholder="Descreva o imóvel, a vizinhança, regras da casa..."></textarea>
+            <p class="erro" data-erro="descricao"></p>
+          </div>
+          <div class="grid sm:grid-cols-2 gap-4">
+            <div>
+              <label for="f-tipo" class="block text-xs font-semibold text-slate-700 mb-1.5">Tipo do imóvel</label>
+              <select id="f-tipo" class="campo">
+                <option value="">Selecione...</option>
+                <option value="APARTAMENTO">Apartamento</option>
+                <option value="CASA">Casa</option>
+                <option value="KITNET">Kitnet</option>
+                <option value="POUSADA">Pousada</option>
+                <option value="CHALE">Chalé</option>
+                <option value="LOFT">Loft</option>
+                <option value="OUTRO">Outro</option>
+              </select>
+              <p class="erro" data-erro="tipoImovel"></p>
+            </div>
+            <div>
+              <label for="f-area" class="block text-xs font-semibold text-slate-700 mb-1.5">Área (m²)</label>
+              <input type="number" id="f-area" min="1" step="1" class="campo" placeholder="Ex: 70">
+              <p class="erro" data-erro="metragemQuadrada"></p>
+            </div>
+          </div>
+        </section>
+
+        <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
+          <h3 class="text-sm font-bold text-slate-900">Características</h3>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div>
+              <label for="f-quartos" class="block text-xs font-semibold text-slate-700 mb-1.5">Quartos</label>
+              <input type="number" id="f-quartos" min="0" class="campo">
+              <p class="erro" data-erro="numeroQuartos"></p>
+            </div>
+            <div>
+              <label for="f-banheiros" class="block text-xs font-semibold text-slate-700 mb-1.5">Banheiros</label>
+              <input type="number" id="f-banheiros" min="0" class="campo">
+              <p class="erro" data-erro="numeroBanheiros"></p>
+            </div>
+            <div>
+              <label for="f-vagas" class="block text-xs font-semibold text-slate-700 mb-1.5">Vagas de garagem</label>
+              <input type="number" id="f-vagas" min="0" class="campo">
+              <p class="erro" data-erro="vagasGaragem"></p>
+            </div>
+            <div>
+              <label for="f-capacidade" class="block text-xs font-semibold text-slate-700 mb-1.5">Hóspedes (capacidade)</label>
+              <input type="number" id="f-capacidade" min="1" class="campo">
+              <p class="erro" data-erro="capacidadeHospedes"></p>
+            </div>
+          </div>
+          <div>
+            <span class="block text-xs font-semibold text-slate-700 mb-1.5">Comodidades</span>
+            <div id="sugestoesComodidades" class="flex flex-wrap gap-2 mb-3"></div>
+            <div class="flex gap-2">
+              <input type="text" id="f-comodidade-nova" maxlength="60" class="campo" placeholder="Outra comodidade...">
+              <button type="button" id="btnAddComodidade" class="px-3 rounded-xl text-xs font-bold border border-slate-300 hover:bg-slate-50">Adicionar</button>
+            </div>
+            <p class="erro" data-erro="comodidades"></p>
+          </div>
+        </section>
+
+        <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
+          <h3 class="text-sm font-bold text-slate-900">Endereço completo</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label for="f-cep" class="block text-xs font-semibold text-slate-700 mb-1.5">CEP</label>
+              <input type="text" id="f-cep" inputmode="numeric" maxlength="9" class="campo" placeholder="00000-000">
+              <p class="text-[10px] text-slate-400 mt-1" id="dicaCep">Preenchemos o endereço pelo CEP.</p>
+              <p class="erro" data-erro="cep"></p>
+            </div>
+            <div class="sm:col-span-2">
+              <label for="f-logradouro" class="block text-xs font-semibold text-slate-700 mb-1.5">Logradouro</label>
+              <input type="text" id="f-logradouro" maxlength="150" class="campo">
+              <p class="erro" data-erro="logradouro"></p>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label for="f-numero" class="block text-xs font-semibold text-slate-700 mb-1.5">Número</label>
+              <input type="text" id="f-numero" maxlength="20" class="campo">
+              <p class="erro" data-erro="numero"></p>
+            </div>
+            <div class="sm:col-span-2">
+              <label for="f-complemento" class="block text-xs font-semibold text-slate-700 mb-1.5">Complemento <span class="font-normal text-slate-400">(opcional)</span></label>
+              <input type="text" id="f-complemento" maxlength="100" class="campo">
+              <p class="erro" data-erro="complemento"></p>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label for="f-bairro" class="block text-xs font-semibold text-slate-700 mb-1.5">Bairro</label>
+              <input type="text" id="f-bairro" maxlength="100" class="campo">
+              <p class="erro" data-erro="bairro"></p>
+            </div>
+            <div>
+              <label for="f-cidade" class="block text-xs font-semibold text-slate-700 mb-1.5">Cidade</label>
+              <input type="text" id="f-cidade" maxlength="100" class="campo">
+              <p class="erro" data-erro="cidade"></p>
+            </div>
+            <div>
+              <label for="f-uf" class="block text-xs font-semibold text-slate-700 mb-1.5">UF</label>
+              <input type="text" id="f-uf" maxlength="2" class="campo uppercase" placeholder="SC">
+              <p class="erro" data-erro="estado"></p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Mídias -->
+        <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <h3 class="text-sm font-bold text-slate-900">Fotos, fotos 360° e vídeos</h3>
+            <div class="flex items-center gap-2 text-xs font-semibold">
+              <span id="contadorImagens" class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-700" title="Fotos comuns e 360° somadas">0/14 imagens</span>
+              <span id="contadorVideos" class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-700">0/2 vídeos</span>
+            </div>
+          </div>
+          <p class="text-[11px] text-slate-500">
+            Limite de <b>14 imagens no total</b> (fotos comuns e 360° contam juntas) e <b>2 vídeos</b> de até 2 minutos
+            (não contam nas 14). Imagens JPEG ou PNG de até 10 MB; foto 360° deve ser equirretangular, na proporção 2:1;
+            vídeos em MP4 de até 100 MB.
+          </p>
+          <div class="flex flex-wrap gap-2">
+            <button type="button" data-add="FOTO" class="btn-add px-3 py-2 rounded-xl text-xs font-bold border border-slate-300 hover:bg-slate-50 flex items-center gap-1.5"><i data-lucide="image-plus" class="w-4 h-4"></i> Adicionar fotos</button>
+            <button type="button" data-add="FOTO_360" class="btn-add px-3 py-2 rounded-xl text-xs font-bold border border-slate-300 hover:bg-slate-50 flex items-center gap-1.5"><i data-lucide="rotate-3d" class="w-4 h-4"></i> Adicionar foto 360°</button>
+            <button type="button" data-add="VIDEO" class="btn-add px-3 py-2 rounded-xl text-xs font-bold border border-slate-300 hover:bg-slate-50 flex items-center gap-1.5"><i data-lucide="video" class="w-4 h-4"></i> Adicionar vídeo</button>
+            <input type="file" id="arquivoFoto" class="hidden" accept="image/jpeg,image/png" multiple>
+            <input type="file" id="arquivoFoto360" class="hidden" accept="image/jpeg,image/png" multiple>
+            <input type="file" id="arquivoVideo" class="hidden" accept="video/mp4,video/quicktime">
+          </div>
+          <p id="erroMidia" class="hidden text-[11px] font-semibold text-rose-600"></p>
+          <div id="listaMidias" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+          <p id="vazioMidias" class="text-xs text-slate-400">Nenhuma mídia adicionada ainda.</p>
+        </section>
+
+        <section id="secaoPreco" class="hidden bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-3">
+          <h3 class="text-sm font-bold text-slate-900">Valor da diária</h3>
+          <p class="text-[11px] text-slate-500">A alteração de preço de um anúncio publicado passa por este fluxo de edição e só vale para reservas criadas depois da confirmação. Reservas existentes mantêm o preço original.</p>
+          <div class="max-w-xs">
+            <input type="number" id="f-preco" min="1" step="0.01" class="campo" placeholder="Ex: 350,00">
+            <p class="erro" data-erro="valorDiaria"></p>
+          </div>
+        </section>
+
+        <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-3">
+          <h3 class="text-sm font-bold text-slate-900">Contato</h3>
+          <div>
+            <label for="f-whatsapp" class="block text-xs font-semibold text-slate-700 mb-1.5">Link do WhatsApp <span class="font-normal text-slate-400">(opcional)</span></label>
+            <input type="url" id="f-whatsapp" maxlength="300" class="campo" placeholder="https://wa.me/5548999990000">
+            <p class="text-[10px] text-slate-400 mt-1">Use um link wa.me ou api.whatsapp.com. Só aparece no anúncio publicado para clientes logados; visitantes não o recebem.</p>
+            <p class="erro" data-erro="whatsappLink"></p>
+          </div>
+        </section>
+
+        <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4" id="blocoFinal">
+          <label id="blocoAceite" class="flex items-start gap-2 text-xs text-slate-700 cursor-pointer">
+            <input type="checkbox" id="f-aceite" class="mt-0.5 accent-blue-600">
+            <span>Li e aceito o <button type="button" id="btnLerTermo" class="font-bold text-blue-700 underline underline-offset-2">termo de uso e responsabilidade do anunciante</button>.</span>
+          </label>
+          <p id="erroGeral" class="hidden p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs font-semibold text-rose-700"></p>
+          <div id="progressoGeral" class="hidden space-y-1">
+            <div class="h-2 bg-slate-100 rounded-full overflow-hidden"><div id="barraGeral" class="h-full bg-blue-600 transition-all" style="width:0%"></div></div>
+            <p id="textoProgressoGeral" class="text-[11px] text-slate-500"></p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button type="submit" id="btnFinalizar" disabled
+              class="px-5 py-3 rounded-xl text-sm font-bold bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-40 disabled:cursor-not-allowed">Finalizar cadastro</button>
+            <button type="button" id="btnSalvarRascunho" class="hidden px-5 py-3 rounded-xl text-sm font-bold border border-slate-300 hover:bg-slate-50">Salvar rascunho</button>
+          </div>
+        </section>
+      </form>
+
+      <!-- ===================== PREVIEW ===================== -->
+      <section id="painelPreview" class="hidden space-y-6">
+        <div class="p-3 rounded-xl bg-blue-50 border border-blue-200 text-xs text-blue-800">
+          Assim o anúncio aparecerá no catálogo, com os dados ainda não salvos do formulário.
+        </div>
+        <div>
+          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Na lista do catálogo</h3>
+          <div id="previewCard" class="max-w-xs"></div>
+        </div>
+        <div>
+          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Na página do anúncio</h3>
+          <div id="previewDetalhe"></div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <style>
+    .campo { width: 100%; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 0.75rem; padding: 0.625rem 0.75rem; font-size: 0.8rem; color: #1e293b; }
+    .campo:focus { outline: none; box-shadow: 0 0 0 2px #3b82f6; border-color: #3b82f6; }
+    .campo.invalido { border-color: #fb7185; }
+    .erro { display: none; margin-top: 0.25rem; font-size: 11px; font-weight: 600; color: #e11d48; }
+    .erro.ativo { display: block; }
+  </style>
+
+  <script src="js/auth.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/header-auth.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/anuncio-acoes.js"></script>
+  <script src="js/imovel-card.js"></script>
+  <script src="js/imovel-detalhe.js"></script>
+  <script src="js/anuncio-form.js"></script>
+  <script>lucide.createIcons();</script>
+</body>
+
+</html>

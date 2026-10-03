@@ -79,7 +79,10 @@ public class AnuncioGestorMapper {
                 i.getEdicaoIniciadaEm(),
                 i.getEdicaoEstadoOrigem(),
                 i.getEdicaoConfirmadaEm(),
-                i.getRepublicarEm());
+                i.getRepublicarEm(),
+                i.getRepublicarOriginalEm(),
+                props.janelaPrePublicacaoHoras(),
+                props.republicacaoHoras());
     }
 
     /** Mesma regra de visibilidade da consulta publica ({@code ImovelRepository.VISIVEL}). */

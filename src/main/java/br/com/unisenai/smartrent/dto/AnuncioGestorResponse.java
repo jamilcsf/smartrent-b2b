@@ -11,7 +11,8 @@ import java.util.List;
  * <p>{@code dados} e sempre o anuncio vivo. Em {@code EM_EDICAO},
  * {@code rascunho} traz o que o gestor esta editando; o formulario parte dele.
  * {@code agora} e o relogio do servidor: as contagens regressivas do front
- * partem dele, nao do relogio do navegador.
+ * partem dele, nao do relogio do navegador. Os prazos configurados (24h/2h)
+ * tambem vao na resposta, para os avisos da tela nao repetirem numeros fixos.
  */
 public record AnuncioGestorResponse(
         Long id,
@@ -34,5 +35,8 @@ public record AnuncioGestorResponse(
         LocalDateTime edicaoIniciadaEm,
         StatusAnuncio edicaoEstadoOrigem,
         LocalDateTime edicaoConfirmadaEm,
-        LocalDateTime republicarEm) {
+        LocalDateTime republicarEm,
+        LocalDateTime republicarOriginalEm,
+        long janelaPrePublicacaoHoras,
+        long republicacaoHoras) {
 }
