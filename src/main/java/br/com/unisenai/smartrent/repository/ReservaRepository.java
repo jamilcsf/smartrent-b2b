@@ -69,4 +69,20 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
     List<Reserva> findByImovelUsuarioIdOrderByDataCheckinDesc(Long usuarioId);
 
     List<Reserva> findByClienteIdOrderByDataCheckinDesc(Long clienteId);
+
+    List<Reserva> findByClienteIdAndImovelIdOrderByDataCheckinDesc(Long clienteId, Long imovelId);
+
+    /** Reservas confirmadas de cliente com conta que ainda nao tem conversa ligada (reconciliacao do SmartChat). */
+    @Query("SELECT r FROM Reserva r WHERE r.cliente IS NOT NULL AND r.status IN "
+         + "(br.com.unisenai.smartrent.model.enums.StatusReserva.CONFIRMADA, br.com.unisenai.smartrent.model.enums.StatusReserva.CONCLUIDA) "
+         + "AND NOT EXISTS (SELECT c.id FROM SmartChatConversa c WHERE r.id MEMBER OF c.reservaIds)")
+    List<Reserva> findConfirmadasSemConversa();
+
+    /** Reservas canceladas de cliente com conta cuja mensagem de sistema de cancelamento ainda nao existe. */
+    @Query("SELECT r FROM Reserva r WHERE r.cliente IS NOT NULL AND r.status IN "
+         + "(br.com.unisenai.smartrent.model.enums.StatusReserva.CANCELADA_COM_REEMBOLSO, "
+         + "br.com.unisenai.smartrent.model.enums.StatusReserva.CANCELADA_SEM_REEMBOLSO, "
+         + "br.com.unisenai.smartrent.model.enums.StatusReserva.CANCELADA_PELO_GESTOR) "
+         + "AND NOT EXISTS (SELECT m.id FROM SmartChatMensagem m WHERE m.chaveIdempotencia = CONCAT('reserva-cancelada:', CAST(r.id AS string)))")
+    List<Reserva> findCanceladasSemMensagem();
 }

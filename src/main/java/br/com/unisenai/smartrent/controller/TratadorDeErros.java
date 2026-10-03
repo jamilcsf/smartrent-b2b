@@ -99,6 +99,11 @@ public class TratadorDeErros {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(corpo);
     }
 
+    @ExceptionHandler(br.com.unisenai.smartrent.service.erro.LimiteExcedidoException.class)
+    public ResponseEntity<Map<String, Object>> limiteExcedido(RuntimeException e) {
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(Map.of("erro", e.getMessage()));
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, Object>> argumento(IllegalArgumentException e) {
         return ResponseEntity.badRequest().body(Map.of("erro", e.getMessage()));

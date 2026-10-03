@@ -1,0 +1,82 @@
+# Termos do filtro de conteudo do SmartChat (um por linha: CATEGORIA|termo).
+#
+# Categorias: OFENSA (xingamentos e ofensas) e SEXUAL (termos sexuais explicitos).
+# Os termos sao comparados sem acentos e sem diferenca de maiusculas, toleram letras
+# repetidas, simbolos no lugar de letras (p0rra, put@) e espacos/pontos entre as
+# letras (p.u.t.a). A comparacao respeita limites de palavra: "disputa" e
+# "computador" NAO casam com "puta". Para ajustar sem mexer em codigo, aponte
+# smartrent.chat.termos-arquivo (SMARTCHAT_TERMOS_ARQUIVO) para um arquivo seu com
+# o mesmo formato; ele substitui esta lista.
+
+OFENSA|puta
+OFENSA|putinha
+OFENSA|puto
+OFENSA|filho da puta
+OFENSA|filha da puta
+OFENSA|fdp
+OFENSA|vadia
+OFENSA|vagabundo
+OFENSA|vagabunda
+OFENSA|piranha
+OFENSA|arrombado
+OFENSA|arrombada
+OFENSA|desgracado
+OFENSA|desgracada
+OFENSA|idiota
+OFENSA|imbecil
+OFENSA|babaca
+OFENSA|otario
+OFENSA|otaria
+OFENSA|retardado
+OFENSA|retardada
+OFENSA|escroto
+OFENSA|escrota
+OFENSA|cuzao
+OFENSA|merda
+OFENSA|bosta
+OFENSA|porra
+OFENSA|caralho
+OFENSA|carai
+OFENSA|krl
+OFENSA|cacete
+OFENSA|pqp
+OFENSA|vtnc
+OFENSA|tnc
+OFENSA|viado
+OFENSA|viadinho
+OFENSA|corno
+OFENSA|corna
+OFENSA|lazarento
+OFENSA|nojento
+OFENSA|nojenta
+OFENSA|vai se foder
+OFENSA|vai tomar no cu
+OFENSA|vai a merda
+OFENSA|foda se
+OFENSA|fodase
+OFENSA|foder
+OFENSA|fodido
+OFENSA|fodida
+OFENSA|cu
+SEXUAL|buceta
+SEXUAL|xoxota
+SEXUAL|xereca
+SEXUAL|piroca
+SEXUAL|punheta
+SEXUAL|siririca
+SEXUAL|boquete
+SEXUAL|putaria
+SEXUAL|pornografia
+SEXUAL|porno
+SEXUAL|pornô
+SEXUAL|nudes
+SEXUAL|nude
+SEXUAL|orgia
+SEXUAL|gozada
+SEXUAL|tesao
+SEXUAL|sexo anal
+SEXUAL|sexo oral
+SEXUAL|transar com voce
+SEXUAL|mamada
+SEXUAL|pau duro
+SEXUAL|me manda foto pelada

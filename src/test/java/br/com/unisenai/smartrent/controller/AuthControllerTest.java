@@ -80,7 +80,7 @@ class AuthControllerTest {
     @DisplayName("CT29 - Login é acessível a visitante e devolve o token")
     void loginDeveSerPublico() throws Exception {
         when(authService.autenticar(any())).thenReturn(new AuthResponse("token-abc", 86400L,
-                new UsuarioResponse(1L, "Ana", "ana@smartrent.dev", PapelUsuario.ANFITRIAO)));
+                new UsuarioResponse(1L, "Ana", "ana@smartrent.dev", PapelUsuario.ANFITRIAO, false)));
 
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -160,7 +160,7 @@ class AuthControllerTest {
         when(googleTokenVerifier.verificar("credencial-google"))
                 .thenReturn(new GoogleTokenVerifier.IdentidadeGoogle("ana@smartrent.dev", "Ana"));
         when(authService.entrarComGoogle("ana@smartrent.dev", "Ana", null)).thenReturn(new AuthResponse("token-g", 86400L,
-                new UsuarioResponse(1L, "Ana", "ana@smartrent.dev", PapelUsuario.ANFITRIAO)));
+                new UsuarioResponse(1L, "Ana", "ana@smartrent.dev", PapelUsuario.ANFITRIAO, false)));
 
         mockMvc.perform(post("/api/auth/google")
                         .contentType(MediaType.APPLICATION_JSON)

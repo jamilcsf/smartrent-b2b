@@ -39,6 +39,10 @@ public class Usuario {
     @Column(name = "ativo", nullable = false)
     private boolean ativo = true;
 
+    /** Aba SmartChat do cliente: liga na primeira interacao e fica ligada (guardada no backend, nao no navegador). */
+    @Column(name = "smartchat_liberado", nullable = false)
+    private boolean smartchatLiberado;
+
     @Column(name = "data_criacao", nullable = false, updatable = false)
     private LocalDateTime dataCriacao;
 
@@ -112,5 +116,13 @@ public class Usuario {
 
     public void setDataCriacao(LocalDateTime dataCriacao) {
         this.dataCriacao = dataCriacao;
+    }
+
+    public boolean isSmartchatLiberado() {
+        return smartchatLiberado;
+    }
+
+    public void setSmartchatLiberado(boolean smartchatLiberado) {
+        this.smartchatLiberado = smartchatLiberado;
     }
 }

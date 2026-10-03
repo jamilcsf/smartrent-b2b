@@ -52,6 +52,8 @@ public class SecurityConfig {
                                 .hasAnyRole("ANFITRIAO", "ADMIN")
                         // Reserva do cliente e SmartChat: qualquer usuario autenticado; a
                         // propriedade (so as proprias reservas e conversas) e conferida nos servicos.
+                        // O fluxo SSE usa ticket de uso unico (EventSource nao envia Authorization).
+                        .requestMatchers("/api/smartchat/stream").permitAll()
                         .requestMatchers("/api/cliente/**", "/api/smartchat/**").authenticated()
                         .anyRequest().permitAll())
                 // Sem isto o Spring Security responderia 401 com WWW-Authenticate
