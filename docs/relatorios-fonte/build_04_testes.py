@@ -84,11 +84,11 @@ casos = [
     ("CT60–66", "Publicação: bloqueio antes de 24h, liberação mesmo sem o job, novo aceite, sem preço, "
                   "janela configurável, promoção em lote idempotente", "RF16", "Serviço (simulado)", "Crítica", "Implementado"),
     ("CT70–82", "Imagens e vídeos: 2:1 das fotos 360, tipo real pelo conteúdo, tamanho, miniatura, "
-                  "duração do vídeo lida no servidor (até 2 min)", "RF15", "Unitário", "Crítica", "Implementado"),
+                  "duração do vídeo lida no servidor (até 1:30)", "RF15", "Unitário", "Crítica", "Implementado"),
     ("CT83–98", "Limite de 14 imagens somadas e 2 vídeos, capa, estados NOVA/REMOVIDA em edição, "
                   "ordem e capa no rascunho, alternância comum/360", "RF15, RF18", "Serviço (simulado)", "Crítica", "Implementado"),
-    ("CT100–107", "Autorização por papel (401/403) nos endpoints do gestor e WhatsApp visível só "
-                    "a usuários logados", "RF17", "Contrato de API", "Crítica", "Implementado"),
+    ("CT100–107", "Autorização por papel (401/403) nos endpoints do gestor; nenhuma resposta "
+                    "pública traz campo de WhatsApp", "RF17", "Contrato de API", "Crítica", "Implementado"),
     ("CT110–132", "Edição de anúncio publicado: sai do ar ao iniciar, rascunho isolado, relógio de 2h só "
                     "na confirmação, descarte imediato e sem suspensão, bloqueio após confirmar, "
                     "sem prazo máximo, edição sobre republicação agendada", "RF18", "Serviço (simulado)", "Crítica", "Implementado"),
@@ -100,6 +100,29 @@ casos = [
                     "para reservas novas, imóvel fora do ar, colunas não atualizáveis", "RF20", "Serviço e repositório", "Crítica", "Implementado"),
     ("CT190–199", "IA de preço: parsing, dados enviados, falhas, lote independente, só sugere", "RF21",
      "Serviço (simulado)", "Alta", "Implementado"),
+    ("CT200–205", "Campos do anúncio: mínimo de diárias, taxa de limpeza e limite de hóspedes "
+                    "validados no servidor; total com taxa; snapshot dos termos imutável", "RF26", "Serviço e validação", "Crítica", "Implementado"),
+    ("CT210–214", "Dashboard: só dados do gestor, cancelamento fora da ocupação, receita líquida "
+                    "de reembolsos, bloqueios fora do denominador, 403 ao cliente", "RF23", "Serviço e contrato de API", "Alta", "Implementado"),
+    ("CT300–308, CT310–315, CT320–324", "Política de cancelamento: fronteiras de 48 horas, gestor, "
+                    "pendente, snapshot, reembolso idempotente, falha de gateway com retry, pagamento "
+                    "idempotente, expiração de pendente, isolamento entre clientes", "RF27, RF28", "Serviço e banco (H2)", "Crítica", "Implementado"),
+    ("CT330–337, CT340–341, CT350, CT360–361", "Bloqueio de datas e calendário: conflito com reserva "
+                    "confirmada, apenas datas livres, pendentes, remoção parcial, auditoria, "
+                    "isolamento entre gestores, concorrência com reserva, autorização", "RF24, RF25", "Serviço, banco e concorrência", "Crítica", "Implementado"),
+    ("CT400–436", "Filtro de conteúdo: telefones em vários formatos e disfarçados, links externos e "
+                    "do domínio da plataforma, ofensas e termos sexuais com variações, dados "
+                    "legítimos preservados, marcador não forjável, original ausente da saída", "RF30", "Unitário", "Crítica", "Implementado"),
+    ("CT500–533", "SmartChat: conversa única, criação idempotente na confirmação, falha sem impedir "
+                    "a reserva, filtro no envio, notificações filtradas e agrupadas, não lidas, "
+                    "isolamento, rate limit, denúncia e bloqueio sem efeito, perfil sem contato", "RF29, RF30", "Serviço e banco (H2)", "Crítica", "Implementado"),
+    ("CT600–606, CT610–612, CT620–623, CT630–631, CT640, CT650, CT700–707", "Vídeos: limite de 90 s "
+                    "no servidor, envio retomável, tipo real pelo conteúdo, processamento assíncrono "
+                    "idempotente com retry e FALHA, bloqueio de publicação, órfãos, preservação "
+                    "na edição, argumentos do FFmpeg sem shell", "RF31", "Serviço, banco e executor simulado", "Crítica", "Implementado"),
+    ("CT800–802, CT810–812, CT820–823", "Remoção do WhatsApp (busca final e rascunho antigo legível), "
+                    "renomeação para Dashboard, botão Criar anúncio só no Painel e fuso de Brasília "
+                    "(virada de dia, datas puras, durações absolutas)", "RF17, RF32", "Unitário", "Alta", "Implementado"),
 ]
 cdata = [[Paragraph("ID", styles["CellHeader"]), Paragraph("Caso de teste", styles["CellHeader"]),
           Paragraph("RF", styles["CellHeaderCenter"]), Paragraph("Nível", styles["CellHeader"]),
@@ -117,9 +140,9 @@ story.extend(quadro(styles, "Matriz de casos de teste", quadro_table(
     header_align_center=[2, 4, 5])))
 
 story.append(Paragraph(
-    "A suíte automatizada executa hoje 161 testes a cada integração; as faixas de "
+    "A suíte automatizada executa hoje 381 testes a cada integração; as faixas de "
     "identificadores acrescentadas ao quadro (CT50 em diante) agrupam os casos do fluxo de "
-    "anúncios. Nenhum deles depende de rede ou de um PostgreSQL externo: as consultas são "
+    "anúncios, do calendário, do cancelamento, do SmartChat, dos vídeos e do fuso horário. Nenhum deles depende de rede ou de um PostgreSQL externo: as consultas são "
     "exercitadas em banco H2 em memória e as chamadas externas são simuladas, de modo que a "
     "esteira de integração contínua executa a suíte completa sem infraestrutura auxiliar, "
     "conforme o RNF04. As migrations, por sua vez, foram validadas manualmente contra "

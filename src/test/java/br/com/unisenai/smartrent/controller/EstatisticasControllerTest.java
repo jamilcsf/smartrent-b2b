@@ -56,7 +56,7 @@ class EstatisticasControllerTest {
     }
 
     @Test
-    @DisplayName("CT114 - Dashboard: visitante 401, cliente 403 e gestor 200")
+    @DisplayName("CT214 - Dashboard: visitante 401, cliente 403 e gestor 200")
     void autorizacao() throws Exception {
         mockMvc.perform(get("/api/gestor/estatisticas")).andExpect(status().isUnauthorized());
         mockMvc.perform(get("/api/gestor/estatisticas").header("Authorization", "Bearer token-cliente"))

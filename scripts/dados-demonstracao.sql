@@ -14,6 +14,14 @@
 -- executado quantas vezes for preciso, inclusive para reiniciar a demo.
 -- =====================================================================
 
+delete from smartchat_denuncias;
+delete from smartchat_bloqueios_usuario;
+delete from smartchat_mensagens;
+delete from smartchat_conversa_reservas;
+delete from smartchat_conversas;
+delete from pagamentos;
+delete from reembolsos;
+delete from bloqueios_datas;
 delete from notificacoes;
 delete from lembretes_edicao;
 delete from auditoria_anuncio;
@@ -93,26 +101,37 @@ insert into imovel_comodidades (imovel_id, comodidade) values
 
 -- Situacoes variadas: confirmada, pendente e cancelada, em canais diferentes.
 insert into reservas
-  (imovel_id, hospede_nome, hospede_email, hospede_telefone, data_checkin,
+  (imovel_id, hospede_nome, hospede_email, data_checkin,
    data_checkout, valor_total, status, origem, data_criacao, versao, observacoes,
    moeda, numero_diarias, preco_diaria_snapshot, taxas_snapshot, total_snapshot,
-   imovel_titulo_snapshot, imovel_endereco_snapshot, imovel_caracteristicas_snapshot)
+   imovel_titulo_snapshot, imovel_endereco_snapshot, imovel_caracteristicas_snapshot,
+   limite_hospedes_snapshot, cliente_id)
 values
-  (2, 'Maria Souza',     'maria@exemplo.com',   '(48) 99871-2200',
+  (2, 'Maria Souza',     'maria@exemplo.com',
    date '2026-10-02', date '2026-10-07', 1950.00, 'CONFIRMADA', 'AIRBNB',  now(), 0, 'Chegada apos as 20h.',
-   'BRL', 1, 0, 0, 0, 'tmp', null, null),
-  (1, 'Carlos Pereira',  'carlos@exemplo.com',  '(48) 99610-4471',
+   'BRL', 1, 0, 0, 0, 'tmp', null, null, 1, null),
+  (1, 'Carlos Pereira',  'carlos@exemplo.com',
    date '2026-11-10', date '2026-11-14',  960.00, 'CONFIRMADA', 'DIRETA',  now(), 0, null,
-   'BRL', 1, 0, 0, 0, 'tmp', null, null),
-  (5, 'Juliana Alves',   'juliana@exemplo.com', '(47) 99145-8032',
+   'BRL', 1, 0, 0, 0, 'tmp', null, null, 1, null),
+  (5, 'Juliana Alves',   'juliana@exemplo.com',
    date '2026-12-20', date '2026-12-27', 5040.00, 'PENDENTE',   'BOOKING', now(), 0, 'Aguardando confirmacao de pagamento.',
-   'BRL', 1, 0, 0, 0, 'tmp', null, null),
-  (6, 'Ricardo Nunes',   'ricardo@exemplo.com', null,
+   'BRL', 1, 0, 0, 0, 'tmp', null, null, 1, null),
+  (6, 'Ricardo Nunes',   'ricardo@exemplo.com',
    date '2027-01-05', date '2027-01-12', 6860.00, 'CONFIRMADA', 'DIRETA',  now(), 0, 'Grupo de 10 pessoas.',
-   'BRL', 1, 0, 0, 0, 'tmp', null, null),
-  (3, 'Fernanda Lima',   'fernanda@exemplo.com', '(48) 98822-1190',
-   date '2026-11-02', date '2026-11-05',  540.00, 'CANCELADA',  'OUTRA_OTA', now(), 0, 'Cancelada pelo hospede.',
-   'BRL', 1, 0, 0, 0, 'tmp', null, null);
+   'BRL', 1, 0, 0, 0, 'tmp', null, null, 1, null),
+  (3, 'Fernanda Lima',   'fernanda@exemplo.com',
+   date '2026-11-02', date '2026-11-05',  540.00, 'CANCELADA_SEM_REEMBOLSO',  'OUTRA_OTA', now(), 0, 'Cancelada pelo hospede.',
+   'BRL', 1, 0, 0, 0, 'tmp', null, null, 1, null);
+
+-- Reservas do cliente de teste (cliente@smartrent.dev), com pagamento aprovado: ao rodar o job de
+-- reconciliacao do SmartChat (ou ao abrir a conversa pela reserva) a conversa com a gestora aparece.
+insert into reservas
+  (imovel_id, hospede_nome, hospede_email, data_checkin, data_checkout, valor_total, status, origem,
+   data_criacao, versao, moeda, numero_diarias, preco_diaria_snapshot, taxas_snapshot, total_snapshot,
+   imovel_titulo_snapshot, limite_hospedes_snapshot, cliente_id, numero_hospedes)
+values
+  (3, 'Cliente de Teste', 'cliente@smartrent.dev', date '2027-02-10', date '2027-02-13', 540.00, 'CONFIRMADA',
+   'DIRETA', now(), 0, 'BRL', 3, 180, 0, 540, 'tmp', 2, 2, 2);
 
 -- Snapshot das reservas (preco e dados do imovel congelados): derivado do que ja
 -- foi inserido acima, como faz a migration V6 para reservas antigas.
@@ -127,6 +146,17 @@ update reservas r set
     imovel_caracteristicas_snapshot = concat_ws(' · ', i.metragem_quadrada || ' m²',
         i.numero_quartos || ' quarto(s)', i.numero_banheiros || ' banheiro(s)')
 from imoveis i where i.id = r.imovel_id;
+
+update reservas r set limite_hospedes_snapshot = i.capacidade_hospedes
+from imoveis i where i.id = r.imovel_id;
+
+insert into pagamentos (reserva_id, valor, moeda, status, chave_idempotencia, ref_gateway, criado_em)
+select id, total_snapshot, 'BRL', 'APROVADO', 'demo:reserva:' || id, 'SBX-DEMO-' || id, now()
+from reservas where cliente_id is not null and status = 'CONFIRMADA';
+
+-- Um bloqueio de datas de exemplo (uso proprio) para o calendario do imovel 1.
+insert into bloqueios_datas (imovel_id, data_inicio, data_fim, motivo, observacao, criado_por, criado_em)
+values (1, date '2026-12-24', date '2026-12-26', 'USO_PROPRIO', 'Natal em familia', 1, now());
 
 insert into reserva_precos_diarios (reserva_id, data, valor)
 select r.id, d::date, r.preco_diaria_snapshot

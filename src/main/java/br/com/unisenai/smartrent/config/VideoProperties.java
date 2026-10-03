@@ -5,7 +5,7 @@ import org.springframework.boot.context.properties.bind.DefaultValue;
 
 /**
  * Videos do anuncio (smartrent.video.*). Tudo configuravel; o limite de duracao
- * de 90 segundos e regra de produto (substitui a de 2 minutos) mas tambem pode
+ * de 90 segundos e regra de produto (substitui o limite anterior) mas tambem pode
  * ser ajustado por ambiente.
  *
  * @param ffmpegPath         caminho do FFmpeg; vazio = procura "ffmpeg" no PATH e, se nao achar, usa o processamento basico

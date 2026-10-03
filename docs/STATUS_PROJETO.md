@@ -2,7 +2,7 @@
 
 **Projeto:** SmartRent B2B — Sistema de Gestão Inteligente para Aluguel por Temporada  
 **Instituição:** UniSENAI — ADS (Florianópolis/SC)[cite: 1, 4]  
-**Última Atualização:** 2026-10-03 — Fluxo de anúncios de imóveis (cadastro, pré-publicação, publicação e edição) e snapshot de preço nas reservas  
+**Última Atualização:** 2026-10-03 — Calendário, bloqueio de datas, reserva e cancelamento com reembolso, SmartChat com filtro de conteúdo, vídeos de 1:30 com processamento assíncrono, fuso de Brasília e remoção do WhatsApp  
 
 ---
 
@@ -43,7 +43,11 @@
 - [x] Papel `CLIENTE`, autorização por papel e por propriedade no servidor, mídias (14 imagens somadas, 2 vídeos), máquina de estados do anúncio, jobs idempotentes e lembretes de edição esquecida
 - [x] Snapshot imutável de preço e dados do imóvel em cada reserva
 - [x] Autenticação (login e cadastro) com JWT e acesso público por padrão
-- [x] Suíte de testes automatizados — 161 testes (JUnit 5, Mockito, `@WebMvcTest` e `@DataJpaTest` em H2); falta cobertura automatizada do front (JavaScript)
+- [x] Dashboard de estatísticas do gestor, calendário de 3 meses por imóvel e bloqueio manual de datas seguro contra concorrência ([ADR-004](adr/ADR-004-calendario-smartchat-cancelamento-video-e-fuso.md))
+- [x] Reserva do cliente com gateway de pagamento **simulado**, política de cancelamento e reembolso (idempotente, com retry) e snapshot dos termos e da política
+- [x] SmartChat (conversa única, criação idempotente na confirmação, SSE, filtro de conteúdo no servidor, denúncia e bloqueio como protótipo)
+- [x] Vídeos de até 1:30 com envio em partes retomável e processamento assíncrono (FFmpeg com fallback); fuso de Brasília; WhatsApp removido de ponta a ponta
+- [x] Suíte de testes automatizados — 381 testes (JUnit 5, Mockito, `@WebMvcTest`, `@DataJpaTest` em H2, concorrência); falta cobertura automatizada do front (JavaScript)
 - [ ] Primeiro boot contra o Supabase com o schema aplicado
 
 ---
@@ -87,3 +91,14 @@ Pendente: SMTP real para o canal de e-mail dos lembretes (hoje `EMAIL_LOG`), arm
 objeto (S3) para mais de uma instância, revisão jurídica do termo de uso, fluxo de reserva autoatendido por
 cliente, geocodificação automática do endereço, trocar o `GroqApiClient` legado pelo novo provedor e testes
 automatizados do front.
+
+Em 2026-10-03 foi entregue também a segunda rodada (ver [ADR-004](adr/ADR-004-calendario-smartchat-cancelamento-video-e-fuso.md) e o `README.md`):
+migrations V7 a V13, Dashboard (antigo Portal da transparência), calendário e bloqueio de datas, reserva do cliente com
+cancelamento e reembolso, SmartChat, vídeos de 1:30 e fuso de Brasília. As migrations foram aplicadas em PostgreSQL 16 (inclusive
+com dados legados de WhatsApp) e os fluxos exercitados de ponta a ponta contra a API em execução.
+
+Pendente (depende de decisão ou de terceiros): **revisão jurídica** da política de cancelamento, dos termos e do item 5 do
+termo de uso (ainda cita o WhatsApp), direito de arrependimento (`CANCEL_REGRET_DAYS`, em espera); gateway de pagamento
+real; SMTP real; armazenamento de mídia em objeto (S3) com upload pré-assinado; FFmpeg em produção (em contêiner com
+limites); moderação de imagens e vídeos; módulo de administração (consome denúncias e bloqueios); rate limit distribuído;
+testes automatizados do front; diagrama de classes ainda sem as entidades novas.

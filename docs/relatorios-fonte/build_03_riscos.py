@@ -61,6 +61,27 @@ riscos = [
             "quando o sistema for usado de verdade.", "Média", "Alto", "Alta",
      "O aceite é versionado e auditado (usuário, imóvel, versão, data, hora e IP); o texto "
      "deve ser revisado por assessoria jurídica antes da produção."),
+    ("R12", "Ir à produção com o gateway de pagamento ainda simulado e cobrar ou estornar de "
+            "forma incorreta.", "Média", "Alto", "Alta",
+     "O gateway está atrás da interface GatewayPagamento, com chave de idempotência única no banco "
+     "para cobrança e estorno; o provedor real é uma nova implementação da interface."),
+    ("R13", "Textos e regras de cancelamento e reembolso entrarem em produção sem a revisão do "
+            "setor jurídico (o direito de arrependimento está em espera).", "Média", "Alto", "Alta",
+     "Textos provisórios centralizados em um único arquivo marcado como pendente; parâmetro "
+     "CANCEL_REGRET_DAYS desligado e sem efeito; parâmetros da política gravados no snapshot da reserva."),
+    ("R14", "O filtro de conteúdo do SmartChat ocultar texto legítimo ou deixar passar contatos "
+            "disfarçados.", "Média", "Médio", "Média",
+     "Regras e listas configuráveis, dados legítimos da reserva protegidos, mais de cem casos de "
+     "teste e texto original guardado para revisão futura."),
+    ("R15", "O processamento de vídeo depender do FFmpeg, ausente em ambientes de desenvolvimento, "
+            "e consumir CPU do servidor.", "Média", "Médio", "Média",
+     "Interface VideoProcessingService com fallback básico, tempo máximo e poucas threads por "
+     "execução, fila com retry; em produção, executar o worker em contêiner com limites."),
+    ("R16", "Limite de envios e agrupamento de notificações do chat em memória não valerem com "
+            "mais de uma instância do servidor.", "Média", "Baixo", "Baixa",
+     "Documentado; trocar por limitador distribuído mantendo a mesma interface."),
+    ("R17", "A remoção das colunas de WhatsApp apagar dados que alguém ainda precise.", "Baixa", "Médio", "Baixa",
+     "Os valores são arquivados em tabelas próprias antes do descarte, em migration separada."),
 ]
 rdata = [[Paragraph("ID", styles["CellHeader"]), Paragraph("Risco", styles["CellHeader"]),
           Paragraph("Prob.", styles["CellHeaderCenter"]), Paragraph("Impacto", styles["CellHeaderCenter"]),

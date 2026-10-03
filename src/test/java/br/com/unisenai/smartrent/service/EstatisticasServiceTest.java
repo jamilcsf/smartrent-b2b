@@ -45,7 +45,7 @@ class EstatisticasServiceTest {
     }
 
     @Test
-    @DisplayName("CT110 - Cancelada nao conta como ocupacao nem receita; pendente tambem nao")
+    @DisplayName("CT210 - Cancelada nao conta como ocupacao nem receita; pendente tambem nao")
     void canceladaEPendenteNaoOcupam() {
         var imoveis = List.of(imovel(StatusAnuncio.PUBLICADO));
         var reservas = List.of(
@@ -66,7 +66,7 @@ class EstatisticasServiceTest {
     }
 
     @Test
-    @DisplayName("CT111 - Reserva que cruza a virada de mes divide as noites entre os meses")
+    @DisplayName("CT211 - Reserva que cruza a virada de mes divide as noites entre os meses")
     void reservaCruzandoMes() {
         var reservas = List.of(reserva(StatusReserva.CONFIRMADA, "2026-10-30", "2026-11-02", "600.00"));
         EstatisticasResponse e = EstatisticasService.agregar(List.of(imovel(StatusAnuncio.PUBLICADO)), reservas,
@@ -79,7 +79,7 @@ class EstatisticasServiceTest {
     }
 
     @Test
-    @DisplayName("CT112 - Usuario sem papel de gestor nao calcula estatisticas")
+    @DisplayName("CT212 - Usuario sem papel de gestor nao calcula estatisticas")
     void clienteNaoCalcula() {
         var service = new EstatisticasService(mock(ImovelRepository.class), mock(ReservaRepository.class), mock(br.com.unisenai.smartrent.repository.BloqueioDataRepository.class), mock(br.com.unisenai.smartrent.repository.PagamentoRepository.class), mock(br.com.unisenai.smartrent.repository.ReembolsoRepository.class),
                 new ImovelAcesso(mock(ImovelRepository.class)), Clock.systemUTC());
@@ -91,7 +91,7 @@ class EstatisticasServiceTest {
     }
 
     @Test
-    @DisplayName("CT113 - Consulta so os imoveis e reservas do gestor autenticado e usa o mes de Brasilia")
+    @DisplayName("CT213 - Consulta so os imoveis e reservas do gestor autenticado e usa o mes de Brasilia")
     void filtraPeloGestorEUsaBrasilia() {
         ImovelRepository imoveis = mock(ImovelRepository.class);
         ReservaRepository reservas = mock(ReservaRepository.class);
@@ -112,7 +112,7 @@ class EstatisticasServiceTest {
     }
 
     @Test
-    @DisplayName("CT115 - Receita desconta reembolsos, cancelada paga sem reembolso continua na receita e bloqueios saem do denominador")
+    @DisplayName("CT215 - Receita desconta reembolsos, cancelada paga sem reembolso continua na receita e bloqueios saem do denominador")
     void receitaDescontaReembolsosEBloqueios() {
         var confirmada = reserva(StatusReserva.CONFIRMADA, "2026-10-02", "2026-10-04", "600.00");
         confirmada.setId(1L);

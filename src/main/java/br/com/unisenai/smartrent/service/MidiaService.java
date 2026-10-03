@@ -51,7 +51,7 @@ public class MidiaService {
 
     public static final int MAX_IMAGENS = 14;
     public static final int MAX_VIDEOS = 2;
-    public static final int MAX_DURACAO_VIDEO_SEGUNDOS = 90; // 1:30; substitui o limite anterior de 2 minutos
+    public static final int MAX_DURACAO_VIDEO_SEGUNDOS = 90; // 1:30 (substitui o limite anterior)
 
     private static final Logger log = LoggerFactory.getLogger(MidiaService.class);
 

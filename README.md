@@ -115,7 +115,7 @@ PRE_PUBLICACAO_SEM_PRECO ─preço─▶ PRE_PUBLICACAO_AGUARDANDO ─24h─▶ 
 |---|---|---|
 | `POST` \| `GET` | `/api/gestor/imoveis` | Cria anúncio (com aceite do termo) / lista os meus |
 | `GET` \| `PUT` | `/api/gestor/imoveis/{id}` | Detalhe / edição direta (só em pré-publicação) |
-| `POST` | `/api/gestor/imoveis/{id}/midias` | Upload (`arquivo`, `tipo` = `FOTO` \| `FOTO_360` \| `VIDEO`); 14 imagens somadas, 2 vídeos de até 2 min |
+| `POST` | `/api/gestor/imoveis/{id}/midias` | Upload de imagem (`arquivo`, `tipo` = `FOTO` \| `FOTO_360`) ou vídeo pequeno; 14 imagens somadas, 2 vídeos de até **1:30** |
 | `DELETE` \| `PUT` | `/api/gestor/imoveis/{id}/midias/{mid}` · `/midias/ordem` · `/midias/{mid}/capa` · `/midias/{mid}/tipo` | Remover, reordenar, capa, comum ↔ 360 |
 | `PUT` | `/api/gestor/imoveis/{id}/preco` | Define/altera o preço em pré-publicação (`origem` MANUAL ou IA) |
 | `POST` | `/api/gestor/imoveis/{id}/publicar` | Publica (exige 24h da 1ª confirmação de preço e novo aceite) |
@@ -126,7 +126,7 @@ PRE_PUBLICACAO_SEM_PRECO ─preço─▶ PRE_PUBLICACAO_AGUARDANDO ─24h─▶ 
 | `GET` | `/api/termos/atual` · `/api/midias/{chave}` | Termo de uso · arquivo da mídia (chave aleatória) |
 
 O catálogo público (`/api/imoveis`) só devolve anúncios **visíveis**: `PUBLICADO`, ou `REPUBLICACAO_AGENDADA` cujo
-horário já chegou (assim um atraso do job não prolonga a suspensão). O link de WhatsApp só é enviado a quem está logado.
+horário já chegou (assim um atraso do job não prolonga a suspensão). O contato com o gestor é só pelo SmartChat (o WhatsApp foi removido).
 Reservas gravam um **snapshot imutável** de preço e dados do imóvel; mudar o preço depois não as afeta.
 
 Variáveis de ambiente (valores padrão entre parênteses):
@@ -136,12 +136,78 @@ Variáveis de ambiente (valores padrão entre parênteses):
 | `SMARTRENT_JANELA_PRE_PUBLICACAO_HORAS` (24) · `SMARTRENT_REPUBLICACAO_HORAS` (2) | Janela de pré-publicação e suspensão após confirmar edição |
 | `SMARTRENT_LEMBRETE_APOS_HORAS` (24) · `SMARTRENT_LEMBRETE_INTERVALO_HORAS` (24) · `SMARTRENT_LEMBRETE_MAX` (5) | Lembrete de edição esquecida |
 | `SMARTRENT_JOBS_HABILITADO` (true) | Liga/desliga os jobs agendados |
-| `MIDIA_DIRETORIO` (`./dados/midias`) · `MIDIA_TAMANHO_MAX_IMAGEM_MB` (10) · `MIDIA_TAMANHO_MAX_VIDEO_MB` (100) | Armazenamento e limites de arquivo |
+| `MIDIA_DIRETORIO` (`./dados/midias`) · `MIDIA_TAMANHO_MAX_IMAGEM_MB` (10) | Armazenamento e limite de imagem |
 | `GROQ_API_KEY` · `GROQ_MODEL` · `GROQ_BASE_URL` · `GROQ_TIMEOUT_MS` | IA de precificação (sem chave, cai para edição manual) |
 | `FORWARD_HEADERS_STRATEGY` (none) | `framework` atrás de proxy, para registrar o IP real do aceite |
 
 Para testar o fluxo sem esperar, rode com `SMARTRENT_JANELA_PRE_PUBLICACAO_HORAS=0` e
 `SMARTRENT_REPUBLICACAO_HORAS=0` (ou ajuste os timestamps no banco). Decisões e suposições: [ADR-003](docs/adr/ADR-003-ciclo-de-vida-do-anuncio.md).
+
+## 📅 Painel do Gestor, calendário, reservas e cancelamento
+
+O antigo "Portal da transparência" agora é o **Dashboard** (`/estatisticas.html`: só estatísticas dos imóveis do gestor;
+a rota antiga redireciona). O **Painel do Gestor** (`/dashboard.html`) concentra "Criar anúncio", pré-publicação,
+sugestão de preço por IA, anúncios e a aba **Reservas e calendário**: três meses lado a lado do imóvel escolhido (cinza =
+confirmada, hachurado = pendente, vermelho com listras e cadeado = bloqueado, dia de troca dividido na diagonal),
+popover acessível com hóspede, e-mail, datas e "Abrir conversa no SmartChat", e bloqueio de datas (clique inicial e final).
+
+| Método | Endpoint | Descrição |
+|---|---|---|
+| `GET` | `/api/gestor/calendario?imovelId&de&ate` | Reservas e bloqueios de **um** imóvel (dados do hóspede só para o dono) |
+| `GET` \| `POST` | `/api/gestor/imoveis/{id}/bloqueios` | Lista / cria bloqueio (`apenasLivres`, `cancelarPendentes` para as confirmações) |
+| `DELETE` | `/api/gestor/imoveis/{id}/bloqueios/{bid}?de&ate` | Remove o bloqueio inteiro ou só uma parte (divide em dois) |
+| `GET` | `/api/gestor/estatisticas?meses=` | Dashboard do gestor autenticado |
+| `POST` | `/api/reservas/{id}/cancelar` | Cancelamento pelo gestor (motivo obrigatório; reembolso integral) |
+| `GET` | `/api/cliente/reservas/previa?imovelId&dataCheckin&dataCheckout&numeroHospedes` | Valores, regras e política antes de reservar |
+| `POST` \| `GET` | `/api/cliente/reservas` · `/{id}` | Cria reserva pendente (exige ciência se nascer sem reembolso) / lista e detalha as minhas |
+| `POST` | `/api/cliente/reservas/{id}/pagar` | Paga (gateway **simulado**, idempotente) e confirma |
+| `GET` \| `POST` | `/api/cliente/reservas/{id}/simulacao-cancelamento` · `/cancelar` | Simulação calculada no servidor / cancelamento |
+| `GET` | `/api/politica-cancelamento` · `/api/imoveis/{id}/indisponibilidade` · `/api/config/agora` | Política (texto provisório) · datas indisponíveis (sem revelar bloqueio) · "hoje" em Brasília |
+
+Cancelamento: reembolso integral até **48 h antes do horário de check-in** (14:00, Brasília), sem reembolso depois,
+integral quando o gestor cancela, sem cobrança para reserva pendente; estorno idempotente com retry. Os parâmetros da
+política ficam gravados na reserva. Os textos da política são **provisórios e pendentes de revisão jurídica**
+(`src/main/resources/textos-pendentes-juridico.properties`); `CANCEL_REGRET_DAYS` (arrependimento) fica `0` e sem efeito.
+
+## 💬 SmartChat
+
+Canal único entre cliente e gestor (`/smartchat.html`). O cliente abre pela página do anúncio (só publicado), pela
+reserva ou automaticamente quando a reserva é confirmada; a aba "SmartChat" aparece para ele depois da primeira
+interação (flag no backend) e sempre para o gestor. Telefones, e-mails, links externos e conteúdo impróprio são
+**borrados no servidor** (o original nunca chega ao navegador); links de `SMARTCHAT_DOMINIOS_PERMITIDOS` passam.
+Denúncia e bloqueio de usuário são **protótipo**: persistem, sem efeito (`SMARTCHAT_BLOCK_ENFORCEMENT=false`).
+
+| Método | Endpoint | Descrição |
+|---|---|---|
+| `GET` | `/api/smartchat/conversas?imovelId=` · `/nao-lidas` | Minhas conversas / contador |
+| `POST` | `/api/smartchat/conversas/por-imovel/{id}` · `/por-reserva/{id}` | Abre ou reutiliza a conversa |
+| `GET` \| `POST` | `/api/smartchat/conversas/{id}/mensagens` | Lê (texto já filtrado) / envia |
+| `POST` | `/api/smartchat/conversas/{id}/lidas` · `/denuncias` · `/bloqueio` | Leitura, denúncia, pedido de bloqueio |
+| `GET` | `/api/smartchat/conversas/{id}/perfil` | Perfil (sem e-mail nem telefone) |
+| `POST` \| `GET` | `/api/smartchat/stream-ticket` · `/stream?ticket=` | Tempo quase real por SSE (ticket de uso único) |
+
+## 🎬 Vídeos
+
+Até 2 vídeos de **1:30** por anúncio, fora das 14 imagens. O envio é em partes retomáveis
+(`POST/PUT/DELETE /api/gestor/imoveis/{id}/videos/uploads`), a duração é validada no servidor e o processamento é
+assíncrono (`ENVIANDO → PROCESSANDO → PRONTO | FALHA`). Com **FFmpeg** (`VIDEO_FFMPEG_PATH` ou no `PATH`) gera H.264+AAC
+faststart, HLS 360/720/1080, poster e remove metadados; sem ele usa o processamento básico (só valida e publica o
+MP4). Publicar e confirmar alteração exigem todos os vídeos prontos.
+
+## 🕒 Fuso horário e variáveis novas
+
+Tudo que depende de dia ou hora segue **America/Sao_Paulo** (`APP_TIMEZONE`): instantes novos em UTC, datas de calendário
+sem fuso, prazos (24h, 2h, lembretes) como tempo decorrido.
+
+| Variável | Efeito |
+|---|---|
+| `APP_TIMEZONE` (`America/Sao_Paulo`) | Fuso oficial da plataforma |
+| `CANCEL_ANTECEDENCIA_HORAS` (48) · `CHECKIN_HORA_PADRAO` (14:00) · `CANCEL_REGRET_DAYS` (0) · `RESERVA_PENDENTE_EXPIRA_MINUTOS` (30) | Política de cancelamento e expiração de pendente |
+| `SMARTCHAT_DOMINIOS_PERMITIDOS` · `SMARTCHAT_TERMOS_ARQUIVO` · `SMARTCHAT_BLOCK_ENFORCEMENT` (false) · `SMARTCHAT_MENSAGENS_POR_MINUTO` (20) | Filtro de conteúdo, termos e limites do chat |
+| `VIDEO_FFMPEG_PATH` · `VIDEO_DURACAO_MAX_SEGUNDOS` (90) · `VIDEO_TAMANHO_MAX_MB` (500) · `VIDEO_APAGAR_ORIGINAL` (true) | Processamento e limites de vídeo |
+
+Contas de demonstração (`scripts/dados-demonstracao.sql`, senha `senhaSegura123`): `ana@smartrent.dev` (gestora) e
+`cliente@smartrent.dev` (cliente). Decisões, suposições e pendências jurídicas: [ADR-004](docs/adr/ADR-004-calendario-smartchat-cancelamento-video-e-fuso.md).
 
 ## 🧪 Testes
 
