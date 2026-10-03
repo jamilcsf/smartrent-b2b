@@ -6,7 +6,13 @@ import br.com.unisenai.smartrent.model.Imovel;
 import br.com.unisenai.smartrent.model.Reserva;
 import br.com.unisenai.smartrent.model.Usuario;
 import br.com.unisenai.smartrent.model.enums.StatusAnuncio;
+import br.com.unisenai.smartrent.model.BloqueioData;
+import br.com.unisenai.smartrent.model.Reembolso;
+import br.com.unisenai.smartrent.model.enums.StatusReembolso;
+import br.com.unisenai.smartrent.repository.BloqueioDataRepository;
 import br.com.unisenai.smartrent.repository.ImovelRepository;
+import br.com.unisenai.smartrent.repository.PagamentoRepository;
+import br.com.unisenai.smartrent.repository.ReembolsoRepository;
 import br.com.unisenai.smartrent.repository.ReservaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,8 +26,10 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.LinkedHashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Estatisticas do Dashboard. O filtro pelo gestor e feito aqui, no servidor:
@@ -37,11 +45,18 @@ public class EstatisticasService {
 
     private final ImovelRepository imovelRepository;
     private final ReservaRepository reservaRepository;
+    private final BloqueioDataRepository bloqueioRepository;
+    private final PagamentoRepository pagamentoRepository;
+    private final ReembolsoRepository reembolsoRepository;
     private final ImovelAcesso acesso;
     private final Clock clock;
 
     public EstatisticasService(ImovelRepository imovelRepository, ReservaRepository reservaRepository,
-                               ImovelAcesso acesso, Clock clock) {
+                               BloqueioDataRepository bloqueioRepository, PagamentoRepository pagamentoRepository,
+                               ReembolsoRepository reembolsoRepository, ImovelAcesso acesso, Clock clock) {
+        this.bloqueioRepository = bloqueioRepository;
+        this.pagamentoRepository = pagamentoRepository;
+        this.reembolsoRepository = reembolsoRepository;
         this.imovelRepository = imovelRepository;
         this.reservaRepository = reservaRepository;
         this.acesso = acesso;
@@ -57,12 +72,28 @@ public class EstatisticasService {
 
         List<Imovel> imoveis = imovelRepository.findByUsuarioId(gestor.getId());
         List<Reserva> reservas = reservaRepository.findByImovelUsuarioIdOrderByDataCheckinDesc(gestor.getId());
-        return agregar(imoveis, reservas, primeiro, ultimo);
+        Set<Long> pagas = new HashSet<>(pagamentoRepository.reservaIdsPagosDoGestor(gestor.getId()));
+        List<Reembolso> reembolsos = reembolsoRepository
+                .findByReservaImovelUsuarioIdAndStatus(gestor.getId(), StatusReembolso.PROCESSADO);
+        List<BloqueioData> bloqueios = bloqueioRepository
+                .findDoGestorNoPeriodo(gestor.getId(), primeiro.atDay(1), ultimo.atEndOfMonth());
+        return agregar(imoveis, reservas, primeiro, ultimo, pagas, reembolsos, bloqueios);
     }
 
     /** Agregacao pura (sem banco), para testar com dados em memoria. */
     static EstatisticasResponse agregar(List<Imovel> imoveis, List<Reserva> reservas,
                                         YearMonth primeiro, YearMonth ultimo) {
+        return agregar(imoveis, reservas, primeiro, ultimo, Set.of(), List.of(), List.of());
+    }
+
+    /**
+     * @param pagas      ids das reservas com cobranca aprovada (cancelada apos pagar continua na receita bruta)
+     * @param reembolsos estornos PROCESSADOS, descontados da receita
+     * @param bloqueios  bloqueios manuais: saem do denominador da ocupacao e sao informados a parte
+     */
+    static EstatisticasResponse agregar(List<Imovel> imoveis, List<Reserva> reservas,
+                                        YearMonth primeiro, YearMonth ultimo,
+                                        Set<Long> pagas, List<Reembolso> reembolsos, List<BloqueioData> bloqueios) {
         LocalDate de = primeiro.atDay(1);
         LocalDate ate = ultimo.atEndOfMonth();
 
@@ -95,6 +126,11 @@ public class EstatisticasService {
                 if (c != null) {
                     c[1]++;
                     canceladas++;
+                    if (pagas.contains(r.getId())) {
+                        // Cobrada e depois cancelada: o valor entra na bruta e o estorno (se houve) sai abaixo.
+                        valores.get(mesDaReserva)[0] = valores.get(mesDaReserva)[0].add(r.getTotalSnapshot());
+                        bruta = bruta.add(r.getTotalSnapshot());
+                    }
                 }
                 continue; // cancelada nunca conta como ocupacao
             }
@@ -119,11 +155,27 @@ public class EstatisticasService {
             }
         }
 
+        for (Reembolso e : reembolsos) {
+            YearMonth mes = YearMonth.from(e.getReserva().getDataCheckin());
+            BigDecimal[] v = valores.get(mes);
+            if (v != null) {
+                v[1] = v[1].add(e.getValor());
+                reemb = reemb.add(e.getValor());
+            }
+        }
+
         long imoveisNoAr = imoveis.stream().filter(i -> i.getStatus() == StatusAnuncio.PUBLICADO
                 || i.getStatus() == StatusAnuncio.EM_EDICAO
                 || i.getStatus() == StatusAnuncio.REPUBLICACAO_AGENDADA).count();
         long dias = ChronoUnit.DAYS.between(de, ate) + 1;
-        long noitesBloqueadas = 0; // preenchido pelo bloqueio manual de datas
+        long noitesBloqueadas = 0;
+        for (BloqueioData b : bloqueios) {
+            LocalDate ini = b.getDataInicio().isBefore(de) ? de : b.getDataInicio();
+            LocalDate fim = b.getDataFim().isAfter(ate) ? ate : b.getDataFim();
+            if (!fim.isBefore(ini)) {
+                noitesBloqueadas += ChronoUnit.DAYS.between(ini, fim) + 1;
+            }
+        }
         long disponiveis = Math.max(0, dias * imoveisNoAr - noitesBloqueadas);
         double taxa = disponiveis == 0 ? 0 : Math.min(1.0, (double) noitesOcupadas / disponiveis);
 

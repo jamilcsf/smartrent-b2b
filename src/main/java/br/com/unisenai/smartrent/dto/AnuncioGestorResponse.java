@@ -16,6 +16,7 @@ import java.util.List;
  */
 public record AnuncioGestorResponse(
         Long id,
+        String codigo,
         StatusAnuncio status,
         boolean ativo,
         boolean noCatalogo,

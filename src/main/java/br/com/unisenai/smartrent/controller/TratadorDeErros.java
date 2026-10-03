@@ -84,6 +84,21 @@ public class TratadorDeErros {
                 .body(Map.of("erro", "O arquivo excede o tamanho maximo permitido."));
     }
 
+    @ExceptionHandler(br.com.unisenai.smartrent.service.erro.PagamentoRecusadoException.class)
+    public ResponseEntity<Map<String, Object>> pagamentoRecusado(RuntimeException e) {
+        return ResponseEntity.status(HttpStatus.PAYMENT_REQUIRED).body(Map.of("erro", e.getMessage()));
+    }
+
+    @ExceptionHandler(br.com.unisenai.smartrent.service.erro.ConflitoComDetalhesException.class)
+    public ResponseEntity<Map<String, Object>> conflitoComDetalhes(
+            br.com.unisenai.smartrent.service.erro.ConflitoComDetalhesException e) {
+        Map<String, Object> corpo = new LinkedHashMap<>();
+        corpo.put("erro", e.getMessage());
+        corpo.put("codigo", e.codigo());
+        corpo.put("detalhes", e.detalhes());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(corpo);
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, Object>> argumento(IllegalArgumentException e) {
         return ResponseEntity.badRequest().body(Map.of("erro", e.getMessage()));

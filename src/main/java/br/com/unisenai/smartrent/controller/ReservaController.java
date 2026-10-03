@@ -19,9 +19,20 @@ import java.util.List;
 public class ReservaController {
 
     private final ReservaService reservaService;
+    private final br.com.unisenai.smartrent.service.CancelamentoService cancelamentoService;
 
-    public ReservaController(ReservaService reservaService) {
+    public ReservaController(ReservaService reservaService,
+                             br.com.unisenai.smartrent.service.CancelamentoService cancelamentoService) {
         this.reservaService = reservaService;
+        this.cancelamentoService = cancelamentoService;
+    }
+
+    /** Cancelamento pelo gestor: motivo obrigatorio e reembolso integral ao cliente. */
+    @PostMapping("/{id}/cancelar")
+    public ReservaResponse cancelar(@AuthenticationPrincipal Usuario gestor, @PathVariable Long id,
+                                    @RequestBody br.com.unisenai.smartrent.dto.ReservaClienteDtos.CancelamentoPedido pedido) {
+        return ReservaResponse.de(cancelamentoService.cancelarPeloGestor(gestor, id,
+                pedido == null ? null : pedido.motivo()));
     }
 
     @GetMapping

@@ -46,7 +46,7 @@ public class Reserva {
     private BigDecimal valorTotal;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false, length = 20)
+    @Column(name = "status", nullable = false, length = 30)
     private StatusReserva status = StatusReserva.PENDENTE;
 
     @Enumerated(EnumType.STRING)
@@ -119,6 +119,19 @@ public class Reserva {
     @Column(name = "numero_hospedes", nullable = false)
     private int numeroHospedes = 1;
 
+    /** Cancelamento: instante (UTC), quem cancelou (CLIENTE, GESTOR, SISTEMA), regra aplicada e motivo. */
+    @Column(name = "cancelada_em")
+    private java.time.Instant canceladaEm;
+
+    @Column(name = "cancelada_por", length = 20)
+    private String canceladaPor;
+
+    @Column(name = "cancelamento_regra", length = 40)
+    private String cancelamentoRegra;
+
+    @Column(name = "cancelamento_motivo", length = 300)
+    private String cancelamentoMotivo;
+
     /** Valor de cada diaria por data, gravado uma unica vez (o preco pode variar por data). */
     @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "reserva_precos_diarios",
@@ -138,7 +151,9 @@ public class Reserva {
 
     @PrePersist
     protected void aoPersistir() {
-        this.dataCriacao = LocalDateTime.now(br.com.unisenai.smartrent.config.PlataformaTempo.zona());
+        if (this.dataCriacao == null) { // os servicos gravam a hora do relogio injetavel; este e so o reserva
+            this.dataCriacao = LocalDateTime.now(br.com.unisenai.smartrent.config.PlataformaTempo.zona());
+        }
     }
 
     public Long getId() {
@@ -379,5 +394,37 @@ public class Reserva {
 
     public void setNumeroHospedes(int numeroHospedes) {
         this.numeroHospedes = numeroHospedes;
+    }
+
+    public java.time.Instant getCanceladaEm() {
+        return canceladaEm;
+    }
+
+    public void setCanceladaEm(java.time.Instant canceladaEm) {
+        this.canceladaEm = canceladaEm;
+    }
+
+    public String getCanceladaPor() {
+        return canceladaPor;
+    }
+
+    public void setCanceladaPor(String canceladaPor) {
+        this.canceladaPor = canceladaPor;
+    }
+
+    public String getCancelamentoRegra() {
+        return cancelamentoRegra;
+    }
+
+    public void setCancelamentoRegra(String cancelamentoRegra) {
+        this.cancelamentoRegra = cancelamentoRegra;
+    }
+
+    public String getCancelamentoMotivo() {
+        return cancelamentoMotivo;
+    }
+
+    public void setCancelamentoMotivo(String cancelamentoMotivo) {
+        this.cancelamentoMotivo = cancelamentoMotivo;
     }
 }

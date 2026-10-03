@@ -41,6 +41,12 @@ class ReservaSnapshotTest {
     private ReservaRepository reservaRepository;
     @Mock
     private ImovelRepository imovelRepository;
+    @Mock
+    private br.com.unisenai.smartrent.repository.BloqueioDataRepository bloqueioRepository;
+    @Mock
+    private br.com.unisenai.smartrent.repository.UsuarioRepository usuarioRepository;
+    @Mock
+    private org.springframework.context.ApplicationEventPublisher publicador;
 
     private ReservaService service;
     private Usuario gestor;
@@ -50,7 +56,8 @@ class ReservaSnapshotTest {
     void preparar() {
         service = new ReservaService(reservaRepository, imovelRepository,
                 new ImovelAcesso(imovelRepository), new RelogioFalso(T0),
-                br.com.unisenai.smartrent.config.PoliticaCancelamentoProperties.padrao());
+                br.com.unisenai.smartrent.config.PoliticaCancelamentoProperties.padrao(),
+                bloqueioRepository, usuarioRepository, publicador);
         gestor = new Usuario();
         gestor.setId(10L);
         gestor.setPapel(PapelUsuario.ANFITRIAO);
@@ -76,6 +83,7 @@ class ReservaSnapshotTest {
         imovel.setEndereco(e);
 
         lenient().when(imovelRepository.findById(1L)).thenReturn(Optional.of(imovel));
+        lenient().when(imovelRepository.findByIdParaAtualizar(1L)).thenReturn(Optional.of(imovel));
         lenient().when(reservaRepository.save(any(Reserva.class))).thenAnswer(i -> i.getArgument(0));
     }
 

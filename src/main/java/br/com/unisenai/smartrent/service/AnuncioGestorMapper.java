@@ -60,6 +60,7 @@ public class AnuncioGestorMapper {
 
         return new AnuncioGestorResponse(
                 i.getId(),
+                CodigoImovel.de(i.getId()),
                 i.getStatus(),
                 i.isAtivo(),
                 noCatalogo(i, agora),

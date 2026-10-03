@@ -50,7 +50,7 @@ class EstatisticasServiceTest {
         var imoveis = List.of(imovel(StatusAnuncio.PUBLICADO));
         var reservas = List.of(
                 reserva(StatusReserva.CONFIRMADA, "2026-10-10", "2026-10-13", "900.00"),
-                reserva(StatusReserva.CANCELADA, "2026-10-20", "2026-10-25", "1500.00"),
+                reserva(StatusReserva.CANCELADA_SEM_REEMBOLSO, "2026-10-20", "2026-10-25", "1500.00"),
                 reserva(StatusReserva.PENDENTE, "2026-10-26", "2026-10-28", "600.00"));
 
         EstatisticasResponse e = EstatisticasService.agregar(imoveis, reservas,
@@ -81,7 +81,7 @@ class EstatisticasServiceTest {
     @Test
     @DisplayName("CT112 - Usuario sem papel de gestor nao calcula estatisticas")
     void clienteNaoCalcula() {
-        var service = new EstatisticasService(mock(ImovelRepository.class), mock(ReservaRepository.class),
+        var service = new EstatisticasService(mock(ImovelRepository.class), mock(ReservaRepository.class), mock(br.com.unisenai.smartrent.repository.BloqueioDataRepository.class), mock(br.com.unisenai.smartrent.repository.PagamentoRepository.class), mock(br.com.unisenai.smartrent.repository.ReembolsoRepository.class),
                 new ImovelAcesso(mock(ImovelRepository.class)), Clock.systemUTC());
         Usuario cliente = new Usuario();
         cliente.setId(1L);
@@ -99,7 +99,7 @@ class EstatisticasServiceTest {
         when(reservas.findByImovelUsuarioIdOrderByDataCheckinDesc(7L)).thenReturn(List.of());
         // 02:00 UTC de 01/11 ainda e 31/10 em Brasilia: o periodo termina em outubro.
         Clock relogio = Clock.fixed(Instant.parse("2026-11-01T02:00:00Z"), ZoneId.of("America/Sao_Paulo"));
-        var service = new EstatisticasService(imoveis, reservas, new ImovelAcesso(imoveis), relogio);
+        var service = new EstatisticasService(imoveis, reservas, mock(br.com.unisenai.smartrent.repository.BloqueioDataRepository.class), mock(br.com.unisenai.smartrent.repository.PagamentoRepository.class), mock(br.com.unisenai.smartrent.repository.ReembolsoRepository.class), new ImovelAcesso(imoveis), relogio);
         Usuario gestor = new Usuario();
         gestor.setId(7L);
         gestor.setPapel(PapelUsuario.ANFITRIAO);
@@ -109,5 +109,38 @@ class EstatisticasServiceTest {
         verify(imoveis).findByUsuarioId(7L);
         verify(reservas).findByImovelUsuarioIdOrderByDataCheckinDesc(7L);
         assertThat(e.ate()).isEqualTo(LocalDate.of(2026, 10, 31));
+    }
+
+    @Test
+    @DisplayName("CT115 - Receita desconta reembolsos, cancelada paga sem reembolso continua na receita e bloqueios saem do denominador")
+    void receitaDescontaReembolsosEBloqueios() {
+        var confirmada = reserva(StatusReserva.CONFIRMADA, "2026-10-02", "2026-10-04", "600.00");
+        confirmada.setId(1L);
+        var comReembolso = reserva(StatusReserva.CANCELADA_COM_REEMBOLSO, "2026-10-10", "2026-10-12", "500.00");
+        comReembolso.setId(2L);
+        var semReembolso = reserva(StatusReserva.CANCELADA_SEM_REEMBOLSO, "2026-10-15", "2026-10-17", "400.00");
+        semReembolso.setId(3L);
+        var pendenteCancelada = reserva(StatusReserva.CANCELADA_SEM_REEMBOLSO, "2026-10-20", "2026-10-22", "300.00");
+        pendenteCancelada.setId(4L); // nunca paga: fora da receita
+
+        var estorno = new br.com.unisenai.smartrent.model.Reembolso();
+        estorno.setReserva(comReembolso);
+        estorno.setValor(new BigDecimal("500.00"));
+        var bloqueio = new br.com.unisenai.smartrent.model.BloqueioData();
+        bloqueio.setDataInicio(LocalDate.of(2026, 10, 25));
+        bloqueio.setDataFim(LocalDate.of(2026, 10, 29)); // 5 noites
+
+        EstatisticasResponse e = EstatisticasService.agregar(List.of(imovel(StatusAnuncio.PUBLICADO)),
+                List.of(confirmada, comReembolso, semReembolso, pendenteCancelada),
+                YearMonth.of(2026, 10), YearMonth.of(2026, 10),
+                java.util.Set.of(1L, 2L, 3L), List.of(estorno), List.of(bloqueio));
+
+        assertThat(e.receitaBruta()).isEqualByComparingTo("1500.00");   // 600 + 500 + 400
+        assertThat(e.reembolsos()).isEqualByComparingTo("500.00");
+        assertThat(e.receitaLiquida()).isEqualByComparingTo("1000.00"); // 600 + 400 retidos
+        assertThat(e.noitesOcupadas()).isEqualTo(2);                    // so a confirmada
+        assertThat(e.noitesBloqueadas()).isEqualTo(5);
+        assertThat(e.noitesDisponiveis()).isEqualTo(26);                // 31 - 5 bloqueadas
+        assertThat(e.reservasCanceladas()).isEqualTo(3);
     }
 }

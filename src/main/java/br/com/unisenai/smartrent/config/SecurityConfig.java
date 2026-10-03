@@ -50,6 +50,9 @@ public class SecurityConfig {
                         // papel, cada servico confere que o imovel e do gestor.
                         .requestMatchers("/api/gestor/**", "/api/reservas/**")
                                 .hasAnyRole("ANFITRIAO", "ADMIN")
+                        // Reserva do cliente e SmartChat: qualquer usuario autenticado; a
+                        // propriedade (so as proprias reservas e conversas) e conferida nos servicos.
+                        .requestMatchers("/api/cliente/**", "/api/smartchat/**").authenticated()
                         .anyRequest().permitAll())
                 // Sem isto o Spring Security responderia 401 com WWW-Authenticate
                 // e o navegador abriria a caixa de dialogo do basic auth.

@@ -8,11 +8,14 @@ import br.com.unisenai.smartrent.model.Usuario;
 import br.com.unisenai.smartrent.model.enums.OrigemReserva;
 import br.com.unisenai.smartrent.model.enums.PapelUsuario;
 import br.com.unisenai.smartrent.model.enums.StatusReserva;
+import br.com.unisenai.smartrent.repository.BloqueioDataRepository;
 import br.com.unisenai.smartrent.repository.ImovelRepository;
 import br.com.unisenai.smartrent.repository.ReservaRepository;
+import br.com.unisenai.smartrent.repository.UsuarioRepository;
 import br.com.unisenai.smartrent.service.erro.AcessoNegadoException;
 import br.com.unisenai.smartrent.service.erro.RecursoNaoEncontradoException;
 import br.com.unisenai.smartrent.service.erro.TransicaoInvalidaException;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,19 +45,30 @@ import java.util.List;
 public class ReservaService {
 
     static final String MSG_CONFLITO = "Conflito de datas detectado para este imovel.";
+    /** Mesma mensagem para o cliente, qualquer que seja a origem: o bloqueio manual nunca e revelado. */
+    static final String MSG_INDISPONIVEL = "Estas datas estão indisponíveis para este imóvel.";
 
     private final ReservaRepository reservaRepository;
     private final ImovelRepository imovelRepository;
     private final ImovelAcesso acesso;
     private final Clock clock;
     private final PoliticaCancelamentoProperties politica;
+    private final BloqueioDataRepository bloqueioRepository;
+    private final UsuarioRepository usuarioRepository;
+    private final ApplicationEventPublisher publicador;
 
     public ReservaService(ReservaRepository reservaRepository,
                           ImovelRepository imovelRepository,
                           ImovelAcesso acesso,
                           Clock clock,
-                          PoliticaCancelamentoProperties politica) {
+                          PoliticaCancelamentoProperties politica,
+                          BloqueioDataRepository bloqueioRepository,
+                          UsuarioRepository usuarioRepository,
+                          ApplicationEventPublisher publicador) {
         this.politica = politica;
+        this.bloqueioRepository = bloqueioRepository;
+        this.usuarioRepository = usuarioRepository;
+        this.publicador = publicador;
         this.reservaRepository = reservaRepository;
         this.imovelRepository = imovelRepository;
         this.acesso = acesso;
@@ -92,7 +106,8 @@ public class ReservaService {
         validarPeriodo(req.dataCheckin(), req.dataCheckout());
         validarHospede(req);
 
-        Imovel imovel = imovelRepository.findById(req.imovelId())
+        // Trava o imovel: reserva e bloqueio simultaneos nas mesmas datas nao passam juntos.
+        Imovel imovel = imovelRepository.findByIdParaAtualizar(req.imovelId())
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Imovel nao encontrado: " + req.imovelId()));
         acesso.conferir(gestor, imovel);
 
@@ -112,13 +127,33 @@ public class ReservaService {
         reserva.setDataCheckin(req.dataCheckin());
         reserva.setDataCheckout(req.dataCheckout());
         reserva.setStatus(req.status() == null ? StatusReserva.CONFIRMADA : req.status());
+        if (reserva.getStatus().cancelada() || reserva.getStatus() == StatusReserva.CONCLUIDA) {
+            throw new IllegalArgumentException("Uma reserva nova deve nascer pendente ou confirmada.");
+        }
+        reserva.setDataCriacao(Agora.de(clock));
+        reserva.setCliente(clienteDoEmail(reserva.getHospedeEmail()));
         reserva.setOrigem(req.origem() == null ? OrigemReserva.DIRETA : req.origem());
         reserva.setObservacoes(req.observacoes());
         reserva.setNumeroHospedes(req.numeroHospedes() == null ? 1 : req.numeroHospedes());
         validarRegrasDoImovel(imovel.getMinimoDiarias(), imovel.getCapacidadeHospedes(),
                 reserva.getDataCheckin(), reserva.getDataCheckout(), reserva.getNumeroHospedes());
         gravarSnapshot(reserva, imovel, politica);
-        return cadastrarReserva(reserva);
+        Reserva salva = cadastrarReserva(reserva);
+        if (salva.getStatus() == StatusReserva.CONFIRMADA) {
+            publicador.publishEvent(new ReservaConfirmadaEvent(salva.getId()));
+        }
+        return salva;
+    }
+
+    /** Vincula a reserva ao usuario CLIENTE de mesmo e-mail, quando existe (habilita o SmartChat). */
+    private Usuario clienteDoEmail(String email) {
+        if (email == null) {
+            return null;
+        }
+        return usuarioRepository.findByEmail(email.trim())
+                .or(() -> usuarioRepository.findByEmail(email.trim().toLowerCase()))
+                .filter(u -> u.getPapel() == PapelUsuario.CLIENTE)
+                .orElse(null);
     }
 
     /**
@@ -129,16 +164,25 @@ public class ReservaService {
      */
     @Transactional
     public Reserva cadastrarReserva(Reserva reserva) {
-        boolean conflito = reservaRepository.existeConflitoDeDatas(
-                reserva.getImovel().getId(),
-                reserva.getDataCheckin(),
-                reserva.getDataCheckout());
+        exigirDisponivel(reserva.getImovel().getId(), reserva.getDataCheckin(), reserva.getDataCheckout(), null);
+        return reservaRepository.save(reserva);
+    }
 
+    /**
+     * Verifica reservas ativas e bloqueios manuais no periodo. Quem chama para
+     * gravar ja travou a linha do imovel, entao o resultado vale ate o commit.
+     */
+    @Transactional(readOnly = true)
+    public void exigirDisponivel(Long imovelId, LocalDate checkin, LocalDate checkout, Long reservaIgnorada) {
+        boolean conflito = reservaIgnorada == null
+                ? reservaRepository.existeConflitoDeDatas(imovelId, checkin, checkout)
+                : reservaRepository.existeConflitoDeDatasExceto(imovelId, reservaIgnorada, checkin, checkout);
         if (conflito) {
             throw new IllegalArgumentException(MSG_CONFLITO);
         }
-
-        return reservaRepository.save(reserva);
+        if (bloqueioRepository.existeBloqueio(imovelId, checkin, checkout)) {
+            throw new IllegalArgumentException(MSG_INDISPONIVEL);
+        }
     }
 
     /** Congela preco e dados do imovel na reserva. Chamado uma unica vez, na criacao. */
@@ -187,17 +231,20 @@ public class ReservaService {
         if (req.imovelId() != null && !req.imovelId().equals(reserva.getImovel().getId())) {
             throw new IllegalArgumentException("Nao e possivel trocar o imovel de uma reserva existente.");
         }
+        if (reserva.getStatus().cancelada()) {
+            throw new TransicaoInvalidaException("Uma reserva cancelada nao pode ser alterada.");
+        }
+        if (req.status() != null && req.status().cancelada()) {
+            throw new IllegalArgumentException("Para cancelar use a acao Cancelar, que exige o motivo e aplica a politica de reembolso.");
+        }
         validarPeriodo(req.dataCheckin(), req.dataCheckout());
         validarHospede(req);
+        imovelRepository.findByIdParaAtualizar(reserva.getImovel().getId()); // serializa com bloqueios e novas reservas
 
         boolean datasMudaram = !req.dataCheckin().equals(reserva.getDataCheckin())
                 || !req.dataCheckout().equals(reserva.getDataCheckout());
-        StatusReserva statusFinal = req.status() == null ? reserva.getStatus() : req.status();
-        if (statusFinal != StatusReserva.CANCELADA
-                && reservaRepository.existeConflitoDeDatasExceto(
-                reserva.getImovel().getId(), reserva.getId(), req.dataCheckin(), req.dataCheckout())) {
-            throw new IllegalArgumentException(MSG_CONFLITO);
-        }
+        StatusReserva statusAnterior = reserva.getStatus();
+        exigirDisponivel(reserva.getImovel().getId(), req.dataCheckin(), req.dataCheckout(), reserva.getId());
 
         int hospedes = req.numeroHospedes() == null ? reserva.getNumeroHospedes() : req.numeroHospedes();
         // Vale o que foi combinado na criacao (snapshot), nao o que o anuncio diz hoje.
@@ -221,12 +268,20 @@ public class ReservaService {
                     .multiply(BigDecimal.valueOf(diarias))
                     .add(reserva.getTaxasSnapshot()));
         }
-        return reservaRepository.save(reserva);
+        Reserva salva = reservaRepository.save(reserva);
+        if (statusAnterior != StatusReserva.CONFIRMADA && salva.getStatus() == StatusReserva.CONFIRMADA) {
+            publicador.publishEvent(new ReservaConfirmadaEvent(salva.getId()));
+        }
+        return salva;
     }
 
     @Transactional
     public void excluir(Usuario gestor, Long id) {
         Reserva reserva = doGestor(gestor, id);
+        if (reserva.getCliente() != null) {
+            throw new TransicaoInvalidaException(
+                    "Reservas de clientes nao podem ser excluidas (ha historico de pagamento e conversa). Use Cancelar.");
+        }
         reservaRepository.delete(reserva);
     }
 
