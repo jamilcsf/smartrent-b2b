@@ -2,7 +2,7 @@
 
 **Projeto:** SmartRent B2B — Sistema de Gestão Inteligente para Aluguel por Temporada  
 **Instituição:** UniSENAI — ADS (Florianópolis/SC)[cite: 1, 4]  
-**Última Atualização:** 2026-09-21 — Catálogo de imóveis servido pela API e interface unificada com a de Jamil Cherem  
+**Última Atualização:** 2026-10-03 — Fluxo de anúncios de imóveis (cadastro, pré-publicação, publicação e edição) e snapshot de preço nas reservas  
 
 ---
 
@@ -38,10 +38,12 @@
 - [x] Objetos de transferência como Records (RNF08)
 - [x] Pipeline GitHub Actions (Etapa 3)
 - [x] Endpoint REST de imóveis (`GET /api/imoveis`), alimentando o catálogo
-- [ ] Endpoints de escrita de usuário e imóvel — o cadastro desses registros ainda é por SQL, e o seletor de imóveis do formulário de reservas segue fixo no HTML
-- [ ] Integração real com a Groq via RestClient (RNF01) — o cliente devolve valor fixo, com o mock pertencendo apenas aos testes (RNF04)
+- [x] Endpoints de escrita de usuário e imóvel — cadastro de usuário (cliente ou gestor) e fluxo completo de anúncios em `/api/gestor/imoveis` ([ADR-003](adr/ADR-003-ciclo-de-vida-do-anuncio.md)); o seletor de imóveis do formulário de reservas agora vem da API
+- [x] Integração real com a Groq via RestClient (RNF01) para a sugestão de preço em lote (`GroqPricingSuggestionProvider`, com timeout e queda para edição manual); o `GroqApiClient` legado da rota `/api/precificacao/sugerir` continua um stub
+- [x] Papel `CLIENTE`, autorização por papel e por propriedade no servidor, mídias (14 imagens somadas, 2 vídeos), máquina de estados do anúncio, jobs idempotentes e lembretes de edição esquecida
+- [x] Snapshot imutável de preço e dados do imóvel em cada reserva
 - [x] Autenticação (login e cadastro) com JWT e acesso público por padrão
-- [ ] Suíte de testes automatizados — 21 casos; falta cobrir conflito de datas em repositório e a IA
+- [x] Suíte de testes automatizados — 161 testes (JUnit 5, Mockito, `@WebMvcTest` e `@DataJpaTest` em H2); falta cobertura automatizada do front (JavaScript)
 - [ ] Primeiro boot contra o Supabase com o schema aplicado
 
 ---
@@ -73,6 +75,15 @@ Validado contra PostgreSQL 16.15: as duas migrations aplicam em sequência, o
 Hibernate aceita o esquema em `validate`, e o cadastro de reservas funciona da
 interface até o banco, com a recusa de sobreposição de datas.
 
-Pendente de adequação: a integração real com a Groq API, hoje um valor fixo no
-código de produção (RNF01), e os endpoints de usuário e imóvel, sem os quais o
-cadastro desses registros só acontece por SQL.
+Em 2026-10-03 foi entregue o **fluxo de anúncios** (ver [ADR-003](adr/ADR-003-ciclo-de-vida-do-anuncio.md)
+e a seção correspondente do `README.md`): migrations V4 a V6 (status e prazos do anúncio, mídias,
+rascunho de edição, histórico de preço, aceites do termo, auditoria, lembretes, notificações e snapshot
+financeiro das reservas), papel `CLIENTE`, Painel do Gestor (`/dashboard.html`) com pré-publicação,
+anúncios e reservas, formulário com preview e viewer 360°, e sugestão de preço por IA no portal da
+transparência (`index.html`). As migrations foram validadas contra PostgreSQL 16 e o fluxo foi exercitado
+de ponta a ponta contra a API em execução.
+
+Pendente: SMTP real para o canal de e-mail dos lembretes (hoje `EMAIL_LOG`), armazenamento de mídia em
+objeto (S3) para mais de uma instância, revisão jurídica do termo de uso, fluxo de reserva autoatendido por
+cliente, geocodificação automática do endereço, trocar o `GroqApiClient` legado pelo novo provedor e testes
+automatizados do front.

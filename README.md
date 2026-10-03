@@ -94,6 +94,55 @@ src/main/java/com/temporada/gestao
 | `GET` \| `POST` | `/api/imoveis/{id}/reservas` | Lista ou cadastra reservas de um imóvel |
 | `GET` | `/api/imoveis/{id}/sugestao-preco?data=YYYY-MM-DD` | Retorna a sugestão de preço da IA para a data informada |
 
+## 🏠 Fluxo de anúncios de imóveis
+
+Perfis: **cliente** (`CLIENTE`) só navega pelo catálogo; **gestor** (`ANFITRIAO`, ou `ADMIN`) acessa o
+**Painel do Gestor** (`/dashboard.html`) e só vê e altera os **próprios** imóveis. A autorização é validada no
+backend (`/api/gestor/**` e `/api/reservas/**` respondem 403 a quem não é gestor; imóvel alheio também é 403).
+O cadastro (`/cadastro.html`) deixa escolher "Quero alugar" ou "Sou gestor de imóveis".
+
+Ciclo de vida (`StatusAnuncio`, transições validadas em `MaquinaDeEstados`):
+
+```
+PRE_PUBLICACAO_SEM_PRECO ─preço─▶ PRE_PUBLICACAO_AGUARDANDO ─24h─▶ PRONTO_PARA_PUBLICAR ─publicar─▶ PUBLICADO
+                                  (relógio NÃO reinicia)                                              │  ▲
+                                                                          editar (sai do ar)          ▼  │ descartar (volta na hora)
+                                                             REPUBLICACAO_AGENDADA ◀─confirmar─ EM_EDICAO
+                                                              (volta sozinho em 2h)     (sem prazo máximo)
+```
+
+| Método | Endpoint (gestor) | Descrição |
+|---|---|---|
+| `POST` \| `GET` | `/api/gestor/imoveis` | Cria anúncio (com aceite do termo) / lista os meus |
+| `GET` \| `PUT` | `/api/gestor/imoveis/{id}` | Detalhe / edição direta (só em pré-publicação) |
+| `POST` | `/api/gestor/imoveis/{id}/midias` | Upload (`arquivo`, `tipo` = `FOTO` \| `FOTO_360` \| `VIDEO`); 14 imagens somadas, 2 vídeos de até 2 min |
+| `DELETE` \| `PUT` | `/api/gestor/imoveis/{id}/midias/{mid}` · `/midias/ordem` · `/midias/{mid}/capa` · `/midias/{mid}/tipo` | Remover, reordenar, capa, comum ↔ 360 |
+| `PUT` | `/api/gestor/imoveis/{id}/preco` | Define/altera o preço em pré-publicação (`origem` MANUAL ou IA) |
+| `POST` | `/api/gestor/imoveis/{id}/publicar` | Publica (exige 24h da 1ª confirmação de preço e novo aceite) |
+| `POST` \| `PUT` | `/api/gestor/imoveis/{id}/edicao/iniciar` · `/edicao/rascunho` | Tira do ar e abre rascunho / salva rascunho |
+| `POST` | `/api/gestor/imoveis/{id}/edicao/confirmar` · `/edicao/descartar` | Aplica (volta em 2h) / descarta (volta na hora) |
+| `POST` | `/api/gestor/precificacao/sugestoes` | Sugestão de preço por IA em lote (só sugere) |
+| `GET` \| `POST` | `/api/gestor/notificacoes` · `/{id}/lida` | Sino do painel |
+| `GET` | `/api/termos/atual` · `/api/midias/{chave}` | Termo de uso · arquivo da mídia (chave aleatória) |
+
+O catálogo público (`/api/imoveis`) só devolve anúncios **visíveis**: `PUBLICADO`, ou `REPUBLICACAO_AGENDADA` cujo
+horário já chegou (assim um atraso do job não prolonga a suspensão). O link de WhatsApp só é enviado a quem está logado.
+Reservas gravam um **snapshot imutável** de preço e dados do imóvel; mudar o preço depois não as afeta.
+
+Variáveis de ambiente (valores padrão entre parênteses):
+
+| Variável | Efeito |
+|---|---|
+| `SMARTRENT_JANELA_PRE_PUBLICACAO_HORAS` (24) · `SMARTRENT_REPUBLICACAO_HORAS` (2) | Janela de pré-publicação e suspensão após confirmar edição |
+| `SMARTRENT_LEMBRETE_APOS_HORAS` (24) · `SMARTRENT_LEMBRETE_INTERVALO_HORAS` (24) · `SMARTRENT_LEMBRETE_MAX` (5) | Lembrete de edição esquecida |
+| `SMARTRENT_JOBS_HABILITADO` (true) | Liga/desliga os jobs agendados |
+| `MIDIA_DIRETORIO` (`./dados/midias`) · `MIDIA_TAMANHO_MAX_IMAGEM_MB` (10) · `MIDIA_TAMANHO_MAX_VIDEO_MB` (100) | Armazenamento e limites de arquivo |
+| `GROQ_API_KEY` · `GROQ_MODEL` · `GROQ_BASE_URL` · `GROQ_TIMEOUT_MS` | IA de precificação (sem chave, cai para edição manual) |
+| `FORWARD_HEADERS_STRATEGY` (none) | `framework` atrás de proxy, para registrar o IP real do aceite |
+
+Para testar o fluxo sem esperar, rode com `SMARTRENT_JANELA_PRE_PUBLICACAO_HORAS=0` e
+`SMARTRENT_REPUBLICACAO_HORAS=0` (ou ajuste os timestamps no banco). Decisões e suposições: [ADR-003](docs/adr/ADR-003-ciclo-de-vida-do-anuncio.md).
+
 ## 🧪 Testes
 
 O projeto utiliza JUnit 5 e Mockito, isolando a chamada externa à API de IA para evitar dependência de rede e custos desnecessários durante a suíte de testes:

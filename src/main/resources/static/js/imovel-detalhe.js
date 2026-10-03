@@ -23,7 +23,8 @@
   function escapar(texto) {
     var d = document.createElement('div');
     d.textContent = texto == null ? '' : String(texto);
-    return d.innerHTML;
+    // innerHTML não escapa aspas; sem isso o texto fecharia um atributo ("...") e injetaria outro.
+    return d.innerHTML.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
 
   function moeda(valor) {
@@ -95,7 +96,7 @@
 
   function blocoContato(imovel, opcoes) {
     // O link só chega nesta função se o servidor o enviou: visitantes anônimos não o recebem.
-    if (imovel.whatsappLink) {
+    if (imovel.whatsappLink && /^https:\/\//.test(imovel.whatsappLink)) {
       return '<a href="' + escapar(imovel.whatsappLink) + '" target="_blank" rel="noopener noreferrer" ' +
              'id="btnWhatsapp" class="mt-3 flex items-center justify-center gap-2 w-full bg-emerald-600 ' +
              'hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-sm transition">' +

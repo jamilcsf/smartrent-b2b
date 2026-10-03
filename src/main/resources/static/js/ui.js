@@ -9,7 +9,8 @@
   function escapar(texto) {
     var d = document.createElement('div');
     d.textContent = texto == null ? '' : String(texto);
-    return d.innerHTML;
+    // innerHTML não escapa aspas; sem isso o texto fecharia um atributo ("...") e injetaria outro.
+    return d.innerHTML.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
 
   /** Aviso rápido no canto da tela. */

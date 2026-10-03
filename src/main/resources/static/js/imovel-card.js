@@ -54,7 +54,8 @@
   function escapar(texto) {
     var div = document.createElement('div');
     div.textContent = texto == null ? '' : String(texto);
-    return div.innerHTML;
+    // innerHTML não escapa aspas; sem isso o texto fecharia um atributo ("...") e injetaria outro.
+    return div.innerHTML.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
 
   /** Foto de capa; sem foto, o placeholder com o titulo. */
