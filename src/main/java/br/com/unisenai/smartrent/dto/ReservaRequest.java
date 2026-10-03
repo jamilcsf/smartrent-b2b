@@ -25,5 +25,15 @@ public record ReservaRequest(
         BigDecimal valorTotal,
         StatusReserva status,
         OrigemReserva origem,
-        String observacoes) {
+        String observacoes,
+        /** Quantidade de hospedes; vazio vale 1. Nunca pode passar do limite do imovel. */
+        Integer numeroHospedes) {
+
+    /** Forma sem numero de hospedes (assume 1), mantida para chamadores antigos. */
+    public ReservaRequest(Long imovelId, String hospedeNome, String hospedeEmail, String hospedeTelefone,
+                          LocalDate dataCheckin, LocalDate dataCheckout, BigDecimal valorTotal,
+                          StatusReserva status, OrigemReserva origem, String observacoes) {
+        this(imovelId, hospedeNome, hospedeEmail, hospedeTelefone, dataCheckin, dataCheckout, valorTotal,
+                status, origem, observacoes, null);
+    }
 }

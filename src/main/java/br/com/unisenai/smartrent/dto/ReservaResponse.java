@@ -35,7 +35,11 @@ public record ReservaResponse(
         BigDecimal totalOriginal,
         String imovelTitulo,
         String imovelEndereco,
-        String imovelCaracteristicas) {
+        String imovelCaracteristicas,
+        int numeroHospedes,
+        int minimoDiarias,
+        BigDecimal taxaLimpeza,
+        int limiteHospedes) {
 
     public static ReservaResponse de(Reserva r) {
         return new ReservaResponse(
@@ -58,6 +62,10 @@ public record ReservaResponse(
                 r.getTotalSnapshot(),
                 r.getImovelTituloSnapshot(),
                 r.getImovelEnderecoSnapshot(),
-                r.getImovelCaracteristicasSnapshot());
+                r.getImovelCaracteristicasSnapshot(),
+                r.getNumeroHospedes(),
+                r.getMinimoDiariasSnapshot(),
+                r.getTaxaLimpezaSnapshot(),
+                r.getLimiteHospedesSnapshot());
     }
 }

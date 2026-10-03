@@ -73,7 +73,7 @@ class AnuncioServiceTest {
         return new AnuncioDados("Apto <b>vista</b> mar", "Descricao <script>alert(1)</script>boa",
                 TipoImovel.APARTAMENTO, 70, 2, 1, 1, 4, List.of("Wi-Fi", "Wi-Fi", " Piscina "),
                 "88054-000", "Rua das Gaivotas", "120", null, "Canasvieiras", "Florianopolis", "sc",
-                "https://wa.me/5548999990000", null);
+                1, new java.math.BigDecimal("80.00"), null);
     }
 
     private Imovel imovelEm(StatusAnuncio status) {

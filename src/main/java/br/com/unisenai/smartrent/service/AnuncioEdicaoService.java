@@ -170,6 +170,7 @@ public class AnuncioEdicaoService {
         BigDecimal precoNovo = dados.valorDiaria() == null ? precoAnterior : AnuncioService.validarPreco(dados.valorDiaria());
 
         LocalDateTime agora = Agora.de(clock);
+        var comerciaisAntes = AuditoriaService.Comerciais.de(imovel);
         AnuncioCampos.aplicar(imovel, dados);
         imovel.setValorDiariaBase(precoNovo);
         midiaService.aplicarRascunho(imovel, r);
@@ -186,6 +187,7 @@ public class AnuncioEdicaoService {
         if (precoNovo != null && (precoAnterior == null || precoAnterior.compareTo(precoNovo) != 0)) {
             auditoria.preco(imovel, precoAnterior, precoNovo, gestor, OrigemPreco.MANUAL);
         }
+        auditoria.camposComerciais(imovel, gestor.getId(), comerciaisAntes, AuditoriaService.Comerciais.de(imovel));
         auditoria.aceite(gestor, imovel, ContextoAceite.CONFIRMACAO_EDICAO, ip);
         auditoria.acao(imovel, gestor.getId(), "EDICAO_CONFIRMADA",
                 "Alterações aplicadas; republicação agendada para " + imovel.getRepublicarEm() + ".");

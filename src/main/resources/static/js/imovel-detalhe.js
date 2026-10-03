@@ -11,7 +11,7 @@
  *     metragemQuadrada, numeroQuartos, numeroBanheiros, vagasGaragem,
  *     capacidadeHospedes, valorDiariaBase, comodidades, ativo,
  *     midias: [{tipo, url, miniaturaUrl, capa, duracaoSegundos}],
- *     whatsappLink }   // whatsappLink só vem para quem está logado
+ *     minimoDiarias, taxaLimpeza }
  */
 (function (global) {
   'use strict';
@@ -94,23 +94,25 @@
            '</div>';
   }
 
+  /**
+   * Unico canal de contato com o gestor e o SmartChat. O botao exige login (visitante
+   * e levado ao login e volta para esta pagina) e o servidor so o libera enquanto o
+   * anuncio esta publicado (esta pagina so existe para anuncios no catalogo).
+   */
   function blocoContato(imovel, opcoes) {
-    // O link só chega nesta função se o servidor o enviou: visitantes anônimos não o recebem.
-    if (imovel.whatsappLink && /^https:\/\//.test(imovel.whatsappLink)) {
-      return '<a href="' + escapar(imovel.whatsappLink) + '" target="_blank" rel="noopener noreferrer" ' +
-             'id="btnWhatsapp" class="mt-3 flex items-center justify-center gap-2 w-full bg-emerald-600 ' +
-             'hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-sm transition">' +
-             '<i data-lucide="message-circle" class="w-4 h-4"></i> Falar com o anfitrião no WhatsApp</a>' +
-             (opcoes.preview
-               ? '<p class="text-[10px] text-slate-400 text-center mt-1.5">Este botão aparece só para clientes logados.</p>'
-               : '');
+    if (opcoes.gestor) { return ''; } // o gestor nao conversa consigo mesmo
+    if (opcoes.preview) {
+      return '<p class="text-[10px] text-slate-400 text-center mt-3">O botão "Conversar com o anfitrião" (SmartChat) aparece aqui para clientes logados.</p>';
     }
-    if (!opcoes.logado && !opcoes.preview) {
+    var rotulo = '<i data-lucide="message-circle" class="w-4 h-4"></i> Conversar com o anfitrião no SmartChat';
+    if (!opcoes.logado) {
       var destino = '/login.html?redirectTo=' + encodeURIComponent(location.pathname + location.search);
-      return '<a href="' + destino + '" class="mt-3 block text-center w-full border border-blue-600 text-blue-700 ' +
-             'hover:bg-blue-50 font-bold py-2.5 rounded-xl text-sm transition">Entre para falar com o anfitrião</a>';
+      return '<a href="' + destino + '" id="btnChat" class="mt-3 flex items-center justify-center gap-2 w-full border ' +
+             'border-blue-600 text-blue-700 hover:bg-blue-50 font-bold py-2.5 rounded-xl text-sm transition">' + rotulo + '</a>' +
+             '<p class="text-[10px] text-slate-400 text-center mt-1.5">Entre para falar com o anfitrião.</p>';
     }
-    return '';
+    return '<button type="button" id="btnChat" class="mt-3 flex items-center justify-center gap-2 w-full border ' +
+           'border-blue-600 text-blue-700 hover:bg-blue-50 font-bold py-2.5 rounded-xl text-sm transition">' + rotulo + '</button>';
   }
 
   /** HTML completo do detalhe. Depois de inserir no DOM, chame {@link ativar}. */
@@ -134,9 +136,11 @@
       attrs += atributo('car-front', imovel.vagasGaragem, 'Vagas de garagem');
     }
     if (imovel.capacidadeHospedes != null && imovel.capacidadeHospedes !== '') {
-      attrs += atributo('users', imovel.capacidadeHospedes, 'Hóspedes');
+      attrs += atributo('users', imovel.capacidadeHospedes, 'Limite de hóspedes');
     }
 
+    var minimo = Number(imovel.minimoDiarias) || 1;
+    var taxa = Number(imovel.taxaLimpeza) || 0;
     var comodidades = imovel.comodidades || [];
     var blocoComodidades = comodidades.length === 0 ? '' :
       '<section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">' +
@@ -187,7 +191,11 @@
           '<div class="flex items-baseline gap-1.5">' +
             '<span class="text-2xl font-extrabold text-slate-900">' + (temPreco ? moeda(imovel.valorDiariaBase) : 'Preço a definir') + '</span>' +
             (temPreco ? '<span class="text-xs text-slate-400 font-medium">/ noite</span>' : '') + '</div>' +
-          '<p class="text-[11px] text-slate-500 mt-1">Diária base • até ' + escapar(imovel.capacidadeHospedes || '?') + ' hóspedes</p>' +
+          '<p class="text-[11px] text-slate-500 mt-1">Diária base • limite de ' + escapar(imovel.capacidadeHospedes || '?') + ' hóspedes</p>' +
+          '<ul class="text-[11px] text-slate-600 mt-2 space-y-0.5" id="regrasReserva">' +
+            '<li>Mínimo de <b>' + minimo + (minimo === 1 ? ' diária' : ' diárias') + '</b> por reserva</li>' +
+            '<li>Taxa de limpeza: <b>' + (taxa > 0 ? moeda(taxa) + '</b> (cobrada uma vez por reserva)' : 'sem taxa</b>') + '</li>' +
+          '</ul>' +
           '<div class="grid grid-cols-2 gap-2 mt-4">' +
             '<label class="block"><span class="text-[10px] font-semibold text-slate-500">Check-in</span>' +
               '<input type="date" id="dataCheckin" class="w-full mt-1 p-2 border border-slate-300 rounded-lg text-xs ' +
@@ -196,9 +204,14 @@
               '<input type="date" id="dataCheckout" class="w-full mt-1 p-2 border border-slate-300 rounded-lg text-xs ' +
               'focus:outline-none focus:ring-2 focus:ring-blue-500"></label>' +
           '</div>' +
+          '<label class="block mt-2"><span class="text-[10px] font-semibold text-slate-500">Hóspedes</span>' +
+            '<input type="number" id="numHospedes" min="1" max="' + escapar(imovel.capacidadeHospedes || 1) + '" value="1" ' +
+            'class="w-full mt-1 p-2 border border-slate-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"></label>' +
           '<div id="resumo" class="hidden mt-4 pt-4 border-t border-slate-100 space-y-1.5">' +
             '<div class="flex justify-between text-xs text-slate-600"><span id="resumoLinha"></span>' +
               '<span id="resumoSubtotal" class="font-semibold text-slate-800"></span></div>' +
+            '<div id="resumoLimpezaLinha" class="flex justify-between text-xs text-slate-600"><span>Taxa de limpeza</span>' +
+              '<span id="resumoLimpeza" class="font-semibold text-slate-800"></span></div>' +
             '<div class="flex justify-between text-sm font-bold text-slate-900 pt-1.5 border-t border-slate-100">' +
               '<span>Total</span><span id="resumoTotal"></span></div>' +
           '</div>' +
@@ -261,35 +274,51 @@
     function recalcular() {
       var ini = raiz.querySelector('#dataCheckin').value;
       var fim = raiz.querySelector('#dataCheckout').value;
+      var hospedes = Number(raiz.querySelector('#numHospedes').value) || 0;
       var resumo = raiz.querySelector('#resumo');
       var aviso = raiz.querySelector('#avisoSidebar');
       var preco = Number(imovel.valorDiariaBase);
+      var minimo = Number(imovel.minimoDiarias) || 1;
+      var taxa = Number(imovel.taxaLimpeza) || 0;
+      var limite = Number(imovel.capacidadeHospedes) || 0;
+      function erro(texto) {
+        resumo.classList.add('hidden');
+        aviso.innerText = texto;
+        aviso.className = 'text-[10px] text-rose-600 text-center mt-2 font-semibold';
+      }
       if (!ini || !fim || isNaN(preco) || imovel.valorDiariaBase == null) { resumo.classList.add('hidden'); return; }
       var noites = Math.round((new Date(fim) - new Date(ini)) / 86400000);
-      if (noites <= 0) {
-        resumo.classList.add('hidden');
-        aviso.innerText = 'O check-out deve ser posterior ao check-in.';
-        aviso.className = 'text-[10px] text-rose-600 text-center mt-2 font-semibold';
-        return;
-      }
+      if (noites <= 0) { return erro('O check-out deve ser posterior ao check-in.'); }
+      if (noites < minimo) { return erro('Este imóvel exige no mínimo ' + minimo + (minimo === 1 ? ' diária.' : ' diárias.')); }
+      if (hospedes < 1) { return erro('Informe ao menos 1 hóspede.'); }
+      if (limite && hospedes > limite) { return erro('Este imóvel aceita no máximo ' + limite + ' hóspedes.'); }
       raiz.querySelector('#resumoLinha').innerText = moeda(preco) + ' x ' + noites + (noites === 1 ? ' noite' : ' noites');
       raiz.querySelector('#resumoSubtotal').innerText = moeda(preco * noites);
-      raiz.querySelector('#resumoTotal').innerText = moeda(preco * noites);
+      raiz.querySelector('#resumoLimpezaLinha').classList.toggle('hidden', !(taxa > 0));
+      raiz.querySelector('#resumoLimpeza').innerText = moeda(taxa);
+      raiz.querySelector('#resumoTotal').innerText = moeda(preco * noites + taxa);
       resumo.classList.remove('hidden');
-      aviso.innerText = 'Valor sem taxas adicionais.';
+      aviso.innerText = 'Valor estimado (diárias + taxa de limpeza). O total final é confirmado ao reservar.';
       aviso.className = 'text-[10px] text-slate-400 text-center mt-2';
     }
     raiz.querySelector('#dataCheckin').addEventListener('change', recalcular);
     raiz.querySelector('#dataCheckout').addEventListener('change', recalcular);
+    raiz.querySelector('#numHospedes').addEventListener('input', recalcular);
 
     var btn = raiz.querySelector('#btnReservar');
     if (btn && opcoes.aoRegistrarReserva) {
       btn.addEventListener('click', function () {
         opcoes.aoRegistrarReserva({
           checkin: raiz.querySelector('#dataCheckin').value,
-          checkout: raiz.querySelector('#dataCheckout').value
+          checkout: raiz.querySelector('#dataCheckout').value,
+          hospedes: Number(raiz.querySelector('#numHospedes').value) || 1
         });
       });
+    }
+
+    var btnChat = raiz.querySelector('#btnChat');
+    if (btnChat && btnChat.tagName === 'BUTTON' && opcoes.aoAbrirChat) {
+      btnChat.addEventListener('click', function () { opcoes.aoAbrirChat(); });
     }
 
     if (global.lucide) { global.lucide.createIcons(); }

@@ -130,7 +130,11 @@ public class GroqPricingSuggestionProvider implements PricingSuggestionService {
         if (i.getVagasGaragem() != null) {
             sb.append("Vagas de garagem: ").append(i.getVagasGaragem()).append('\n');
         }
-        sb.append("Capacidade: ").append(i.getCapacidadeHospedes()).append(" hóspedes\n");
+        sb.append("Limite de hóspedes: ").append(i.getCapacidadeHospedes()).append('\n');
+        sb.append("Mínimo de diárias por reserva: ").append(i.getMinimoDiarias()).append('\n');
+        // Contexto apenas: a taxa de limpeza e definida pelo gestor e cobrada a parte; a IA nao a sugere.
+        sb.append("Taxa de limpeza (uma vez por reserva, fora da diária): R$ ")
+          .append(i.getTaxaLimpeza() == null ? "0.00" : i.getTaxaLimpeza().toPlainString()).append('\n');
         if (i.getComodidades() != null && !i.getComodidades().isEmpty()) {
             sb.append("Comodidades: ").append(String.join(", ", i.getComodidades())).append('\n');
         }

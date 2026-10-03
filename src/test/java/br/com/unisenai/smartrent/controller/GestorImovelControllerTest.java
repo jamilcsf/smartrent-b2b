@@ -127,7 +127,7 @@ class GestorImovelControllerTest {
     void cadastroInvalido() throws Exception {
         mockMvc.perform(post("/api/gestor/imoveis").header("Authorization", "Bearer token-gestor")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"dados\":{\"titulo\":\"\",\"metragemQuadrada\":-5,\"whatsappLink\":\"http://golpe.com\"}}"))
+                        .content("{\"dados\":{\"titulo\":\"\",\"metragemQuadrada\":-5,\"minimoDiarias\":0,\"taxaLimpeza\":-1}}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.campos").exists());
         verify(anuncioService, never()).criar(any(), any(), any());

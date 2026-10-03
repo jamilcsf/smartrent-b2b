@@ -90,6 +90,35 @@ public class Reserva {
     @Column(name = "imovel_caracteristicas_snapshot", length = 500, updatable = false)
     private String imovelCaracteristicasSnapshot;
 
+    /** Termos vigentes na criacao (imutaveis): alterar o anuncio depois nao os muda. */
+    @Column(name = "minimo_diarias_snapshot", nullable = false, updatable = false)
+    private int minimoDiariasSnapshot = 1;
+
+    @Column(name = "taxa_limpeza_snapshot", nullable = false, precision = 10, scale = 2, updatable = false)
+    private BigDecimal taxaLimpezaSnapshot = BigDecimal.ZERO;
+
+    @Column(name = "limite_hospedes_snapshot", nullable = false, updatable = false)
+    private int limiteHospedesSnapshot = 1;
+
+    /** Politica de cancelamento vigente na criacao (imutavel). */
+    @Column(name = "politica_antecedencia_horas", nullable = false, updatable = false)
+    private int politicaAntecedenciaHoras = 48;
+
+    @Column(name = "politica_regret_dias", nullable = false, updatable = false)
+    private int politicaRegretDias = 0;
+
+    @Column(name = "politica_versao", nullable = false, length = 30, updatable = false)
+    private String politicaVersao = "PROVISORIA-1";
+
+    /** Cliente (usuario) dono da reserva; nulo em reservas lancadas pelo gestor para hospede sem conta. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "cliente_id", updatable = false,
+            foreignKey = @ForeignKey(name = "fk_reserva_cliente"))
+    private Usuario cliente;
+
+    @Column(name = "numero_hospedes", nullable = false)
+    private int numeroHospedes = 1;
+
     /** Valor de cada diaria por data, gravado uma unica vez (o preco pode variar por data). */
     @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "reserva_precos_diarios",
@@ -286,5 +315,69 @@ public class Reserva {
 
     public void setPrecosDiarios(Map<LocalDate, BigDecimal> precosDiarios) {
         this.precosDiarios = precosDiarios;
+    }
+
+    public int getMinimoDiariasSnapshot() {
+        return minimoDiariasSnapshot;
+    }
+
+    public void setMinimoDiariasSnapshot(int v) {
+        this.minimoDiariasSnapshot = v;
+    }
+
+    public BigDecimal getTaxaLimpezaSnapshot() {
+        return taxaLimpezaSnapshot;
+    }
+
+    public void setTaxaLimpezaSnapshot(BigDecimal v) {
+        this.taxaLimpezaSnapshot = v;
+    }
+
+    public int getLimiteHospedesSnapshot() {
+        return limiteHospedesSnapshot;
+    }
+
+    public void setLimiteHospedesSnapshot(int v) {
+        this.limiteHospedesSnapshot = v;
+    }
+
+    public int getPoliticaAntecedenciaHoras() {
+        return politicaAntecedenciaHoras;
+    }
+
+    public void setPoliticaAntecedenciaHoras(int v) {
+        this.politicaAntecedenciaHoras = v;
+    }
+
+    public int getPoliticaRegretDias() {
+        return politicaRegretDias;
+    }
+
+    public void setPoliticaRegretDias(int v) {
+        this.politicaRegretDias = v;
+    }
+
+    public String getPoliticaVersao() {
+        return politicaVersao;
+    }
+
+    public void setPoliticaVersao(String v) {
+        this.politicaVersao = v;
+    }
+
+    public Usuario getCliente() {
+        return cliente;
+    }
+
+    public void setCliente(Usuario cliente) {
+        this.cliente = cliente;
+    }
+
+    public int getNumeroHospedes() {
+        return numeroHospedes;
+    }
+
+    public void setNumeroHospedes(int numeroHospedes) {
+        this.numeroHospedes = numeroHospedes;
     }
 }

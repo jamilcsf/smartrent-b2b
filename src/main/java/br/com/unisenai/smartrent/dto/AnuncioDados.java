@@ -1,7 +1,9 @@
 package br.com.unisenai.smartrent.dto;
 
 import br.com.unisenai.smartrent.model.enums.TipoImovel;
+import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -51,9 +53,9 @@ public record AnuncioDados(
         @Max(value = 100, message = "Número de vagas acima do limite aceito.")
         Integer vagasGaragem,
 
-        @NotNull(message = "Informe a capacidade de hóspedes.")
-        @Min(value = 1, message = "A capacidade deve ser de ao menos 1 hóspede.")
-        @Max(value = 200, message = "Capacidade acima do limite aceito.")
+        @NotNull(message = "Informe o limite de hóspedes.")
+        @Min(value = 1, message = "O limite de hóspedes deve ser de ao menos 1.")
+        @Max(value = 50, message = "O limite de hóspedes não pode passar de 50.")
         Integer capacidadeHospedes,
 
         @Size(max = 40, message = "Informe no máximo 40 comodidades.")
@@ -87,10 +89,14 @@ public record AnuncioDados(
         @Pattern(regexp = "^[A-Za-z]{2}$", message = "UF inválida. Use duas letras.")
         String estado,
 
-        @Size(max = 300, message = "O link do WhatsApp deve ter no máximo 300 caracteres.")
-        @Pattern(regexp = "^$|^https://(wa\\.me/\\d{8,15}(\\?\\S*)?|(api\\.)?whatsapp\\.com/send\\?\\S*phone=\\d{8,15}\\S*)$",
-                message = "Link do WhatsApp inválido. Use um link wa.me ou api.whatsapp.com.")
-        String whatsappLink,
+        @Min(value = 1, message = "A quantidade mínima de diárias deve ser de ao menos 1.")
+        @Max(value = 365, message = "A quantidade mínima de diárias não pode passar de 365.")
+        Integer minimoDiarias,
+
+        @DecimalMin(value = "0.00", message = "A taxa de limpeza não pode ser negativa.")
+        @DecimalMax(value = "100000.00", message = "Taxa de limpeza acima do limite aceito.")
+        @Digits(integer = 6, fraction = 2, message = "A taxa de limpeza deve ter no máximo 2 casas decimais.")
+        BigDecimal taxaLimpeza,
 
         @DecimalMin(value = "1.00", message = "O valor da diária deve ser de ao menos R$ 1,00.")
         BigDecimal valorDiaria) {

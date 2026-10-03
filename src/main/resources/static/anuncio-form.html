@@ -128,9 +128,23 @@
               <p class="erro" data-erro="vagasGaragem"></p>
             </div>
             <div>
-              <label for="f-capacidade" class="block text-xs font-semibold text-slate-700 mb-1.5">Hóspedes (capacidade)</label>
-              <input type="number" id="f-capacidade" min="1" class="campo">
+              <label for="f-capacidade" class="block text-xs font-semibold text-slate-700 mb-1.5">Limite de hóspedes</label>
+              <input type="number" id="f-capacidade" min="1" max="50" class="campo">
               <p class="erro" data-erro="capacidadeHospedes"></p>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label for="f-minimo" class="block text-xs font-semibold text-slate-700 mb-1.5">Mínimo de diárias</label>
+              <input type="number" id="f-minimo" min="1" max="365" step="1" value="1" class="campo">
+              <p class="text-[10px] text-slate-400 mt-1">Reservas com menos noites são recusadas.</p>
+              <p class="erro" data-erro="minimoDiarias"></p>
+            </div>
+            <div>
+              <label for="f-limpeza" class="block text-xs font-semibold text-slate-700 mb-1.5">Taxa de limpeza (R$)</label>
+              <input type="number" id="f-limpeza" min="0" step="0.01" value="0" class="campo" placeholder="0,00">
+              <p class="text-[10px] text-slate-400 mt-1">Cobrada uma vez por reserva. 0 = sem taxa.</p>
+              <p class="erro" data-erro="taxaLimpeza"></p>
             </div>
           </div>
           <div>
@@ -223,16 +237,6 @@
           <div class="max-w-xs">
             <input type="number" id="f-preco" min="1" step="0.01" class="campo" placeholder="Ex: 350,00">
             <p class="erro" data-erro="valorDiaria"></p>
-          </div>
-        </section>
-
-        <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-3">
-          <h3 class="text-sm font-bold text-slate-900">Contato</h3>
-          <div>
-            <label for="f-whatsapp" class="block text-xs font-semibold text-slate-700 mb-1.5">Link do WhatsApp <span class="font-normal text-slate-400">(opcional)</span></label>
-            <input type="url" id="f-whatsapp" maxlength="300" class="campo" placeholder="https://wa.me/5548999990000">
-            <p class="text-[10px] text-slate-400 mt-1">Use um link wa.me ou api.whatsapp.com. Só aparece no anúncio publicado para clientes logados; visitantes não o recebem.</p>
-            <p class="erro" data-erro="whatsappLink"></p>
           </div>
         </section>
 

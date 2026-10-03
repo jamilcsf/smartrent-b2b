@@ -61,6 +61,32 @@ public class AuditoriaService {
         aceiteRepository.save(a);
     }
 
+    /** Foto dos campos comerciais do anuncio (minimo de diarias, taxa de limpeza, limite de hospedes). */
+    public record Comerciais(int minimoDiarias, BigDecimal taxaLimpeza, Integer limiteHospedes) {
+        public static Comerciais de(Imovel i) {
+            return new Comerciais(i.getMinimoDiarias(), i.getTaxaLimpeza(), i.getCapacidadeHospedes());
+        }
+    }
+
+    /** Registra a mudanca desses campos, como ja acontece com o preco. Sem mudanca, nao grava nada. */
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void camposComerciais(Imovel imovel, Long usuarioId, Comerciais antes, Comerciais depois) {
+        StringBuilder sb = new StringBuilder();
+        if (antes.minimoDiarias() != depois.minimoDiarias()) {
+            sb.append("mínimo de diárias ").append(antes.minimoDiarias()).append(" -> ").append(depois.minimoDiarias()).append("; ");
+        }
+        if (antes.taxaLimpeza() == null ? depois.taxaLimpeza() != null
+                : depois.taxaLimpeza() == null || antes.taxaLimpeza().compareTo(depois.taxaLimpeza()) != 0) {
+            sb.append("taxa de limpeza ").append(antes.taxaLimpeza()).append(" -> ").append(depois.taxaLimpeza()).append("; ");
+        }
+        if (!java.util.Objects.equals(antes.limiteHospedes(), depois.limiteHospedes())) {
+            sb.append("limite de hóspedes ").append(antes.limiteHospedes()).append(" -> ").append(depois.limiteHospedes()).append("; ");
+        }
+        if (sb.length() > 0) {
+            acao(imovel, usuarioId, "CAMPOS_COMERCIAIS_ALTERADOS", sb.toString().trim());
+        }
+    }
+
     @Transactional(propagation = Propagation.MANDATORY)
     public void acao(Imovel imovel, Long usuarioId, String acao, String detalhes) {
         AuditoriaAnuncio a = new AuditoriaAnuncio();

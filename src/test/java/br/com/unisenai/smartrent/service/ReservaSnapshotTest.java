@@ -49,7 +49,8 @@ class ReservaSnapshotTest {
     @BeforeEach
     void preparar() {
         service = new ReservaService(reservaRepository, imovelRepository,
-                new ImovelAcesso(imovelRepository), new RelogioFalso(T0));
+                new ImovelAcesso(imovelRepository), new RelogioFalso(T0),
+                br.com.unisenai.smartrent.config.PoliticaCancelamentoProperties.padrao());
         gestor = new Usuario();
         gestor.setId(10L);
         gestor.setPapel(PapelUsuario.ANFITRIAO);
@@ -237,5 +238,67 @@ class ReservaSnapshotTest {
         cliente.setPapel(PapelUsuario.CLIENTE);
         assertThrows(AcessoNegadoException.class, () -> service.listar(cliente));
         assertThrows(AcessoNegadoException.class, () -> service.criar(cliente, pedido(null)));
+    }
+
+    private ReservaRequest pedidoCom(LocalDate in, LocalDate out, Integer hospedes) {
+        return new ReservaRequest(1L, "Maria", "maria@exemplo.com", null, in, out, null,
+                StatusReserva.CONFIRMADA, null, null, hospedes);
+    }
+
+    @Test
+    @DisplayName("CT200 - O total inclui a taxa de limpeza, cobrada uma vez por reserva")
+    void totalIncluiTaxaDeLimpeza() {
+        imovel.setTaxaLimpeza(new BigDecimal("80.00"));
+
+        Reserva r = service.criar(gestor, pedido(null));
+
+        assertEquals(new BigDecimal("980.00"), r.getTotalSnapshot()); // 3 x 300 + 80
+        assertEquals(new BigDecimal("980.00"), r.getValorTotal());
+        assertEquals(new BigDecimal("80.00"), r.getTaxasSnapshot());
+        assertEquals(new BigDecimal("80.00"), r.getTaxaLimpezaSnapshot());
+    }
+
+    @Test
+    @DisplayName("CT201 - Reserva com menos noites que o minimo e rejeitada pelo servidor")
+    void rejeitaMenosNoitesQueOMinimo() {
+        imovel.setMinimoDiarias(3);
+
+        var erro = assertThrows(IllegalArgumentException.class,
+                () -> service.criar(gestor, pedidoCom(IN, IN.plusDays(2), 2)));
+
+        assertTrue(erro.getMessage().contains("no mínimo 3 diárias"), erro.getMessage());
+        verify(reservaRepository, never()).save(any());
+        assertDoesNotThrow(() -> service.criar(gestor, pedidoCom(IN, IN.plusDays(3), 2)));
+    }
+
+    @Test
+    @DisplayName("CT202 - Reserva com mais hospedes que o limite e rejeitada pelo servidor")
+    void rejeitaMaisHospedesQueOLimite() {
+        var erro = assertThrows(IllegalArgumentException.class,
+                () -> service.criar(gestor, pedidoCom(IN, OUT, 5))); // limite do imovel: 4
+
+        assertTrue(erro.getMessage().contains("no máximo 4 hóspedes"), erro.getMessage());
+        assertThrows(IllegalArgumentException.class, () -> service.criar(gestor, pedidoCom(IN, OUT, 0)));
+        assertEquals(4, service.criar(gestor, pedidoCom(IN, OUT, 4)).getNumeroHospedes());
+    }
+
+    @Test
+    @DisplayName("CT203 - O snapshot guarda minimo, taxa, limite e politica e nao muda quando o anuncio e editado")
+    void snapshotDosTermosEImutavel() {
+        imovel.setMinimoDiarias(2);
+        imovel.setTaxaLimpeza(new BigDecimal("50.00"));
+        Reserva r = service.criar(gestor, pedido(null));
+
+        imovel.setMinimoDiarias(7);
+        imovel.setTaxaLimpeza(new BigDecimal("500.00"));
+        imovel.setCapacidadeHospedes(10);
+
+        assertEquals(2, r.getMinimoDiariasSnapshot());
+        assertEquals(new BigDecimal("50.00"), r.getTaxaLimpezaSnapshot());
+        assertEquals(4, r.getLimiteHospedesSnapshot());
+        assertEquals(48, r.getPoliticaAntecedenciaHoras());
+        assertEquals(0, r.getPoliticaRegretDias());
+        assertEquals("PROVISORIA-1", r.getPoliticaVersao());
+        assertEquals(new BigDecimal("950.00"), r.getTotalSnapshot());
     }
 }

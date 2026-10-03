@@ -80,12 +80,16 @@
         gestor: Auth.isGestor()
       });
       ImovelDetalhe.ativar(raiz, imovel, {
+        aoAbrirChat: function () {
+          location.href = '/smartchat.html?imovel=' + encodeURIComponent(imovel.id);
+        },
         aoRegistrarReserva: function (datas) {
           // O gestor registra a reserva no painel, onde a regra de choque de
           // datas e o snapshot de preco sao aplicados pelo servidor.
           const params = new URLSearchParams({ aba: 'reservas', imovelId: imovel.id });
           if (datas.checkin) { params.set('checkin', datas.checkin); }
           if (datas.checkout) { params.set('checkout', datas.checkout); }
+          if (datas.hospedes) { params.set('hospedes', datas.hospedes); }
           location.href = '/dashboard.html?' + params.toString();
         }
       });

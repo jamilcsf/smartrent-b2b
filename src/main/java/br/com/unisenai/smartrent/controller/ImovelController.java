@@ -3,11 +3,9 @@ package br.com.unisenai.smartrent.controller;
 import br.com.unisenai.smartrent.dto.ImovelResponse;
 import br.com.unisenai.smartrent.model.Imovel;
 import br.com.unisenai.smartrent.model.ImovelMidia;
-import br.com.unisenai.smartrent.model.Usuario;
 import br.com.unisenai.smartrent.repository.ImovelMidiaRepository;
 import br.com.unisenai.smartrent.repository.ImovelRepository;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Clock;
@@ -44,9 +42,7 @@ public class ImovelController {
      * anuncio fora do ar.
      */
     @GetMapping
-    public List<ImovelResponse> listar(
-            @RequestParam(defaultValue = "true") boolean apenasAtivos,
-            @AuthenticationPrincipal Usuario usuario) {
+    public List<ImovelResponse> listar(@RequestParam(defaultValue = "true") boolean apenasAtivos) {
         var imoveis = imovelRepository.findVisiveis(LocalDateTime.now(clock));
         if (imoveis.isEmpty()) {
             return List.of();
@@ -55,18 +51,15 @@ public class ImovelController {
                 .findByImovelIdInOrderByOrdemAscIdAsc(imoveis.stream().map(Imovel::getId).toList())
                 .stream().collect(Collectors.groupingBy(m -> m.getImovel().getId()));
         return imoveis.stream()
-                .map(i -> ImovelResponse.de(i, midias.getOrDefault(i.getId(), List.of()),
-                        usuario != null, false))
+                .map(i -> ImovelResponse.de(i, midias.getOrDefault(i.getId(), List.of()), false))
                 .toList();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ImovelResponse> buscarPorId(@PathVariable Long id,
-                                                      @AuthenticationPrincipal Usuario usuario) {
+    public ResponseEntity<ImovelResponse> buscarPorId(@PathVariable Long id) {
         return imovelRepository.findVisivelPorId(id, LocalDateTime.now(clock))
                 .map(i -> ImovelResponse.de(i,
-                        midiaRepository.findByImovelIdOrderByOrdemAscIdAsc(i.getId()),
-                        usuario != null, true))
+                        midiaRepository.findByImovelIdOrderByOrdemAscIdAsc(i.getId()), true))
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }

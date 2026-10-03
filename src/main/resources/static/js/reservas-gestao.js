@@ -36,6 +36,7 @@
             '</div>' +
             '<div><label class="block text-xs font-semibold text-slate-700 mb-1.5" for="rg-nome">Nome do hóspede</label><input type="text" id="rg-nome" class="rg-campo" maxlength="120"></div>' +
             '<div><label class="block text-xs font-semibold text-slate-700 mb-1.5" for="rg-email">E-mail do hóspede</label><input type="email" id="rg-email" class="rg-campo" maxlength="150"></div>' +
+            '<div><label class="block text-xs font-semibold text-slate-700 mb-1.5" for="rg-hospedes">Hóspedes</label><input type="number" id="rg-hospedes" class="rg-campo" min="1" value="1"></div>' +
             '<div><label class="block text-xs font-semibold text-slate-700 mb-1.5" for="rg-status">Status</label>' +
               '<select id="rg-status" class="rg-campo"><option value="CONFIRMADA">CONFIRMADA</option><option value="PENDENTE">PENDENTE</option><option value="CANCELADA">CANCELADA</option></select></div>' +
             '<div id="rg-total" class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-600"></div>' +
@@ -138,7 +139,8 @@
       hospedeEmail: $('rg-email').value.trim(),
       dataCheckin: $('rg-checkin').value,
       dataCheckout: $('rg-checkout').value,
-      status: $('rg-status').value
+      status: $('rg-status').value,
+      numeroHospedes: Number($('rg-hospedes').value) || 1
     };
     if (!corpo.imovelId) { return mostrarErro('Selecione um imóvel.'); }
     if (!corpo.dataCheckin || !corpo.dataCheckout) { return mostrarErro('Informe as datas de check-in e check-out.'); }
@@ -196,6 +198,7 @@
       $('rg-nome').value = r.hospedeNome || '';
       $('rg-email').value = r.hospedeEmail || '';
       $('rg-status').value = r.status;
+      $('rg-hospedes').value = r.numeroHospedes || 1;
       $('rg-titulo').innerText = 'Editar reserva #' + r.id;
       $('rg-salvar').innerText = 'Atualizar reserva';
       $('rg-cancelar').classList.remove('hidden');

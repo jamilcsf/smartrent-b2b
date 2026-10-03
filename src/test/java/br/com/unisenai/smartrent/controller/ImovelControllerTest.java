@@ -65,7 +65,8 @@ class ImovelControllerTest {
         imovel.setTipoImovel(TipoImovel.APARTAMENTO);
         imovel.setStatus(StatusAnuncio.PUBLICADO);
         imovel.setAtivo(true);
-        imovel.setWhatsappLink("https://wa.me/5548999990000");
+        imovel.setMinimoDiarias(2);
+        imovel.setTaxaLimpeza(new java.math.BigDecimal("80.00"));
         when(imovelRepository.findVisiveis(any())).thenReturn(List.of(imovel));
         when(imovelRepository.findVisivelPorId(any(), any())).thenReturn(Optional.of(imovel));
         when(midiaRepository.findByImovelIdInOrderByOrdemAscIdAsc(any())).thenReturn(List.of());
@@ -81,23 +82,20 @@ class ImovelControllerTest {
     }
 
     @Test
-    @DisplayName("CT105 - Visitante anonimo NAO recebe o link do WhatsApp (nem o campo) no detalhe nem na lista")
-    void anonimoNaoRecebeWhatsapp() throws Exception {
+    @DisplayName("CT105 - Nenhuma resposta publica traz campo de WhatsApp (anonimo ou logado); traz minimo de diarias e taxa de limpeza")
+    void respostaNaoTemWhatsapp() throws Exception {
         mockMvc.perform(get("/api/imoveis/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.titulo").value("Apto Canasvieiras"))
+                .andExpect(jsonPath("$.minimoDiarias").value(2))
+                .andExpect(jsonPath("$.taxaLimpeza").value(80.00))
                 .andExpect(jsonPath("$.whatsappLink").doesNotExist());
         mockMvc.perform(get("/api/imoveis"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].whatsappLink").doesNotExist());
-    }
-
-    @Test
-    @DisplayName("CT106 - Cliente logado recebe o link do WhatsApp")
-    void logadoRecebeWhatsapp() throws Exception {
         mockMvc.perform(get("/api/imoveis/1").header("Authorization", "Bearer token-cliente"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.whatsappLink").value("https://wa.me/5548999990000"));
+                .andExpect(jsonPath("$.whatsappLink").doesNotExist());
     }
 
     @Test

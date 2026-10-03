@@ -66,7 +66,6 @@ class PrecificacaoIaTest {
         imovel.setVagasGaragem(1);
         imovel.setCapacidadeHospedes(4);
         imovel.setComodidades(List.of("Wi-Fi", "Piscina"));
-        imovel.setWhatsappLink("https://wa.me/5548999990000");
         Endereco e = new Endereco();
         e.setLogradouro("Rua Secreta");
         e.setNumero("777");

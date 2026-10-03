@@ -88,8 +88,10 @@ public class AnuncioService {
             throw new TransicaoInvalidaException(
                     "Este anúncio já foi publicado. Para alterá-lo, inicie a edição do anúncio.");
         }
+        var comerciaisAntes = AuditoriaService.Comerciais.de(imovel);
         AnuncioCampos.aplicar(imovel, dados);
         imovelRepository.save(imovel);
+        auditoria.camposComerciais(imovel, gestor.getId(), comerciaisAntes, AuditoriaService.Comerciais.de(imovel));
         auditoria.acao(imovel, gestor.getId(), "ATUALIZADO", "Cadastro alterado em pré-publicação.");
         return mapper.montar(imovel);
     }

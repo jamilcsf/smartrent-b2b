@@ -95,7 +95,7 @@ class AnuncioEdicaoServiceTest {
     private static AnuncioDados dadosValidos(String titulo) {
         return new AnuncioDados(titulo, "Descricao do imovel", TipoImovel.APARTAMENTO, 70, 2, 1, 1, 4,
                 List.of("Wi-Fi"), "88054-000", "Rua das Gaivotas", "120", null, "Canasvieiras",
-                "Florianopolis", "SC", null, null);
+                "Florianopolis", "SC", 1, BigDecimal.ZERO, null);
     }
 
     private AnuncioDados rascunhoAtual() throws Exception {
@@ -267,7 +267,7 @@ class AnuncioEdicaoServiceTest {
     void confirmarAplicaRascunho() throws Exception {
         iniciar();
         AnuncioDados novo = new AnuncioDados("Titulo Novo", "Outra descricao", TipoImovel.CASA, 90, 3, 2, 2, 6,
-                List.of("Piscina"), "88054-000", "Rua Nova", "5", null, "Centro", "Florianopolis", "SC", null,
+                List.of("Piscina"), "88054-000", "Rua Nova", "5", null, "Centro", "Florianopolis", "SC", 2, new BigDecimal("60.00"),
                 new BigDecimal("450"));
         service.salvarRascunho(gestor, 1L, novo);
 
@@ -288,7 +288,7 @@ class AnuncioEdicaoServiceTest {
     void confirmarRascunhoInvalido() {
         iniciar();
         AnuncioDados invalido = new AnuncioDados("", null, TipoImovel.CASA, -3, 1, 1, null, 2, List.of(),
-                "000", "Rua", "1", null, "Centro", "Floripa", "SC", null, null);
+                "000", "Rua", "1", null, "Centro", "Floripa", "SC", null, null, null);
         rascunhoSalvo.setDados(serializar(invalido));
 
         var erro = assertThrows(ValidacaoAnuncioException.class, () -> service.confirmar(gestor, 1L, true, "ip"));

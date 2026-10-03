@@ -48,8 +48,9 @@ public final class AnuncioCampos {
         e.setEstado(d.estado() == null ? null : d.estado().trim().toUpperCase());
         imovel.setEndereco(e);
 
-        String whatsapp = d.whatsappLink() == null ? null : d.whatsappLink().trim();
-        imovel.setWhatsappLink(whatsapp == null || whatsapp.isEmpty() ? null : whatsapp);
+        imovel.setMinimoDiarias(d.minimoDiarias() == null ? 1 : d.minimoDiarias());
+        imovel.setTaxaLimpeza(d.taxaLimpeza() == null ? java.math.BigDecimal.ZERO
+                : d.taxaLimpeza().setScale(2, java.math.RoundingMode.HALF_UP));
     }
 
     /** Estado atual do imovel como campos de formulario (base do rascunho de edicao). */
@@ -72,7 +73,8 @@ public final class AnuncioCampos {
                 e.getBairro(),
                 e.getCidade(),
                 e.getEstado(),
-                i.getWhatsappLink(),
+                i.getMinimoDiarias(),
+                i.getTaxaLimpeza(),
                 i.getValorDiariaBase());
     }
 
@@ -84,7 +86,7 @@ public final class AnuncioCampos {
         return new AnuncioDados(limpo.titulo(), limpo.descricao(), limpo.tipoImovel(), limpo.metragemQuadrada(),
                 limpo.numeroQuartos(), limpo.numeroBanheiros(), limpo.vagasGaragem(), limpo.capacidadeHospedes(),
                 limpo.comodidades(), limpo.cep(), limpo.logradouro(), limpo.numero(), limpo.complemento(),
-                limpo.bairro(), limpo.cidade(), limpo.estado(), limpo.whatsappLink(), d.valorDiaria());
+                limpo.bairro(), limpo.cidade(), limpo.estado(), limpo.minimoDiarias(), limpo.taxaLimpeza(), d.valorDiaria());
     }
 
     private static String normalizarCep(String cep) {

@@ -1,5 +1,6 @@
 package br.com.unisenai.smartrent.service;
 
+import br.com.unisenai.smartrent.config.PoliticaCancelamentoProperties;
 import br.com.unisenai.smartrent.dto.ReservaRequest;
 import br.com.unisenai.smartrent.model.Imovel;
 import br.com.unisenai.smartrent.model.Reserva;
@@ -46,11 +47,14 @@ public class ReservaService {
     private final ImovelRepository imovelRepository;
     private final ImovelAcesso acesso;
     private final Clock clock;
+    private final PoliticaCancelamentoProperties politica;
 
     public ReservaService(ReservaRepository reservaRepository,
                           ImovelRepository imovelRepository,
                           ImovelAcesso acesso,
-                          Clock clock) {
+                          Clock clock,
+                          PoliticaCancelamentoProperties politica) {
+        this.politica = politica;
         this.reservaRepository = reservaRepository;
         this.imovelRepository = imovelRepository;
         this.acesso = acesso;
@@ -110,7 +114,10 @@ public class ReservaService {
         reserva.setStatus(req.status() == null ? StatusReserva.CONFIRMADA : req.status());
         reserva.setOrigem(req.origem() == null ? OrigemReserva.DIRETA : req.origem());
         reserva.setObservacoes(req.observacoes());
-        gravarSnapshot(reserva, imovel);
+        reserva.setNumeroHospedes(req.numeroHospedes() == null ? 1 : req.numeroHospedes());
+        validarRegrasDoImovel(imovel.getMinimoDiarias(), imovel.getCapacidadeHospedes(),
+                reserva.getDataCheckin(), reserva.getDataCheckout(), reserva.getNumeroHospedes());
+        gravarSnapshot(reserva, imovel, politica);
         return cadastrarReserva(reserva);
     }
 
@@ -135,7 +142,7 @@ public class ReservaService {
     }
 
     /** Congela preco e dados do imovel na reserva. Chamado uma unica vez, na criacao. */
-    private static void gravarSnapshot(Reserva reserva, Imovel imovel) {
+    static void gravarSnapshot(Reserva reserva, Imovel imovel, PoliticaCancelamentoProperties politica) {
         BigDecimal diaria = imovel.getValorDiariaBase();
         List<LocalDate> noites = new ArrayList<>();
         for (LocalDate d = reserva.getDataCheckin(); d.isBefore(reserva.getDataCheckout()); d = d.plusDays(1)) {
@@ -146,7 +153,8 @@ public class ReservaService {
             reserva.getPrecosDiarios().put(noite, diaria); // hoje o preco e o mesmo em toda data
             soma = soma.add(diaria);
         }
-        BigDecimal taxas = BigDecimal.ZERO;
+        BigDecimal taxaLimpeza = imovel.getTaxaLimpeza() == null ? BigDecimal.ZERO : imovel.getTaxaLimpeza();
+        BigDecimal taxas = taxaLimpeza; // a taxa de limpeza e cobrada uma vez por reserva
         BigDecimal total = soma.add(taxas);
 
         reserva.setMoeda("BRL");
@@ -155,6 +163,12 @@ public class ReservaService {
         reserva.setTaxasSnapshot(taxas);
         reserva.setTotalSnapshot(total);
         reserva.setValorTotal(total);
+        reserva.setMinimoDiariasSnapshot(imovel.getMinimoDiarias());
+        reserva.setTaxaLimpezaSnapshot(taxaLimpeza);
+        reserva.setLimiteHospedesSnapshot(imovel.getCapacidadeHospedes());
+        reserva.setPoliticaAntecedenciaHoras(politica.antecedenciaHoras());
+        reserva.setPoliticaRegretDias(politica.regretDias());
+        reserva.setPoliticaVersao(politica.versao());
         reserva.setImovelTituloSnapshot(imovel.getTitulo());
         reserva.setImovelEnderecoSnapshot(descreverEndereco(imovel));
         reserva.setImovelCaracteristicasSnapshot(descreverCaracteristicas(imovel));
@@ -185,7 +199,13 @@ public class ReservaService {
             throw new IllegalArgumentException(MSG_CONFLITO);
         }
 
+        int hospedes = req.numeroHospedes() == null ? reserva.getNumeroHospedes() : req.numeroHospedes();
+        // Vale o que foi combinado na criacao (snapshot), nao o que o anuncio diz hoje.
+        validarRegrasDoImovel(reserva.getMinimoDiariasSnapshot(), reserva.getLimiteHospedesSnapshot(),
+                req.dataCheckin(), req.dataCheckout(), hospedes);
+
         copiarDadosDoHospede(req, reserva);
+        reserva.setNumeroHospedes(hospedes);
         reserva.setDataCheckin(req.dataCheckin());
         reserva.setDataCheckout(req.dataCheckout());
         reserva.setObservacoes(req.observacoes());
@@ -231,6 +251,23 @@ public class ReservaService {
         // Regra de negocio: a data final deve ser posterior a inicial.
         if (!checkout.isAfter(checkin)) {
             throw new IllegalArgumentException("A data de check-out deve ser posterior a data de check-in.");
+        }
+    }
+
+    /** Minimo de diarias e limite de hospedes: o servidor valida, independentemente do front. */
+    static void validarRegrasDoImovel(int minimoDiarias, int limiteHospedes,
+                                      LocalDate checkin, LocalDate checkout, int hospedes) {
+        long noites = ChronoUnit.DAYS.between(checkin, checkout);
+        if (noites < minimoDiarias) {
+            throw new IllegalArgumentException("Este imóvel exige no mínimo " + minimoDiarias
+                    + (minimoDiarias == 1 ? " diária" : " diárias") + " por reserva (foram solicitadas " + noites + ").");
+        }
+        if (hospedes < 1) {
+            throw new IllegalArgumentException("Informe ao menos 1 hóspede.");
+        }
+        if (hospedes > limiteHospedes) {
+            throw new IllegalArgumentException("Este imóvel aceita no máximo " + limiteHospedes
+                    + (limiteHospedes == 1 ? " hóspede" : " hóspedes") + " (foram informados " + hospedes + ").");
         }
     }
 

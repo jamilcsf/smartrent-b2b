@@ -5,8 +5,6 @@ import br.com.unisenai.smartrent.model.ImovelMidia;
 import br.com.unisenai.smartrent.model.enums.EstadoMidia;
 import br.com.unisenai.smartrent.model.enums.TipoImovel;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -17,8 +15,6 @@ import java.util.List;
  * da via. Como a entidade já guarda os dois em colunas distintas, não há o que
  * extrair de uma string: basta não enviar o número.
  *
- * <p>{@code whatsappLink} só é preenchido para quem está logado e, nulo, nem
- * sequer entra no JSON: o dado não sai do servidor para visitantes anônimos.
  */
 public record ImovelResponse(
         Long id,
@@ -39,15 +35,15 @@ public record ImovelResponse(
         boolean ativo,
         String capaUrl,
         List<MidiaResponse> midias,
-        @JsonInclude(JsonInclude.Include.NON_NULL) String whatsappLink) {
+        int minimoDiarias,
+        BigDecimal taxaLimpeza) {
 
     /**
      * @param midias           midias do imóvel; só as ATIVAS são expostas
-     * @param incluirWhatsapp  verdadeiro apenas para requisições autenticadas
      * @param comMidias        falso no catálogo: lá só a capa interessa
      */
     public static ImovelResponse de(Imovel i, List<ImovelMidia> midias,
-                                    boolean incluirWhatsapp, boolean comMidias) {
+                                    boolean comMidias) {
         var ativas = midias.stream()
                 .filter(m -> m.getEstado() == EstadoMidia.ATIVA)
                 .toList();
@@ -75,7 +71,8 @@ public record ImovelResponse(
                 i.isAtivo(),
                 capa == null ? null : (capa.miniaturaUrl() != null ? capa.miniaturaUrl() : capa.url()),
                 comMidias ? ativas.stream().map(MidiaResponse::de).toList() : List.of(),
-                incluirWhatsapp ? i.getWhatsappLink() : null);
+                i.getMinimoDiarias(),
+                i.getTaxaLimpeza());
     }
 
     /** Nome legível do tipo; o enum em caixa alta não serve para exibição. */

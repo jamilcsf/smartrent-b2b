@@ -99,8 +99,13 @@ public class Imovel {
     @Column(name = "republicar_em")
     private LocalDateTime republicarEm;
 
-    @Column(name = "whatsapp_link", length = 300)
-    private String whatsappLink;
+    /** Quantidade minima de diarias por reserva (padrao 1). */
+    @Column(name = "minimo_diarias", nullable = false)
+    private int minimoDiarias = 1;
+
+    /** Taxa de limpeza em R$, cobrada uma vez por reserva (0 = sem taxa). */
+    @Column(name = "taxa_limpeza", nullable = false, precision = 10, scale = 2)
+    private java.math.BigDecimal taxaLimpeza = java.math.BigDecimal.ZERO;
 
     @Column(name = "ativo", nullable = false)
     private boolean ativo = true;
@@ -300,11 +305,19 @@ public class Imovel {
         this.republicarEm = republicarEm;
     }
 
-    public String getWhatsappLink() {
-        return whatsappLink;
+    public int getMinimoDiarias() {
+        return minimoDiarias;
     }
 
-    public void setWhatsappLink(String whatsappLink) {
-        this.whatsappLink = whatsappLink;
+    public void setMinimoDiarias(int minimoDiarias) {
+        this.minimoDiarias = minimoDiarias;
+    }
+
+    public java.math.BigDecimal getTaxaLimpeza() {
+        return taxaLimpeza;
+    }
+
+    public void setTaxaLimpeza(java.math.BigDecimal taxaLimpeza) {
+        this.taxaLimpeza = taxaLimpeza;
     }
 }

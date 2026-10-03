@@ -23,7 +23,6 @@
     'Pet friendly', 'Estacionamento', 'Máquina de lavar', 'TV', 'Varanda', 'Café da manhã'];
   var ROTULOS_TIPO = { APARTAMENTO: 'Apartamento', CASA: 'Casa', KITNET: 'Kitnet', POUSADA: 'Pousada',
     CHALE: 'Chalé', LOFT: 'Loft', OUTRO: 'Outro' };
-  var REGEX_WHATSAPP = /^https:\/\/(wa\.me\/\d{8,15}(\?\S*)?|(api\.)?whatsapp\.com\/send\?\S*phone=\d{8,15}\S*)$/;
 
   var S = { modo: 'criar', id: null, anuncio: null, midias: [], capaKey: null, comodidades: [],
             sujo: false, ocupado: false, seq: 0, timerAutosave: null, viewer: null };
@@ -57,7 +56,8 @@
       bairro: texto('f-bairro'),
       cidade: texto('f-cidade'),
       estado: texto('f-uf').toUpperCase(),
-      whatsappLink: texto('f-whatsapp') || null,
+      minimoDiarias: numero('f-minimo'),
+      taxaLimpeza: numero('f-limpeza'),
       valorDiaria: S.modo === 'rascunho' ? numero('f-preco') : null
     };
   }
@@ -79,7 +79,8 @@
     $('f-bairro').value = d.bairro || '';
     $('f-cidade').value = d.cidade || '';
     $('f-uf').value = d.estado || '';
-    $('f-whatsapp').value = d.whatsappLink || '';
+    $('f-minimo').value = d.minimoDiarias != null ? d.minimoDiarias : 1;
+    $('f-limpeza').value = d.taxaLimpeza != null ? d.taxaLimpeza : 0;
     $('f-preco').value = d.valorDiaria != null ? d.valorDiaria : '';
     renderComodidades();
   }
@@ -95,15 +96,20 @@
     if (d.numeroQuartos == null || d.numeroQuartos < 0) { e.numeroQuartos = 'Informe o número de quartos.'; }
     if (d.numeroBanheiros == null || d.numeroBanheiros < 0) { e.numeroBanheiros = 'Informe o número de banheiros.'; }
     if (d.vagasGaragem != null && d.vagasGaragem < 0) { e.vagasGaragem = 'O número de vagas não pode ser negativo.'; }
-    if (d.capacidadeHospedes == null || d.capacidadeHospedes < 1) { e.capacidadeHospedes = 'A capacidade deve ser de ao menos 1 hóspede.'; }
+    if (d.capacidadeHospedes == null || d.capacidadeHospedes < 1) { e.capacidadeHospedes = 'O limite de hóspedes deve ser de ao menos 1.'; }
+    if (d.capacidadeHospedes != null && d.capacidadeHospedes > 50) { e.capacidadeHospedes = 'O limite de hóspedes não pode passar de 50.'; }
     if (!/^\d{5}-?\d{3}$/.test(d.cep)) { e.cep = 'CEP inválido. Use o formato 00000-000.'; }
     if (!d.logradouro) { e.logradouro = 'Informe o logradouro.'; }
     if (!d.numero) { e.numero = 'Informe o número.'; }
     if (!d.bairro) { e.bairro = 'Informe o bairro.'; }
     if (!d.cidade) { e.cidade = 'Informe a cidade.'; }
     if (!/^[A-Za-z]{2}$/.test(d.estado)) { e.estado = 'UF inválida. Use duas letras.'; }
-    if (d.whatsappLink && !REGEX_WHATSAPP.test(d.whatsappLink)) {
-      e.whatsappLink = 'Link do WhatsApp inválido. Use um link wa.me ou api.whatsapp.com.';
+    if (d.minimoDiarias == null || !Number.isInteger(d.minimoDiarias) || d.minimoDiarias < 1 || d.minimoDiarias > 365) {
+      e.minimoDiarias = 'Informe um mínimo de diárias inteiro entre 1 e 365.';
+    }
+    if (d.taxaLimpeza == null || d.taxaLimpeza < 0 || d.taxaLimpeza > 100000 ||
+        Math.round(d.taxaLimpeza * 100) / 100 !== d.taxaLimpeza) {
+      e.taxaLimpeza = 'Informe a taxa de limpeza em R$ (0 ou mais, até 2 casas decimais).';
     }
     if (S.modo === 'rascunho' && d.valorDiaria != null && d.valorDiaria < 1) {
       e.valorDiaria = 'O valor da diária deve ser de ao menos R$ 1,00.';
@@ -114,7 +120,7 @@
   var CAMPO_DO_ERRO = { titulo: 'f-titulo', descricao: 'f-descricao', tipoImovel: 'f-tipo', metragemQuadrada: 'f-area',
     numeroQuartos: 'f-quartos', numeroBanheiros: 'f-banheiros', vagasGaragem: 'f-vagas', capacidadeHospedes: 'f-capacidade',
     cep: 'f-cep', logradouro: 'f-logradouro', numero: 'f-numero', complemento: 'f-complemento', bairro: 'f-bairro',
-    cidade: 'f-cidade', estado: 'f-uf', whatsappLink: 'f-whatsapp', valorDiaria: 'f-preco', comodidades: 'f-comodidade-nova' };
+    cidade: 'f-cidade', estado: 'f-uf', minimoDiarias: 'f-minimo', taxaLimpeza: 'f-limpeza', valorDiaria: 'f-preco', comodidades: 'f-comodidade-nova' };
 
   function mostrarErros(erros) {
     document.querySelectorAll('.erro').forEach(function (p) { p.classList.remove('ativo'); p.innerText = ''; });
@@ -488,7 +494,8 @@
       metragemQuadrada: d.metragemQuadrada, numeroQuartos: d.numeroQuartos, numeroBanheiros: d.numeroBanheiros,
       vagasGaragem: d.vagasGaragem, capacidadeHospedes: d.capacidadeHospedes,
       valorDiariaBase: precoPreview, comodidades: d.comodidades, ativo: true,
-      capaUrl: capa ? (capa.miniaturaUrl || capa.url) : null, midias: midias, whatsappLink: d.whatsappLink
+      capaUrl: capa ? (capa.miniaturaUrl || capa.url) : null, midias: midias,
+      minimoDiarias: d.minimoDiarias, taxaLimpeza: d.taxaLimpeza
     };
   }
 
