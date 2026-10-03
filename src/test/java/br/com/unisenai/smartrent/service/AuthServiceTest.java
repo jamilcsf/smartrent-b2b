@@ -61,7 +61,7 @@ class AuthServiceTest {
         when(jwtService.gerarToken(any())).thenReturn("token-ficticio");
 
         authService.cadastrar(new CadastroRequest(
-                "Ana Beatriz Rocha", "ana@smartrent.dev", "senhaSegura123", "senhaSegura123"));
+                "Ana Beatriz Rocha", "ana@smartrent.dev", "senhaSegura123", "senhaSegura123", null));
 
         ArgumentCaptor<Usuario> capturado = ArgumentCaptor.forClass(Usuario.class);
         verify(usuarioRepository).save(capturado.capture());
@@ -81,7 +81,7 @@ class AuthServiceTest {
         when(jwtService.gerarToken(any())).thenReturn("token-ficticio");
 
         authService.cadastrar(new CadastroRequest(
-                "Ana", "  Ana@SmartRent.DEV  ", "senhaSegura123", "senhaSegura123"));
+                "Ana", "  Ana@SmartRent.DEV  ", "senhaSegura123", "senhaSegura123", null));
 
         ArgumentCaptor<Usuario> capturado = ArgumentCaptor.forClass(Usuario.class);
         verify(usuarioRepository).save(capturado.capture());
@@ -91,7 +91,7 @@ class AuthServiceTest {
     @Test
     @DisplayName("CT21 - Cadastro deve recusar senha e confirmação diferentes")
     void deveRecusarConfirmacaoDivergente() {
-        var req = new CadastroRequest("Ana", "ana@smartrent.dev", "senhaSegura123", "outraCoisa456");
+        var req = new CadastroRequest("Ana", "ana@smartrent.dev", "senhaSegura123", "outraCoisa456", null);
 
         var erro = assertThrows(IllegalArgumentException.class, () -> authService.cadastrar(req));
 
@@ -105,7 +105,7 @@ class AuthServiceTest {
         when(usuarioRepository.findByEmail("ana@smartrent.dev"))
                 .thenReturn(Optional.of(usuarioComSenha("qualquer")));
 
-        var req = new CadastroRequest("Ana", "ana@smartrent.dev", "senhaSegura123", "senhaSegura123");
+        var req = new CadastroRequest("Ana", "ana@smartrent.dev", "senhaSegura123", "senhaSegura123", null);
 
         assertThrows(AuthService.EmailJaCadastradoException.class, () -> authService.cadastrar(req));
         verify(usuarioRepository, never()).save(any());

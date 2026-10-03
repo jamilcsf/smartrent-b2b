@@ -41,6 +41,8 @@ public class AuthController {
 
     @PostMapping("/cadastro")
     public ResponseEntity<AuthResponse> cadastrar(@Valid @RequestBody CadastroRequest req) {
+        // Sem captcha, qualquer script criaria contas em massa.
+        captchaService.verificar(req.captchaToken());
         return ResponseEntity.ok(authService.cadastrar(req));
     }
 

@@ -193,4 +193,23 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.recaptchaSiteKey").value("site-key"))
                 .andExpect(jsonPath("$.googleClientId").value("client-id"));
     }
+
+    @Test
+    @DisplayName("CT48 - Cadastro sem captcha válido deve responder 400 sem criar a conta")
+    void cadastroSemCaptchaDeveSerRecusado() throws Exception {
+        doThrow(new CaptchaService.CaptchaInvalidoException("Confirme que você não é um robô."))
+                .when(captchaService).verificar(any());
+
+        mockMvc.perform(post("/api/auth/cadastro")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of(
+                                "nome", "Ana",
+                                "email", "ana@smartrent.dev",
+                                "senha", "senhaSegura123",
+                                "confirmacaoSenha", "senhaSegura123"))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.erro").value("Confirme que você não é um robô."));
+
+        verify(authService, never()).cadastrar(any());
+    }
 }

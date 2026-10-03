@@ -58,6 +58,12 @@
             <p id="erro-confirmacaoSenha" class="hidden mt-1 text-[11px] font-semibold text-rose-600"></p>
           </div>
 
+          <!-- reCAPTCHA: o widget é montado por js após ler /api/auth/config -->
+          <div class="mb-4">
+            <div id="captcha" class="flex justify-center min-h-[78px]"></div>
+            <p id="erro-captcha" class="hidden mt-1 text-center text-[11px] font-semibold text-rose-600"></p>
+          </div>
+
           <p id="mensagemGeral" class="hidden mb-4 p-2.5 rounded-lg bg-rose-50 border border-rose-200 text-[11px] font-semibold text-rose-700"></p>
 
           <button type="submit" id="btnSubmit"
@@ -72,7 +78,20 @@
           <span class="flex-1 border-t border-slate-200"></span>
         </div>
 
-        <p class="text-center text-sm text-slate-500">
+        <!-- Botão oficial do Google (quando há client ID); senão, o botão abaixo só avisa -->
+        <div id="googleBotao" class="flex justify-center"></div>
+        <button type="button" id="googleFallback"
+          class="w-full flex items-center justify-center gap-2 border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold py-3 rounded-full text-sm transition">
+          <svg class="w-4 h-4" viewBox="0 0 48 48" aria-hidden="true">
+            <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.9 2.4 30.4 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"/>
+            <path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.7 6c4.5-4.2 6.9-10.3 6.9-17.7z"/>
+            <path fill="#FBBC05" d="M10.5 28.7c-.5-1.4-.8-3-.8-4.7s.3-3.3.8-4.7l-7.9-6.1C.9 16.4 0 20.1 0 24s.9 7.6 2.6 10.8l7.9-6.1z"/>
+            <path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.7-6c-2.1 1.4-4.9 2.3-8.2 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/>
+          </svg>
+          Cadastrar com o Google
+        </button>
+
+        <p class="text-center text-sm text-slate-500 mt-4">
           Já tem conta?
           <a id="linkLogin" href="login.html" class="font-bold text-blue-700 hover:underline">Entrar</a>
         </p>
@@ -100,6 +119,7 @@
 
   <script src="js/auth.js"></script>
   <script src="js/api.js"></script>
+  <script src="js/auth-externo.js"></script>
   <script>lucide.createIcons();</script>
   <script>
     // Volta para onde a pessoa estava. Só aceita caminho relativo do próprio
@@ -164,6 +184,8 @@
       var senha = document.getElementById('senha').value;
       var confirmacao = document.getElementById('confirmacaoSenha').value;
 
+      var captchaToken = AuthExterno.exigirCaptcha();
+
       var ok = true;
       if (!nome) { ok = mostrarErro('nome', 'Informe seu nome.') && ok; }
       if (!email) { ok = mostrarErro('email', 'Informe seu e-mail.') && ok; }
@@ -171,12 +193,14 @@
       if (senha.length < 8) { ok = mostrarErro('senha', 'A senha deve ter ao menos 8 caracteres.') && ok; }
       if (!confirmacao) { ok = mostrarErro('confirmacaoSenha', 'Confirme a senha.') && ok; }
       else if (senha !== confirmacao) { ok = mostrarErro('confirmacaoSenha', 'As senhas não conferem.') && ok; }
+      if (!captchaToken) { ok = false; }
       if (!ok) { return; }
 
       carregando(true);
       try {
         var r = await Api.post('/api/auth/cadastro', {
-          nome: nome, email: email, senha: senha, confirmacaoSenha: confirmacao
+          nome: nome, email: email, senha: senha, confirmacaoSenha: confirmacao,
+          captchaToken: captchaToken
         }, { ignorar401: true });
         Auth.definirSessao(r.token, r.usuario);
         location.href = destinoDeRetorno();
@@ -189,7 +213,20 @@
         }
         erroGeral(e.message || 'Não foi possível criar a conta.');
         carregando(false, 'Criar conta');
+        AuthExterno.resetarCaptcha();
       }
+    });
+
+    function entrar(resposta) {
+      Auth.definirSessao(resposta.token, resposta.usuario);
+      location.href = destinoDeRetorno();
+    }
+
+    AuthExterno.iniciar({
+      textoGoogle: 'signup_with',
+      limpar: function () { limparErros(['nome', 'email', 'senha', 'confirmacaoSenha']); },
+      aoEntrar: entrar,
+      aoErro: erroGeral
     });
 
     document.addEventListener('DOMContentLoaded', function () {

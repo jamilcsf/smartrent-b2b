@@ -109,6 +109,7 @@
 
   <script src="js/auth.js"></script>
   <script src="js/api.js"></script>
+  <script src="js/auth-externo.js"></script>
   <script>lucide.createIcons();</script>
   <script>
     // Volta para onde a pessoa estava. Só aceita caminho relativo do próprio
@@ -170,20 +171,13 @@
       var email = document.getElementById('email').value.trim();
       var senha = document.getElementById('senha').value;
 
-      var captchaToken = captchaWidgetId === null ? '' : grecaptcha.getResponse(captchaWidgetId);
+      var captchaToken = AuthExterno.exigirCaptcha();
 
       var ok = true;
       if (!email) { ok = mostrarErro('email', 'Informe seu e-mail.') && ok; }
       else if (!emailValido(email)) { ok = mostrarErro('email', 'E-mail inválido.') && ok; }
       if (!senha) { ok = mostrarErro('senha', 'Informe sua senha.') && ok; }
-      if (!captchaToken) {
-        var alvoCaptcha = document.getElementById('erro-captcha');
-        alvoCaptcha.innerText = captchaWidgetId === null
-          ? 'A verificação de segurança não carregou. Recarregue a página.'
-          : 'Confirme que você não é um robô.';
-        alvoCaptcha.classList.remove('hidden');
-        ok = false;
-      }
+      if (!captchaToken) { ok = false; }
       if (!ok) { return; }
 
       carregando(true);
@@ -196,9 +190,7 @@
       } catch (e) {
         erroGeral(e.message || 'Não foi possível entrar.');
         carregando(false, 'Entrar');
-        // O token do reCAPTCHA vale uma única verificação: após qualquer
-        // tentativa é preciso resolver de novo.
-        if (captchaWidgetId !== null) { grecaptcha.reset(captchaWidgetId); }
+        AuthExterno.resetarCaptcha();
       }
     });
 
@@ -207,80 +199,12 @@
       location.href = destinoDeRetorno();
     }
 
-    // ---------------------------------------------------------------
-    // reCAPTCHA e login com Google. As chaves públicas vêm do servidor
-    // (/api/auth/config); o segredo do captcha nunca chega ao navegador.
-    // ---------------------------------------------------------------
-    var captchaWidgetId = null;
-
-    function carregarScript(src) {
-      var s = document.createElement('script');
-      s.src = src;
-      s.async = true;
-      s.defer = true;
-      document.head.appendChild(s);
-    }
-
-    // Chamado pelo próprio script do reCAPTCHA quando termina de carregar.
-    window.aoCarregarCaptcha = function () {
-      captchaWidgetId = grecaptcha.render('captcha', {
-        sitekey: window.__siteKeyCaptcha,
-        hl: 'pt-BR',
-        callback: function () {
-          document.getElementById('erro-captcha').classList.add('hidden');
-        }
-      });
-    };
-
-    async function aoReceberCredencialGoogle(resposta) {
-      limparErros(['email', 'senha']);
-      try {
-        var r = await Api.post('/api/auth/google', { credential: resposta.credential }, { ignorar401: true });
-        entrar(r);
-      } catch (e) {
-        erroGeral(e.message || 'Não foi possível entrar com o Google.');
-      }
-    }
-
-    function iniciarGoogle(clientId) {
-      var fallback = document.getElementById('googleFallback');
-      if (!clientId) {
-        // Sem client ID o recurso não está configurado: o botão existe, mas avisa.
-        fallback.addEventListener('click', function () {
-          erroGeral('Login com o Google ainda não está configurado neste ambiente (GOOGLE_CLIENT_ID).');
-        });
-        return;
-      }
-      fallback.classList.add('hidden');
-      var iniciar = function () {
-        google.accounts.id.initialize({ client_id: clientId, callback: aoReceberCredencialGoogle });
-        var largura = Math.min(400, Math.max(200, document.getElementById('googleBotao').offsetWidth));
-        google.accounts.id.renderButton(document.getElementById('googleBotao'), {
-          theme: 'outline', size: 'large', shape: 'pill', text: 'signin_with',
-          locale: 'pt-BR', width: largura
-        });
-      };
-      var s = document.createElement('script');
-      s.src = 'https://accounts.google.com/gsi/client';
-      s.async = true;
-      s.defer = true;
-      s.onload = iniciar;
-      document.head.appendChild(s);
-    }
-
-    async function carregarConfiguracao() {
-      try {
-        var cfg = await Api.get('/api/auth/config');
-        if (cfg.recaptchaSiteKey) {
-          window.__siteKeyCaptcha = cfg.recaptchaSiteKey;
-          carregarScript('https://www.google.com/recaptcha/api.js?onload=aoCarregarCaptcha&render=explicit&hl=pt-BR');
-        }
-        iniciarGoogle(cfg.googleClientId);
-      } catch (e) {
-        erroGeral('Não foi possível carregar a verificação de segurança. Recarregue a página.');
-      }
-    }
-    carregarConfiguracao();
+    AuthExterno.iniciar({
+      textoGoogle: 'signin_with',
+      limpar: function () { limparErros(['email', 'senha']); },
+      aoEntrar: entrar,
+      aoErro: erroGeral
+    });
 
     document.addEventListener('DOMContentLoaded', function () {
       var alvo = new URLSearchParams(location.search).get('redirectTo');

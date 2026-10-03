@@ -20,5 +20,8 @@ public record CadastroRequest(
         String senha,
 
         @NotBlank(message = "Confirme a senha.")
-        String confirmacaoSenha) {
+        String confirmacaoSenha,
+
+        /** Token do reCAPTCHA; validado no servidor antes de criar a conta. */
+        String captchaToken) {
 }
