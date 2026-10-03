@@ -51,7 +51,7 @@ public class ReservaClienteMapper {
         if (r.getStatus() != StatusReserva.PENDENTE || r.getCliente() == null) {
             return null;
         }
-        return r.getDataCriacao().plus(Duration.ofMinutes(expiraMinutos));
+        return Agora.somar(r.getDataCriacao(), Duration.ofMinutes(expiraMinutos), clock);
     }
 
     public boolean expirada(Reserva r) {

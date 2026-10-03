@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 @Controller
 public class PaginasController {
 
-    /** Rotas antigas do "Portal da transparencia", renomeado para Dashboard. */
+    /** Rotas antigas da pagina de estatisticas, hoje chamada Dashboard: redirecionam para a nova. */
     @GetMapping({"/transparencia", "/transparencia.html", "/portal-da-transparencia"})
     public String portalDaTransparencia() {
         return "redirect:/estatisticas.html";

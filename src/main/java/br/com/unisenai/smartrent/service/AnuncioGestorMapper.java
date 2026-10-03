@@ -53,7 +53,7 @@ public class AnuncioGestorMapper {
                 .filter(m -> !m.tipo().imagem() && m.estado() != EstadoMidia.REMOVIDA).count();
 
         LocalDateTime pronto = i.getPrecoPrimeiraConfirmacaoEm() == null ? null
-                : i.getPrecoPrimeiraConfirmacaoEm().plus(Duration.ofHours(props.janelaPrePublicacaoHoras()));
+                : Agora.somar(i.getPrecoPrimeiraConfirmacaoEm(), Duration.ofHours(props.janelaPrePublicacaoHoras()), clock);
         boolean podePublicar = pronto != null && !agora.isBefore(pronto)
                 && (i.getStatus() == StatusAnuncio.PRE_PUBLICACAO_AGUARDANDO
                 || i.getStatus() == StatusAnuncio.PRONTO_PARA_PUBLICAR);

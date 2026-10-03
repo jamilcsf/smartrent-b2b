@@ -70,7 +70,7 @@ public class LembreteEdicaoProcessador {
      * maximo configurado.
      */
     int numeroDevido(LocalDateTime edicaoIniciadaEm, LocalDateTime agora) {
-        long decorridoH = Duration.between(edicaoIniciadaEm, agora).toHours();
+        long decorridoH = Agora.decorrido(edicaoIniciadaEm, agora, clock).toHours();
         long apos = props.lembreteAposHoras();
         if (decorridoH < apos) {
             return 0;
@@ -99,7 +99,7 @@ public class LembreteEdicaoProcessador {
         }
 
         Usuario gestor = imovel.getUsuario();
-        Duration emEdicao = Duration.between(imovel.getEdicaoIniciadaEm(), agora);
+        Duration emEdicao = Agora.decorrido(imovel.getEdicaoIniciadaEm(), agora, clock);
         String titulo = "Anúncio fora do ar há " + descrever(emEdicao);
         String link = "/dashboard.html?imovel=" + imovel.getId();
         String mensagem = "O anúncio \"" + imovel.getTitulo() + "\" está em edição há " + descrever(emEdicao)

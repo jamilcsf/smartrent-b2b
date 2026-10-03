@@ -139,7 +139,7 @@ public class CancelamentoService {
     /** Job: pendentes autoatendidas nao pagas a tempo deixam de segurar as datas. */
     @Transactional
     public int expirarPendentes() {
-        LocalDateTime limite = Agora.de(clock).minus(Duration.ofMinutes(expiraMinutos));
+        LocalDateTime limite = Agora.somar(Agora.de(clock), Duration.ofMinutes(expiraMinutos).negated(), clock);
         List<Reserva> vencidas = reservaRepository.findPendentesExpiradas(limite);
         vencidas.forEach(r -> cancelarPendentePeloSistema(r, textos.get("cancelamento.expirada")));
         return vencidas.size();

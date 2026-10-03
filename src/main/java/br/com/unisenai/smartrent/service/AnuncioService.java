@@ -219,13 +219,13 @@ public class AnuncioService {
     private boolean janelaCumprida(Imovel imovel, LocalDateTime agora) {
         LocalDateTime inicio = imovel.getPrecoPrimeiraConfirmacaoEm();
         return inicio != null
-                && !agora.isBefore(inicio.plus(Duration.ofHours(props.janelaPrePublicacaoHoras())));
+                && !agora.isBefore(Agora.somar(inicio, Duration.ofHours(props.janelaPrePublicacaoHoras()), clock));
     }
 
     private Duration restanteDaJanela(Imovel imovel) {
-        LocalDateTime fim = imovel.getPrecoPrimeiraConfirmacaoEm()
-                .plus(Duration.ofHours(props.janelaPrePublicacaoHoras()));
-        return Duration.between(Agora.de(clock), fim);
+        LocalDateTime fim = Agora.somar(imovel.getPrecoPrimeiraConfirmacaoEm(),
+                Duration.ofHours(props.janelaPrePublicacaoHoras()), clock);
+        return Agora.decorrido(Agora.de(clock), fim, clock);
     }
 
     private static String descrever(Duration d) {
@@ -244,7 +244,7 @@ public class AnuncioService {
         LocalDateTime agora = Agora.de(clock);
         int republicados = imovelRepository.promoverRepublicacoesVencidas(agora);
         int prontos = imovelRepository.promoverProntosParaPublicar(
-                agora.minus(Duration.ofHours(props.janelaPrePublicacaoHoras())));
+                Agora.somar(agora, Duration.ofHours(props.janelaPrePublicacaoHoras()).negated(), clock));
         return republicados + prontos;
     }
 }

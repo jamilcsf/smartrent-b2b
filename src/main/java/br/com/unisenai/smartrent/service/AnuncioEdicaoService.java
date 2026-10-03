@@ -177,7 +177,7 @@ public class AnuncioEdicaoService {
         midiaService.aplicarRascunho(imovel, r);
 
         imovel.setEdicaoConfirmadaEm(agora);
-        imovel.setRepublicarEm(agora.plus(Duration.ofHours(props.republicacaoHoras())));
+        imovel.setRepublicarEm(Agora.somar(agora, Duration.ofHours(props.republicacaoHoras()), clock));
         imovel.setEdicaoIniciadaEm(null);
         imovel.setEdicaoEstadoOrigem(null);
         imovel.setRepublicarOriginalEm(null);
