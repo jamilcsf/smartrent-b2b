@@ -21,6 +21,7 @@ public record ReservaRequest(
         String hospedeTelefone,
         @JsonFormat(pattern = "yyyy-MM-dd") LocalDate dataCheckin,
         @JsonFormat(pattern = "yyyy-MM-dd") LocalDate dataCheckout,
+        /** Ignorado pelo servidor: o total sai do snapshot de preco, nunca do cliente. */
         BigDecimal valorTotal,
         StatusReserva status,
         OrigemReserva origem,

@@ -24,6 +24,15 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
                                   @Param("checkin") LocalDate checkin,
                                   @Param("checkout") LocalDate checkout);
 
+    /** Mesma regra de sobreposicao, ignorando a propria reserva (usada ao alterar datas). */
+    @Query("SELECT COUNT(r) > 0 FROM Reserva r WHERE r.imovel.id = :imovelId AND r.id <> :reservaId "
+         + "AND r.status <> br.com.unisenai.smartrent.model.enums.StatusReserva.CANCELADA "
+         + "AND (:checkin < r.dataCheckout AND :checkout > r.dataCheckin)")
+    boolean existeConflitoDeDatasExceto(@Param("imovelId") Long imovelId,
+                                        @Param("reservaId") Long reservaId,
+                                        @Param("checkin") LocalDate checkin,
+                                        @Param("checkout") LocalDate checkout);
+
     List<Reserva> findByImovelId(Long imovelId);
 
     List<Reserva> findByImovelUsuarioIdOrderByDataCheckinDesc(Long usuarioId);
