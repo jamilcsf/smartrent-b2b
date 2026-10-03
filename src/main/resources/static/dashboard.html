@@ -24,23 +24,7 @@
           <p class="text-[10px] text-slate-500 font-medium">Operação Canasvieiras • Painel do Gestor</p>
         </div>
       </div>
-      <nav class="flex items-center space-x-1 sm:space-x-2">
-        <a href="index.html" data-somente-gestor
-          class="flex items-center space-x-2 px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 text-xs font-semibold transition">
-          <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
-          <span class="hidden sm:inline">Portal da Transparência</span>
-        </a>
-        <a href="imoveis.html"
-          class="flex items-center space-x-2 px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 text-xs font-semibold transition">
-          <i data-lucide="home" class="w-4 h-4"></i>
-          <span class="hidden sm:inline">Imóveis</span>
-        </a>
-        <a href="dashboard.html" data-somente-gestor
-          class="flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 text-xs font-semibold transition">
-          <i data-lucide="calendar" class="w-4 h-4"></i>
-          <span class="hidden sm:inline">Painel do Gestor</span>
-        </a>
-      </nav>
+      <nav id="navPrincipal" class="flex items-center space-x-1 sm:space-x-2"></nav>
       <div id="areaAuth" class="flex items-center ml-4"></div>
     </div>
   </header>
@@ -84,6 +68,39 @@
       </div>
 
       <section id="aba-pre" class="space-y-4 hidden"></section>
+
+    <!-- Sugestão de preço por IA para imóveis em pré-publicação (somente gestores) -->
+    <div id="ia-preco" class="hidden bg-white border border-slate-200 p-6 sm:p-8 rounded-2xl shadow-sm space-y-5">
+      <div class="border-b border-slate-100 pb-4">
+        <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+          <i data-lucide="sparkles" class="w-5 h-5 text-blue-600"></i>
+          Sugestão de preço por IA: imóveis em pré-publicação
+        </h3>
+        <p class="text-xs text-slate-500 mt-1">Selecione os imóveis e peça a sugestão. A IA considera tipo, localização, área,
+          características e a época do ano; <b>ela só sugere</b>: nada é salvo até você revisar e confirmar. A primeira
+          confirmação de preço inicia a janela de pré-publicação e alterações seguintes não a reiniciam.</p>
+      </div>
+      <div id="iaCarregando" class="text-xs text-slate-500">Carregando seus imóveis...</div>
+      <div id="iaVazio" class="hidden text-xs text-slate-500 bg-slate-50 border border-dashed border-slate-300 rounded-xl p-6 text-center">
+        Nenhum imóvel em pré-publicação. <a class="text-blue-700 font-semibold underline" href="anuncio-form.html">Criar anúncio</a>
+      </div>
+      <div id="iaConteudo" class="hidden space-y-4">
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs text-left">
+            <thead class="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider border-b border-slate-200">
+              <tr><th class="p-3 w-10"><input type="checkbox" id="iaTodos" class="accent-blue-600" aria-label="Selecionar todos"></th>
+                  <th class="p-3">Imóvel</th><th class="p-3">Situação</th><th class="p-3">Valor atual</th><th class="p-3">Sugestão da IA</th><th class="p-3">Ação</th></tr>
+            </thead>
+            <tbody id="iaTabela" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+        <div class="flex flex-wrap items-center gap-3">
+          <button type="button" id="iaSugerir" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs disabled:opacity-40 disabled:cursor-not-allowed" disabled>Sugerir preço com IA</button>
+          <span id="iaStatus" class="text-xs text-slate-500"></span>
+        </div>
+      </div>
+    </div>
+
       <section id="aba-anuncios" class="space-y-4 hidden"></section>
       <section id="aba-reservas" class="hidden"></section>
     </div>
@@ -96,8 +113,10 @@
   <script src="js/auth.js"></script>
   <script src="js/api.js"></script>
   <script src="js/header-auth.js"></script>
+  <script src="js/navegacao.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/anuncio-acoes.js"></script>
+  <script src="js/ia-preco.js"></script>
   <script src="js/reservas-gestao.js"></script>
   <script src="js/dashboard.js"></script>
   <script>lucide.createIcons();</script>

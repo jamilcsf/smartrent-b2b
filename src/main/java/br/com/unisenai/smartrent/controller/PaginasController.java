@@ -17,6 +17,12 @@ import org.springframework.web.bind.annotation.PathVariable;
 @Controller
 public class PaginasController {
 
+    /** Rotas antigas do "Portal da transparencia", renomeado para Dashboard. */
+    @GetMapping({"/transparencia", "/transparencia.html", "/portal-da-transparencia"})
+    public String portalDaTransparencia() {
+        return "redirect:/estatisticas.html";
+    }
+
     @GetMapping("/imoveis/{id}")
     public String detalheDoImovel(@PathVariable Long id) {
         return "forward:/imovel.html";

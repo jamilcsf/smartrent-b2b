@@ -12,7 +12,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 
 /**
- * Sugestao de preco por IA em lote, a partir do portal da transparencia.
+ * Sugestao de preco por IA em lote, a partir do Painel do Gestor.
  *
  * <p>So le e sugere: nenhuma sugestao e gravada. Confirmar e uma acao
  * explicita do gestor sobre cada imovel (rota de preco, origem IA).

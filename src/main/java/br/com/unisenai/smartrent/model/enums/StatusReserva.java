@@ -5,5 +5,15 @@ public enum StatusReserva {
     PENDENTE,
     CONFIRMADA,
     CANCELADA,
-    CONCLUIDA
+    CONCLUIDA;
+
+    /** Verdadeiro para qualquer estado de cancelamento. */
+    public boolean cancelada() {
+        return this == CANCELADA;
+    }
+
+    /** Estados que contam como ocupacao (pendente ainda nao e ocupacao nem receita). */
+    public boolean ocupaDatas() {
+        return this == CONFIRMADA || this == CONCLUIDA;
+    }
 }

@@ -78,7 +78,7 @@
             'class="block mt-1 w-36 bg-slate-50 border border-slate-300 rounded-xl p-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="0,00"></label>' +
           '<button type="button" data-acao="preco" data-id="' + a.id + '" class="px-3 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white">' +
             (semPreco ? 'Confirmar preço' : 'Alterar preço') + '</button>' +
-          '<a href="index.html?ia=' + a.id + '#ia-preco" class="px-3 py-2 rounded-xl text-xs font-bold border border-slate-300 hover:bg-slate-50 flex items-center gap-1.5">' +
+          '<a href="dashboard.html?aba=pre&ia=' + a.id + '#ia-preco" class="px-3 py-2 rounded-xl text-xs font-bold border border-slate-300 hover:bg-slate-50 flex items-center gap-1.5">' +
             '<i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Sugerir com IA</a>' +
         '</div>' + info +
         '<div class="flex flex-wrap gap-2">' +
@@ -241,6 +241,8 @@
   function mostrarAba(aba) {
     if (ABAS.indexOf(aba) < 0) { aba = 'pre'; }
     E.aba = aba;
+    var ia = document.getElementById('ia-preco');
+    if (ia) { ia.classList.toggle('hidden', aba !== 'pre'); }
     ABAS.forEach(function (a) {
       $('aba-' + a).classList.toggle('hidden', a !== aba);
     });

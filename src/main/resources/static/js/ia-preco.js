@@ -1,6 +1,6 @@
 /**
- * Portal da Transparência: sugestão de preço por IA para imóveis em
- * pré-publicação, com seleção múltipla.
+ * Painel do Gestor, aba Pré-publicação: sugestão de preço por IA para imóveis
+ * em pré-publicação, com seleção múltipla.
  *
  * A IA só sugere. Cada preço só é salvo quando o gestor clica em "Confirmar":
  * se o valor confirmado é o sugerido, a origem registrada é IA; se foi
@@ -127,7 +127,6 @@
 
   function iniciar() {
     if (!global.Auth || !Auth.isGestor()) { return; }
-    $('ia-preco').classList.remove('hidden');
     $('iaTabela').addEventListener('click', aoClicar);
     $('iaTabela').addEventListener('change', atualizarBotao);
     $('iaTodos').addEventListener('change', function (e) {

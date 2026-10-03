@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/** Portal da transparencia: sugestao de preco por IA em lote. So sugere; nao salva. */
+/** Painel do gestor (pre-publicacao): sugestao de preco por IA em lote. So sugere; nao salva. */
 @RestController
 @RequestMapping("/api/gestor/precificacao")
 public class PrecificacaoGestorController {
