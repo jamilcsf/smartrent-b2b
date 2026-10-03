@@ -65,6 +65,7 @@ class PrecificacaoIaTest {
         imovel.setNumeroBanheiros(1);
         imovel.setVagasGaragem(1);
         imovel.setCapacidadeHospedes(4);
+        imovel.setTaxaLimpeza(new java.math.BigDecimal("80.00"));
         imovel.setComodidades(List.of("Wi-Fi", "Piscina"));
         Endereco e = new Endereco();
         e.setLogradouro("Rua Secreta");
@@ -113,6 +114,9 @@ class PrecificacaoIaTest {
                         org.hamcrest.Matchers.containsString("Canasvieiras"),
                         org.hamcrest.Matchers.containsString("Piscina"),
                         org.hamcrest.Matchers.containsString("70 m"),
+                        org.hamcrest.Matchers.containsString("Limite de hóspedes: 4"),
+                        org.hamcrest.Matchers.containsString("Taxa de limpeza"),
+                        org.hamcrest.Matchers.containsString("80.00"),
                         org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("Rua Secreta")),
                         org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("777")),
                         org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("88054")),

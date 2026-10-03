@@ -199,7 +199,9 @@ public class SmartChatService {
         boolean nova = gravarSistema(c, "reserva-confirmada:" + r.getId(), texto);
         if (nova) {
             String link = "/smartchat.html?conversa=" + c.getId();
-            avisar(r.getCliente(), r.getImovel().getId(), "Reserva confirmada", "Seu chat com o gestor está pronto. " + texto.split("\n")[1], link);
+            avisar(r.getCliente(), r.getImovel().getId(), "Reserva confirmada", "Seu chat com o gestor está pronto. " + texto.split("\n")[1]
+                    + ". A política de cancelamento da sua reserva está em /reserva.html?id=" + r.getId()
+                    + " (texto provisório).", link);
             avisar(c.getGestor(), r.getImovel().getId(), "Nova reserva confirmada",
                     r.getHospedeNome() + " reservou " + r.getImovelTituloSnapshot() + " (" + r.getDataCheckin().format(DATA) + " a "
                             + r.getDataCheckout().format(DATA) + "). Há uma conversa aberta.", link);
