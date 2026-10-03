@@ -113,7 +113,7 @@ public class Imovel {
 
     @PrePersist
     protected void aoPersistir() {
-        this.dataCadastro = LocalDateTime.now();
+        this.dataCadastro = LocalDateTime.now(br.com.unisenai.smartrent.config.PlataformaTempo.zona());
     }
 
     public Long getId() {

@@ -145,13 +145,57 @@
 
   function doisDigitos(n) { return n < 10 ? '0' + n : String(n); }
 
-  /** "03/10/2026 14:05". Datas da API vêm sem fuso; são exibidas como chegam. */
-  function dataHora(iso) {
-    if (!iso) { return '—'; }
-    var d = new Date(iso);
-    if (isNaN(d)) { return '—'; }
-    return doisDigitos(d.getDate()) + '/' + doisDigitos(d.getMonth() + 1) + '/' + d.getFullYear() +
-           ' ' + doisDigitos(d.getHours()) + ':' + doisDigitos(d.getMinutes());
+  var ZONA = 'America/Sao_Paulo'; // horario de Brasilia; o servidor confirma em /api/config/agora
+
+  var fmtPartes = new Intl.DateTimeFormat('pt-BR', {
+    timeZone: ZONA, year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23'
+  });
+
+  function partes(ms) {
+    var o = {};
+    fmtPartes.formatToParts(new Date(ms)).forEach(function (p) { o[p.type] = p.value; });
+    return o;
+  }
+
+  /**
+   * Instante (ms) de um texto da API. Datas-hora sem fuso ("2026-10-03T14:05:00")
+   * sao horario de Brasilia; com "Z" ou deslocamento, valem como instante.
+   * Nunca depende do fuso do navegador.
+   */
+  function instante(iso) {
+    if (!iso) { return NaN; }
+    if (/(Z|[+-]\d{2}:?\d{2})$/.test(iso)) { return new Date(iso).getTime(); }
+    var m = /^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2}))?)?/.exec(iso);
+    if (!m) { return NaN; }
+    var alvo = Date.UTC(+m[1], +m[2] - 1, +m[3], +(m[4] || 0), +(m[5] || 0), +(m[6] || 0));
+    var ms = alvo;
+    for (var i = 0; i < 3; i++) { // converge no deslocamento correto da data (sem valor fixo)
+      var p = partes(ms);
+      var visto = Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour, +p.minute, +p.second);
+      ms += alvo - visto;
+    }
+    return ms;
+  }
+
+  /** "2026-10-03" de hoje em Brasilia (aproximacao do relogio local; o servidor e a fonte oficial). */
+  function hojeBrasilia(ms) {
+    var p = partes(ms == null ? Date.now() : ms);
+    return p.year + '-' + p.month + '-' + p.day;
+  }
+
+  /** "03/10/2026 14:05 (horario de Brasilia)" sem o sufixo se curto=true. */
+  function dataHora(iso, curto) {
+    var ms = instante(iso);
+    if (isNaN(ms)) { return '—'; }
+    var p = partes(ms);
+    return p.day + '/' + p.month + '/' + p.year + ' ' + p.hour + ':' + p.minute + (curto ? '' : ' (horário de Brasília)');
+  }
+
+  /** "14:05" em Brasilia, a partir de um instante em ms (ou agora). */
+  function horaMinuto(ms) {
+    var p = partes(ms == null ? Date.now() : ms);
+    return p.hour + ':' + p.minute;
   }
 
   /** 3725000 ms -> "1h 02min 05s" (ou "02min 05s" abaixo de 1h). */
@@ -179,13 +223,13 @@
    * uma vez e aplicada a todas as contagens.
    */
   function relogioDoServidor(agoraIso) {
-    var deslocamento = new Date(agoraIso).getTime() - Date.now();
+    var deslocamento = instante(agoraIso) - Date.now();
     return function () { return Date.now() + deslocamento; };
   }
 
   global.UI = {
     escapar: escapar, toast: toast, modal: modal, confirmar: confirmar, aceitarTermo: aceitarTermo,
-    lerTermo: lerTermo, dataHora: dataHora, contagem: contagem, duracaoLonga: duracaoLonga,
+    lerTermo: lerTermo, dataHora: dataHora, instante: instante, hojeBrasilia: hojeBrasilia, horaMinuto: horaMinuto, contagem: contagem, duracaoLonga: duracaoLonga,
     relogioDoServidor: relogioDoServidor,
     BTN_PRIMARIO: BTN_PRIMARIO, BTN_PERIGO: BTN_PERIGO, BTN_NEUTRO: BTN_NEUTRO
   };

@@ -110,7 +110,7 @@
         '" data-recarregar="1">…</b> (às ' + UI.dataHora(a.republicarEm) + ').</p>';
       botoes = '<button type="button" data-acao="editar" data-id="' + a.id + '" class="px-3 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white">Editar anúncio</button>';
     } else {
-      var desde = new Date(a.edicaoIniciadaEm).getTime();
+      var desde = UI.instante(a.edicaoIniciadaEm);
       var emEdicaoMs = E.relogio() - desde;
       var longo = emEdicaoMs >= 24 * 3600 * 1000;
       corpo = '<p class="text-xs text-amber-900"><b>Em edição desde ' + UI.dataHora(a.edicaoIniciadaEm) + '.</b> O anúncio está <b>fora do catálogo</b> e sem receber novas reservas.</p>' +
@@ -159,7 +159,7 @@
   function atualizarContagens() {
     var zerou = false;
     document.querySelectorAll('[data-alvo]').forEach(function (el) {
-      var alvo = new Date(el.dataset.alvo).getTime();
+      var alvo = UI.instante(el.dataset.alvo);
       var restante = alvo - E.relogio();
       el.innerText = restante > 0 ? UI.contagem(restante) : 'agora';
       if (restante <= 0 && el.dataset.recarregar) { zerou = true; }

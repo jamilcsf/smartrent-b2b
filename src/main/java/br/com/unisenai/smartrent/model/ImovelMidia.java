@@ -70,7 +70,7 @@ public class ImovelMidia {
     @PrePersist
     protected void aoPersistir() {
         if (this.dataEnvio == null) {
-            this.dataEnvio = LocalDateTime.now();
+            this.dataEnvio = LocalDateTime.now(br.com.unisenai.smartrent.config.PlataformaTempo.zona());
         }
     }
 

@@ -537,8 +537,7 @@
       var r = await Api.put('/api/gestor/imoveis/' + S.id + '/edicao/rascunho', lerForm());
       S.anuncio = r;
       S.sujo = false;
-      var h = new Date();
-      $('statusRascunho').innerText = 'Rascunho salvo às ' + String(h.getHours()).padStart(2, '0') + ':' + String(h.getMinutes()).padStart(2, '0') + '.';
+      $('statusRascunho').innerText = 'Rascunho salvo às ' + UI.horaMinuto() + ' (horário de Brasília).';
       if (!silencioso) { UI.toast('Rascunho salvo. O anúncio no ar não foi alterado.'); }
       return true;
     } catch (e) {

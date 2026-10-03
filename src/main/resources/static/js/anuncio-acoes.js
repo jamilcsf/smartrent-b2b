@@ -70,7 +70,7 @@
   function descartarEdicao(anuncio) {
     // Edição iniciada sobre uma republicação agendada: o descarte restaura o agendamento original.
     var restauraAgendamento = anuncio.edicaoEstadoOrigem === 'REPUBLICACAO_AGENDADA' && !!anuncio.republicarOriginalEm &&
-      new Date(anuncio.republicarOriginalEm).getTime() > UI.relogioDoServidor(anuncio.agora)();
+      UI.instante(anuncio.republicarOriginalEm) > UI.relogioDoServidor(anuncio.agora)();
     var destino = restauraAgendamento
       ? '<p>O anúncio volta ao estado anterior: a <b>republicação agendada para ' + UI.dataHora(anuncio.republicarOriginalEm) +
         '</b> é restaurada, exatamente como estava, sem nenhuma suspensão adicional.</p>'

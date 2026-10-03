@@ -64,7 +64,7 @@ public class SugestaoPreco {
 
     @PrePersist
     protected void aoPersistir() {
-        this.dataGeracao = LocalDateTime.now();
+        this.dataGeracao = LocalDateTime.now(br.com.unisenai.smartrent.config.PlataformaTempo.zona());
     }
 
     public Long getId() {
