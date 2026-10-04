@@ -10,6 +10,7 @@ import br.com.unisenai.smartrent.security.JwtService;
 import br.com.unisenai.smartrent.service.FotoPerfilService;
 import br.com.unisenai.smartrent.service.PerfilService;
 import br.com.unisenai.smartrent.service.SenhaService;
+import br.com.unisenai.smartrent.service.TrocaEmailService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -41,6 +42,7 @@ class PerfilControllerTest {
     @MockBean private PerfilService perfilService;
     @MockBean private FotoPerfilService fotoPerfilService;
     @MockBean private SenhaService senhaService;
+    @MockBean private TrocaEmailService trocaEmailService;
     @MockBean private JwtService jwtService;
     @MockBean private UsuarioRepository usuarioRepository;
 
@@ -58,7 +60,7 @@ class PerfilControllerTest {
         when(jwtService.versaoDaSessao("tk")).thenReturn(0);
         when(usuarioRepository.findByEmail(usuario.getEmail())).thenReturn(Optional.of(usuario));
         when(perfilService.obter(any())).thenReturn(new PerfilResponse("Ana Rocha", "ana@smartrent.dev",
-                PapelUsuario.CLIENTE, null, LocalDateTime.of(2026, 1, 2, 3, 4), true, null, List.of()));
+                PapelUsuario.CLIENTE, null, LocalDateTime.of(2026, 1, 2, 3, 4), true, null, List.of(), null));
     }
 
     @Test

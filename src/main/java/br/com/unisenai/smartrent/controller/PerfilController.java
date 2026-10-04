@@ -2,12 +2,16 @@ package br.com.unisenai.smartrent.controller;
 
 import br.com.unisenai.smartrent.dto.AtualizarPerfilRequest;
 import br.com.unisenai.smartrent.dto.AuthResponse;
+import br.com.unisenai.smartrent.dto.ConfirmarEmailRequest;
+import br.com.unisenai.smartrent.dto.EmailRequest;
+import br.com.unisenai.smartrent.dto.MensagemResponse;
 import br.com.unisenai.smartrent.dto.PerfilResponse;
 import br.com.unisenai.smartrent.dto.SenhaRequest;
 import br.com.unisenai.smartrent.model.Usuario;
 import br.com.unisenai.smartrent.service.FotoPerfilService;
 import br.com.unisenai.smartrent.service.PerfilService;
 import br.com.unisenai.smartrent.service.SenhaService;
+import br.com.unisenai.smartrent.service.TrocaEmailService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.http.MediaType;
@@ -27,11 +31,14 @@ public class PerfilController {
     private final PerfilService perfilService;
     private final FotoPerfilService fotoService;
     private final SenhaService senhaService;
+    private final TrocaEmailService trocaEmailService;
 
-    public PerfilController(PerfilService perfilService, FotoPerfilService fotoService, SenhaService senhaService) {
+    public PerfilController(PerfilService perfilService, FotoPerfilService fotoService, SenhaService senhaService,
+                            TrocaEmailService trocaEmailService) {
         this.perfilService = perfilService;
         this.fotoService = fotoService;
         this.senhaService = senhaService;
+        this.trocaEmailService = trocaEmailService;
     }
 
     @GetMapping
@@ -67,5 +74,20 @@ public class PerfilController {
     public AuthResponse alterarSenha(@AuthenticationPrincipal Usuario usuario, @RequestBody SenhaRequest req,
                                      HttpServletRequest http) {
         return senhaService.alterar(usuario, req, http.getRemoteAddr());
+    }
+
+    /** Pede a troca do e-mail de login. A resposta e sempre a mesma, exista ou nao conta com o endereco. */
+    @PostMapping("/email")
+    public MensagemResponse solicitarTrocaEmail(@AuthenticationPrincipal Usuario usuario, @RequestBody EmailRequest req,
+                                                HttpServletRequest http) {
+        return new MensagemResponse(trocaEmailService.solicitar(usuario, req.novoEmail(), req.senhaAtual(),
+                req.credencialGoogle(), http.getRemoteAddr()));
+    }
+
+    /** Confirma o link recebido por e-mail. Publico: o token de uso unico e a prova (ver SecurityConfig). */
+    @PostMapping("/email/confirmar")
+    public MensagemResponse confirmarTrocaEmail(@RequestBody ConfirmarEmailRequest req, HttpServletRequest http) {
+        trocaEmailService.confirmar(req.token(), http.getRemoteAddr());
+        return new MensagemResponse("E-mail alterado com sucesso. Entre novamente com o novo endereço.");
     }
 }

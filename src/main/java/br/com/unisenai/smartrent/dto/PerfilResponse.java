@@ -14,7 +14,11 @@ import java.util.List;
  */
 public record PerfilResponse(String nome, String email, PapelUsuario papel, String fotoUrl,
                              LocalDateTime dataCadastro, boolean senhaDefinida,
-                             ExclusaoResumo exclusao, List<String> restricoes) {
+                             ExclusaoResumo exclusao, List<String> restricoes, EmailPendente emailPendente) {
+
+    /** Troca de e-mail aguardando confirmacao (so o proprio usuario ve). */
+    public record EmailPendente(String email, Instant expiraEm) {
+    }
 
     /** Solicitacao de exclusao aberta (nulo quando nao ha). */
     public record ExclusaoResumo(String estado, Instant desde) {

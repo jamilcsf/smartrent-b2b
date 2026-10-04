@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- O link traz um token de uso unico: nada de enviar a URL como Referer a terceiros. -->
+  <meta name="referrer" content="no-referrer">
+  <title>SmartRent B2B - Confirmar e-mail</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/api.js"></script>
+</head>
+
+<body class="bg-slate-50 text-slate-800 min-h-screen flex items-center justify-center p-4 antialiased">
+  <main class="w-full max-w-md bg-white border border-slate-200 rounded-2xl shadow-sm p-8 text-center space-y-4">
+    <h1 class="text-xl font-extrabold text-slate-900">Confirmar novo e-mail</h1>
+    <p id="status" class="text-sm text-slate-600" role="status">Confirmando...</p>
+    <a id="acao" href="/login.html" class="hidden inline-block px-4 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white">Entrar</a>
+  </main>
+
+  <script>
+    (function () {
+      'use strict';
+      var status = document.getElementById('status');
+      var acao = document.getElementById('acao');
+      var token = new URLSearchParams(location.search).get('token');
+      // Tira o token da barra de enderecos e do historico logo de saida.
+      history.replaceState(null, '', location.pathname);
+
+      if (!token) {
+        status.textContent = 'Este link é inválido. Faça um novo pedido de troca de e-mail no seu perfil.';
+        status.className = 'text-sm font-semibold text-rose-700';
+        return;
+      }
+      Api.post('/api/perfil/email/confirmar', { token: token }, { ignorar401: true }).then(function (r) {
+        // As sessoes abertas deixaram de valer: limpa a deste navegador e pede novo login.
+        Auth.limparSessao();
+        status.textContent = r.mensagem;
+        status.className = 'text-sm font-semibold text-emerald-700';
+        acao.classList.remove('hidden');
+      }).catch(function (e) {
+        status.textContent = e.message || 'Não foi possível confirmar o e-mail.';
+        status.className = 'text-sm font-semibold text-rose-700';
+      });
+    })();
+  </script>
+</body>
+
+</html>

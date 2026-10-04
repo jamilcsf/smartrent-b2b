@@ -3,11 +3,14 @@ package br.com.unisenai.smartrent.service;
 import br.com.unisenai.smartrent.dto.PerfilResponse;
 import br.com.unisenai.smartrent.dto.UsuarioResponse;
 import br.com.unisenai.smartrent.model.Usuario;
+import br.com.unisenai.smartrent.repository.TrocaEmailRepository;
 import br.com.unisenai.smartrent.repository.UsuarioRepository;
 import br.com.unisenai.smartrent.service.erro.RecursoNaoEncontradoException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.util.List;
 
 /**
@@ -20,12 +23,16 @@ public class PerfilService {
     private final UsuarioRepository usuarioRepository;
     private final NomeExibicaoValidador nomeValidador;
     private final AuditoriaContaService auditoria;
+    private final TrocaEmailRepository trocaEmailRepository;
+    private final Clock clock;
 
     public PerfilService(UsuarioRepository usuarioRepository, NomeExibicaoValidador nomeValidador,
-                         AuditoriaContaService auditoria) {
+                         AuditoriaContaService auditoria, TrocaEmailRepository trocaEmailRepository, Clock clock) {
         this.usuarioRepository = usuarioRepository;
         this.nomeValidador = nomeValidador;
         this.auditoria = auditoria;
+        this.trocaEmailRepository = trocaEmailRepository;
+        this.clock = clock;
     }
 
     @Transactional(readOnly = true)
@@ -49,6 +56,12 @@ public class PerfilService {
         return montar(u);
     }
 
+    private PerfilResponse.EmailPendente emailPendente(Usuario u) {
+        Instant agora = clock.instant();
+        return trocaEmailRepository.abertas(u.getId()).stream().filter(t -> t.pendente(agora)).findFirst()
+                .map(t -> new PerfilResponse.EmailPendente(t.getEmailNovo(), t.getExpiraEm())).orElse(null);
+    }
+
     Usuario carregar(Usuario sessao) {
         return usuarioRepository.findById(sessao.getId())
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Conta não encontrada."));
@@ -56,6 +69,6 @@ public class PerfilService {
 
     public PerfilResponse montar(Usuario u) {
         return new PerfilResponse(u.getNome(), u.getEmail(), u.getPapel(), UsuarioResponse.fotoUrl(u),
-                u.getDataCriacao(), u.isSenhaDefinida(), null, List.of());
+                u.getDataCriacao(), u.isSenhaDefinida(), null, List.of(), emailPendente(u));
     }
 }

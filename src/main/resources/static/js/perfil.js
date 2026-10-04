@@ -47,6 +47,11 @@
     $('btnRemoverFoto').classList.toggle('hidden', !perfil.fotoUrl);
     if (document.activeElement !== $('nomeExibicao')) { $('nomeExibicao').value = perfil.nome || ''; }
     $('emailAtual').textContent = perfil.email;
+    var pend = $('emailPendente');
+    pend.classList.toggle('hidden', !perfil.emailPendente);
+    pend.textContent = perfil.emailPendente
+      ? 'Aguardando a confirmação de ' + perfil.emailPendente.email + ' (link válido até ' + UI.dataHora(perfil.emailPendente.expiraEm) + '). Até lá, você entra com o e-mail atual.'
+      : '';
     $('papel').textContent = PAPEL[perfil.papel] || perfil.papel;
     $('cadastro').textContent = UI.dataHora(perfil.dataCadastro);
     var aviso = $('avisoRestricao');
@@ -393,6 +398,52 @@
     });
   }
 
+  // ------------------------------------------------------------------ e-mail
+
+  function iniciarEmail() {
+    var form = $('formEmail');
+    function abrir(sim) {
+      form.classList.toggle('hidden', !sim);
+      $('btnAlterarEmail').classList.toggle('hidden', sim);
+      if (sim) { $('novoEmail').focus(); }
+    }
+    $('btnAlterarEmail').addEventListener('click', function () { mensagem('msgEmail', ''); abrir(true); });
+    $('btnFecharEmail').addEventListener('click', function () { abrir(false); });
+
+    form.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var botao = form.querySelector('button[type="submit"]');
+      var area = form.querySelector('[data-reauth]');
+      var cred = Reauth.ler(area);
+      var novo = $('novoEmail').value.trim();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(novo)) {
+        mensagem('msgEmail', 'Informe um e-mail válido.', true);
+        return;
+      }
+      if (!Reauth.informada(cred)) {
+        mensagem('msgEmail', estado.perfil.senhaDefinida ? 'Informe a senha atual.' : 'Confirme sua identidade com o Google.', true);
+        return;
+      }
+      ocupado(botao, true);
+      mensagem('msgEmail', '');
+      try {
+        var r = await Api.post('/api/perfil/email', {
+          novoEmail: novo, senhaAtual: cred.senhaAtual, credencialGoogle: cred.credencialGoogle
+        });
+        $('novoEmail').value = '';
+        Reauth.limpar(area);
+        Reauth.credencial = null;
+        abrir(false);
+        mensagem('msgEmail', r.mensagem);
+        aplicar(await Api.get('/api/perfil')); // mostra o pedido pendente, se houver
+      } catch (err) {
+        mensagem('msgEmail', err.message || 'Não foi possível pedir a troca de e-mail.', true);
+      } finally {
+        ocupado(botao, false);
+      }
+    });
+  }
+
   global.Perfil = {
     $: $, iniciais: iniciais, mensagem: mensagem, ocupado: ocupado, pintarFoto: pintarFoto,
     aplicar: aplicar, sincronizarSessao: sincronizarSessao, perfil: function () { return estado.perfil; }
@@ -407,6 +458,7 @@
     iniciarNome();
     iniciarFoto();
     iniciarSenha();
+    iniciarEmail();
     carregar();
   });
 })(window);
