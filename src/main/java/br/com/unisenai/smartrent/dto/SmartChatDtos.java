@@ -18,7 +18,7 @@ public final class SmartChatDtos {
     }
 
     /** Interlocutor da conversa: so o nome (e iniciais para o avatar) e o papel. */
-    public record Interlocutor(String nome, String iniciais, String papel) {
+    public record Interlocutor(String nome, String iniciais, String papel, String fotoUrl) {
     }
 
     public record ReservaResumo(

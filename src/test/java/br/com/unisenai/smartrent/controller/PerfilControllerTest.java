@@ -7,6 +7,7 @@ import br.com.unisenai.smartrent.model.enums.PapelUsuario;
 import br.com.unisenai.smartrent.repository.UsuarioRepository;
 import br.com.unisenai.smartrent.security.JwtAuthenticationFilter;
 import br.com.unisenai.smartrent.security.JwtService;
+import br.com.unisenai.smartrent.service.FotoPerfilService;
 import br.com.unisenai.smartrent.service.PerfilService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -31,12 +32,13 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /** Perfil: exige login, vale so para o proprio usuario e respeita a versao de sessao do token. */
-@WebMvcTest(PerfilController.class)
+@WebMvcTest({PerfilController.class, FotoPerfilController.class})
 @Import({SecurityConfig.class, JwtAuthenticationFilter.class})
 class PerfilControllerTest {
 
     @Autowired private MockMvc mockMvc;
     @MockBean private PerfilService perfilService;
+    @MockBean private FotoPerfilService fotoPerfilService;
     @MockBean private JwtService jwtService;
     @MockBean private UsuarioRepository usuarioRepository;
 

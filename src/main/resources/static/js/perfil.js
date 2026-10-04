@@ -109,6 +109,108 @@
     });
   }
 
+  // ------------------------------------------------------------ foto de perfil
+
+  var FOTO_MAX_BYTES = 2 * 1024 * 1024;
+  var MSG_FOTO = 'Use uma imagem PNG ou JPG de até 2 MB.';
+  var fotoEscolhida = null;
+
+  function limparPrevia() {
+    fotoEscolhida = null;
+    $('previaFoto').classList.add('hidden');
+    $('inputFoto').value = '';
+  }
+
+  /** Pre-visualizacao circular com o mesmo recorte quadrado central que o servidor aplica. */
+  function escolherFoto(arquivo) {
+    mensagem('msgFoto', '');
+    if (!arquivo) { return; }
+    if (arquivo.type !== 'image/png' && arquivo.type !== 'image/jpeg') {
+      limparPrevia();
+      mensagem('msgFoto', MSG_FOTO, true);
+      return;
+    }
+    if (arquivo.size > FOTO_MAX_BYTES) {
+      limparPrevia();
+      mensagem('msgFoto', MSG_FOTO, true);
+      return;
+    }
+    var url = URL.createObjectURL(arquivo);
+    var img = new Image();
+    img.onload = function () {
+      URL.revokeObjectURL(url);
+      if (img.naturalWidth < 128 || img.naturalHeight < 128) {
+        limparPrevia();
+        mensagem('msgFoto', 'A imagem deve ter pelo menos 128×128 pixels.', true);
+        return;
+      }
+      var canvas = $('canvasPrevia');
+      var ctx = canvas.getContext('2d');
+      var lado = Math.min(img.naturalWidth, img.naturalHeight);
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, (img.naturalWidth - lado) / 2, (img.naturalHeight - lado) / 2, lado, lado,
+        0, 0, canvas.width, canvas.height);
+      fotoEscolhida = arquivo;
+      $('previaFoto').classList.remove('hidden');
+    };
+    img.onerror = function () {
+      URL.revokeObjectURL(url);
+      limparPrevia();
+      mensagem('msgFoto', MSG_FOTO, true);
+    };
+    img.src = url;
+  }
+
+  function iniciarFoto() {
+    $('inputFoto').addEventListener('change', function (e) { escolherFoto(e.target.files[0]); });
+    var zona = $('zonaFoto');
+    ['dragenter', 'dragover'].forEach(function (nome) {
+      zona.addEventListener(nome, function (e) { e.preventDefault(); zona.classList.add('border-blue-500', 'bg-blue-50'); });
+    });
+    ['dragleave', 'drop'].forEach(function (nome) {
+      zona.addEventListener(nome, function (e) { e.preventDefault(); zona.classList.remove('border-blue-500', 'bg-blue-50'); });
+    });
+    zona.addEventListener('drop', function (e) {
+      escolherFoto(e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]);
+    });
+    $('btnCancelarFoto').addEventListener('click', function () { limparPrevia(); mensagem('msgFoto', ''); });
+
+    $('btnSalvarFoto').addEventListener('click', async function (e) {
+      if (!fotoEscolhida) { return; }
+      ocupado(e.target, true);
+      try {
+        var dados = new FormData();
+        dados.append('arquivo', fotoEscolhida);
+        var perfil = await Api.postForm('/api/perfil/foto', dados);
+        limparPrevia();
+        aplicar(perfil);
+        sincronizarSessao();
+        mensagem('msgFoto', 'Foto atualizada.');
+      } catch (err) {
+        mensagem('msgFoto', err.message || MSG_FOTO, true);
+      } finally {
+        ocupado(e.target, false);
+      }
+    });
+
+    $('btnRemoverFoto').addEventListener('click', async function (e) {
+      var sim = await UI.confirmar({ titulo: 'Remover foto', mensagem: 'Remover sua foto de perfil? Voltarão a aparecer suas iniciais.',
+        confirmarTexto: 'Remover' });
+      if (!sim) { return; }
+      ocupado(e.target, true);
+      try {
+        aplicar(await Api.del('/api/perfil/foto'));
+        sincronizarSessao();
+        mensagem('msgFoto', 'Foto removida.');
+      } catch (err) {
+        mensagem('msgFoto', err.message || 'Não foi possível remover a foto.', true);
+      } finally {
+        ocupado(e.target, false);
+      }
+    });
+  }
+
   global.Perfil = {
     $: $, iniciais: iniciais, mensagem: mensagem, ocupado: ocupado, pintarFoto: pintarFoto,
     aplicar: aplicar, sincronizarSessao: sincronizarSessao, perfil: function () { return estado.perfil; }
@@ -121,6 +223,7 @@
       return;
     }
     iniciarNome();
+    iniciarFoto();
     carregar();
   });
 })(window);

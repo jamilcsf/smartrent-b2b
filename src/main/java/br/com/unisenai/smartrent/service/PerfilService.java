@@ -54,7 +54,7 @@ public class PerfilService {
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Conta não encontrada."));
     }
 
-    PerfilResponse montar(Usuario u) {
+    public PerfilResponse montar(Usuario u) {
         return new PerfilResponse(u.getNome(), u.getEmail(), u.getPapel(), UsuarioResponse.fotoUrl(u),
                 u.getDataCriacao(), u.isSenhaDefinida(), null, List.of());
     }

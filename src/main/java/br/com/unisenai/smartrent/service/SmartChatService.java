@@ -442,7 +442,8 @@ public class SmartChatService {
         Usuario outro = c.outroLado(usuario);
         String[] partes = outro.getNome().trim().split("\\s+");
         String iniciais = (partes[0].substring(0, 1) + (partes.length > 1 ? partes[partes.length - 1].substring(0, 1) : "")).toUpperCase();
-        return new Interlocutor(outro.getNome(), iniciais, c.getGestor().getId().equals(outro.getId()) ? "Gestor" : "Cliente");
+        return new Interlocutor(outro.getNome(), iniciais, c.getGestor().getId().equals(outro.getId()) ? "Gestor" : "Cliente",
+                br.com.unisenai.smartrent.dto.UsuarioResponse.fotoUrl(outro));
     }
 
     /** Reserva exibida no cabecalho: a ativa mais proxima, senao a mais recente do cliente naquele imovel. */

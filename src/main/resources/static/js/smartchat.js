@@ -64,12 +64,20 @@
       : r.status === 'PENDENTE' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200';
   }
 
+  /** Conteudo do avatar: foto quando existir (URL do proprio servidor), senao as iniciais. */
+  function avatarConteudo(i) {
+    if (i.fotoUrl && /^\/api\/perfil\/foto\//.test(i.fotoUrl)) {
+      return '<img src="' + esc(i.fotoUrl) + '" alt="" class="w-full h-full object-cover" onerror="this.replaceWith(document.createTextNode(this.dataset.i))" data-i="' + esc(i.iniciais) + '">';
+    }
+    return esc(i.iniciais);
+  }
+
   // ------------------------------------------------------------------ lista
 
   function itemLista(c) {
     var ativa = S.atual && S.atual.id === c.id;
     return '<li><button type="button" data-conversa="' + c.id + '" class="w-full text-left flex gap-3 p-3 hover:bg-slate-50 ' + (ativa ? 'bg-blue-50' : '') + '">' +
-      '<span class="w-11 h-11 rounded-full bg-blue-100 text-blue-700 font-bold text-sm flex items-center justify-center shrink-0">' + esc(c.interlocutor.iniciais) + '</span>' +
+      '<span class="w-11 h-11 rounded-full bg-blue-100 text-blue-700 font-bold text-sm flex items-center justify-center shrink-0 overflow-hidden">' + avatarConteudo(c.interlocutor) + '</span>' +
       '<span class="min-w-0 flex-1">' +
         '<span class="flex items-baseline justify-between gap-2"><span class="font-bold text-sm text-slate-900 truncate">' + esc(c.interlocutor.nome) + '</span>' +
           '<span class="text-[10px] ' + (c.naoLidas ? 'text-blue-700 font-bold' : 'text-slate-400') + ' shrink-0">' + (c.ultimaMensagemEm ? horaOuDia(c.ultimaMensagemEm) : '') + '</span></span>' +
@@ -129,7 +137,7 @@
 
   function cabecalho() {
     var c = S.atual;
-    $('cabAvatar').innerText = c.interlocutor.iniciais;
+    $('cabAvatar').innerHTML = avatarConteudo(c.interlocutor);
     $('cabNome').innerText = c.interlocutor.nome;
     $('cabImovel').innerText = c.imovel.codigo + ' · ' + c.imovel.titulo;
     var chip = $('cabReserva'), mob = $('cabReservaMobile');
@@ -253,7 +261,7 @@
       var p = await Api.get('/api/smartchat/conversas/' + S.atual.id + '/perfil');
       corpo.innerHTML =
         '<div class="flex flex-col items-center text-center">' +
-          '<span class="w-16 h-16 rounded-full bg-blue-100 text-blue-700 font-bold text-xl flex items-center justify-center">' + esc(p.interlocutor.iniciais) + '</span>' +
+          '<span class="w-16 h-16 rounded-full bg-blue-100 text-blue-700 font-bold text-xl flex items-center justify-center overflow-hidden">' + avatarConteudo(p.interlocutor) + '</span>' +
           '<p class="font-bold text-slate-900 mt-2">' + esc(p.interlocutor.nome) + '</p>' +
           '<p class="text-xs text-slate-500">' + esc(p.interlocutor.papel) + '</p></div>' +
         '<dl class="text-xs space-y-2">' +
