@@ -83,6 +83,32 @@
     }
   }
 
+  // ------------------------------------------------------------ nome de exibicao
+
+  function iniciarNome() {
+    $('formNome').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var botao = e.target.querySelector('button[type="submit"]');
+      var nome = $('nomeExibicao').value.trim();
+      if (nome.length < 2 || nome.length > 60) {
+        mensagem('msgNome', 'O nome de exibição deve ter entre 2 e 60 caracteres.', true);
+        return;
+      }
+      ocupado(botao, true);
+      mensagem('msgNome', '');
+      try {
+        var perfil = await Api.patch('/api/perfil', { nome: nome });
+        aplicar(perfil);
+        sincronizarSessao(); // cabecalho atualizado na hora
+        mensagem('msgNome', 'Nome atualizado.');
+      } catch (err) {
+        mensagem('msgNome', err.message || 'Não foi possível salvar o nome.', true);
+      } finally {
+        ocupado(botao, false);
+      }
+    });
+  }
+
   global.Perfil = {
     $: $, iniciais: iniciais, mensagem: mensagem, ocupado: ocupado, pintarFoto: pintarFoto,
     aplicar: aplicar, sincronizarSessao: sincronizarSessao, perfil: function () { return estado.perfil; }
@@ -94,6 +120,7 @@
       location.href = Api.urlDeLogin(Auth.rotaAtual());
       return;
     }
+    iniciarNome();
     carregar();
   });
 })(window);
