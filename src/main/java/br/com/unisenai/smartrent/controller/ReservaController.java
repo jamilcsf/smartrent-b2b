@@ -2,100 +2,63 @@ package br.com.unisenai.smartrent.controller;
 
 import br.com.unisenai.smartrent.dto.ReservaRequest;
 import br.com.unisenai.smartrent.dto.ReservaResponse;
-import br.com.unisenai.smartrent.model.Imovel;
-import br.com.unisenai.smartrent.model.Reserva;
-import br.com.unisenai.smartrent.model.enums.OrigemReserva;
-import br.com.unisenai.smartrent.model.enums.StatusReserva;
-import br.com.unisenai.smartrent.repository.ImovelRepository;
-import br.com.unisenai.smartrent.repository.ReservaRepository;
+import br.com.unisenai.smartrent.model.Usuario;
 import br.com.unisenai.smartrent.service.ReservaService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
+/**
+ * Gestao de reservas. Restrita a gestores (SecurityConfig) e, dentro dela, ao
+ * que pertence aos imoveis de quem pede (ReservaService).
+ */
 @RestController
 @RequestMapping("/api/reservas")
-@CrossOrigin(origins = "*")
 public class ReservaController {
 
-    private final ReservaRepository reservaRepository;
-    private final ImovelRepository imovelRepository;
     private final ReservaService reservaService;
+    private final br.com.unisenai.smartrent.service.CancelamentoService cancelamentoService;
 
-    public ReservaController(ReservaRepository reservaRepository,
-                             ImovelRepository imovelRepository,
-                             ReservaService reservaService) {
-        this.reservaRepository = reservaRepository;
-        this.imovelRepository = imovelRepository;
+    public ReservaController(ReservaService reservaService,
+                             br.com.unisenai.smartrent.service.CancelamentoService cancelamentoService) {
         this.reservaService = reservaService;
+        this.cancelamentoService = cancelamentoService;
+    }
+
+    /** Cancelamento pelo gestor: motivo obrigatorio e reembolso integral ao cliente. */
+    @PostMapping("/{id}/cancelar")
+    public ReservaResponse cancelar(@AuthenticationPrincipal Usuario gestor, @PathVariable Long id,
+                                    @RequestBody br.com.unisenai.smartrent.dto.ReservaClienteDtos.CancelamentoPedido pedido) {
+        return ReservaResponse.de(cancelamentoService.cancelarPeloGestor(gestor, id,
+                pedido == null ? null : pedido.motivo()));
     }
 
     @GetMapping
-    public List<ReservaResponse> listarTodas() {
-        return reservaRepository.findAll().stream().map(ReservaResponse::de).toList();
+    public List<ReservaResponse> listar(@AuthenticationPrincipal Usuario gestor) {
+        return reservaService.listar(gestor).stream().map(ReservaResponse::de).toList();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ReservaResponse> buscarPorId(@PathVariable Long id) {
-        return reservaRepository.findById(id)
-                .map(ReservaResponse::de)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ReservaResponse buscarPorId(@AuthenticationPrincipal Usuario gestor, @PathVariable Long id) {
+        return ReservaResponse.de(reservaService.buscar(gestor, id));
     }
 
     @PostMapping
-    public ResponseEntity<?> criarReserva(@RequestBody ReservaRequest req) {
-        Optional<Imovel> imovel = imovelRepository.findById(req.imovelId());
-        if (imovel.isEmpty()) {
-            return ResponseEntity.badRequest().body("Imovel nao encontrado: " + req.imovelId());
-        }
-
-        Reserva reserva = new Reserva();
-        reserva.setImovel(imovel.get());
-        aplicar(req, reserva);
-        reserva.setStatus(req.status() == null ? StatusReserva.CONFIRMADA : req.status());
-        reserva.setOrigem(req.origem() == null ? OrigemReserva.DIRETA : req.origem());
-
-        try {
-            return ResponseEntity.ok(ReservaResponse.de(reservaService.cadastrarReserva(reserva)));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ReservaResponse criar(@AuthenticationPrincipal Usuario gestor, @RequestBody ReservaRequest req) {
+        return ReservaResponse.de(reservaService.criar(gestor, req));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ReservaResponse> atualizarReserva(@PathVariable Long id,
-                                                            @RequestBody ReservaRequest req) {
-        return reservaRepository.findById(id).map(reserva -> {
-            aplicar(req, reserva);
-            if (req.status() != null) {
-                reserva.setStatus(req.status());
-            }
-            if (req.origem() != null) {
-                reserva.setOrigem(req.origem());
-            }
-            return ResponseEntity.ok(ReservaResponse.de(reservaRepository.save(reserva)));
-        }).orElse(ResponseEntity.notFound().build());
+    public ReservaResponse atualizar(@AuthenticationPrincipal Usuario gestor, @PathVariable Long id,
+                                     @RequestBody ReservaRequest req) {
+        return ReservaResponse.de(reservaService.atualizar(gestor, id, req));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletarReserva(@PathVariable Long id) {
-        if (reservaRepository.existsById(id)) {
-            reservaRepository.deleteById(id);
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.notFound().build();
-    }
-
-    private void aplicar(ReservaRequest req, Reserva reserva) {
-        reserva.setHospedeNome(req.hospedeNome());
-        reserva.setHospedeEmail(req.hospedeEmail());
-        reserva.setHospedeTelefone(req.hospedeTelefone());
-        reserva.setDataCheckin(req.dataCheckin());
-        reserva.setDataCheckout(req.dataCheckout());
-        reserva.setValorTotal(req.valorTotal());
-        reserva.setObservacoes(req.observacoes());
+    public ResponseEntity<Void> excluir(@AuthenticationPrincipal Usuario gestor, @PathVariable Long id) {
+        reservaService.excluir(gestor, id);
+        return ResponseEntity.noContent().build();
     }
 }

@@ -47,3 +47,6 @@ Thumbs.db
 # Python
 __pycache__/
 *.pyc
+
+# Midias enviadas em desenvolvimento (smartrent.midia.diretorio)
+dados/

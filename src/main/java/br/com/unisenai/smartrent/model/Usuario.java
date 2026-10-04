@@ -39,6 +39,26 @@ public class Usuario {
     @Column(name = "ativo", nullable = false)
     private boolean ativo = true;
 
+    /** Aba SmartChat do cliente: liga na primeira interacao e fica ligada (guardada no backend, nao no navegador). */
+    @Column(name = "smartchat_liberado", nullable = false)
+    private boolean smartchatLiberado;
+
+    /** Nome do arquivo (aleatorio) da foto de perfil, ou nulo quando nao ha foto. */
+    @Column(name = "foto_arquivo", length = 64)
+    private String fotoArquivo;
+
+    /** Muda a cada troca de foto: entra na URL e evita cache antigo. */
+    @Column(name = "foto_versao", nullable = false)
+    private int fotoVersao;
+
+    /** Sobe a cada troca de senha/e-mail; o token carrega a versao e so vale se for a atual. */
+    @Column(name = "sessao_versao", nullable = false)
+    private int sessaoVersao;
+
+    /** false = conta criada pelo Google, sem senha conhecida. */
+    @Column(name = "senha_definida", nullable = false)
+    private boolean senhaDefinida = true;
+
     @Column(name = "data_criacao", nullable = false, updatable = false)
     private LocalDateTime dataCriacao;
 
@@ -47,7 +67,7 @@ public class Usuario {
 
     @PrePersist
     protected void aoPersistir() {
-        this.dataCriacao = LocalDateTime.now();
+        this.dataCriacao = LocalDateTime.now(br.com.unisenai.smartrent.config.PlataformaTempo.zona());
     }
 
     public Long getId() {
@@ -112,5 +132,45 @@ public class Usuario {
 
     public void setDataCriacao(LocalDateTime dataCriacao) {
         this.dataCriacao = dataCriacao;
+    }
+
+    public boolean isSmartchatLiberado() {
+        return smartchatLiberado;
+    }
+
+    public void setSmartchatLiberado(boolean smartchatLiberado) {
+        this.smartchatLiberado = smartchatLiberado;
+    }
+
+    public String getFotoArquivo() {
+        return fotoArquivo;
+    }
+
+    public void setFotoArquivo(String fotoArquivo) {
+        this.fotoArquivo = fotoArquivo;
+    }
+
+    public int getFotoVersao() {
+        return fotoVersao;
+    }
+
+    public void setFotoVersao(int fotoVersao) {
+        this.fotoVersao = fotoVersao;
+    }
+
+    public int getSessaoVersao() {
+        return sessaoVersao;
+    }
+
+    public void setSessaoVersao(int sessaoVersao) {
+        this.sessaoVersao = sessaoVersao;
+    }
+
+    public boolean isSenhaDefinida() {
+        return senhaDefinida;
+    }
+
+    public void setSenhaDefinida(boolean senhaDefinida) {
+        this.senhaDefinida = senhaDefinida;
     }
 }

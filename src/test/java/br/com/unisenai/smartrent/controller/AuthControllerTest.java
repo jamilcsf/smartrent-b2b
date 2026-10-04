@@ -59,6 +59,12 @@ class AuthControllerTest {
     @MockBean
     private UsuarioRepository usuarioRepository;
 
+    @MockBean
+    private br.com.unisenai.smartrent.service.AuditoriaContaService auditoriaContaService;
+
+    @MockBean
+    private br.com.unisenai.smartrent.service.AccountRestrictionService accountRestrictionService;
+
     @Test
     @DisplayName("CT27 - /api/auth/me sem token deve responder 401 em JSON")
     void deveResponder401SemToken() throws Exception {
@@ -80,7 +86,7 @@ class AuthControllerTest {
     @DisplayName("CT29 - Login é acessível a visitante e devolve o token")
     void loginDeveSerPublico() throws Exception {
         when(authService.autenticar(any())).thenReturn(new AuthResponse("token-abc", 86400L,
-                new UsuarioResponse(1L, "Ana", "ana@smartrent.dev", PapelUsuario.ANFITRIAO)));
+                new UsuarioResponse(1L, "Ana", "ana@smartrent.dev", PapelUsuario.ANFITRIAO, false)));
 
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -159,8 +165,8 @@ class AuthControllerTest {
     void loginGoogleDeveDevolverToken() throws Exception {
         when(googleTokenVerifier.verificar("credencial-google"))
                 .thenReturn(new GoogleTokenVerifier.IdentidadeGoogle("ana@smartrent.dev", "Ana"));
-        when(authService.entrarComGoogle("ana@smartrent.dev", "Ana")).thenReturn(new AuthResponse("token-g", 86400L,
-                new UsuarioResponse(1L, "Ana", "ana@smartrent.dev", PapelUsuario.ANFITRIAO)));
+        when(authService.entrarComGoogle("ana@smartrent.dev", "Ana", null)).thenReturn(new AuthResponse("token-g", 86400L,
+                new UsuarioResponse(1L, "Ana", "ana@smartrent.dev", PapelUsuario.ANFITRIAO, false)));
 
         mockMvc.perform(post("/api/auth/google")
                         .contentType(MediaType.APPLICATION_JSON)

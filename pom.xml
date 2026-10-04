@@ -82,6 +82,14 @@
             <artifactId>spring-security-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- Banco em memoria so para testar as consultas JPQL (visibilidade do
+             catalogo, promocoes por tempo, chaves unicas) sem exigir um
+             PostgreSQL no CI. As migrations continuam validadas no PostgreSQL. -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>

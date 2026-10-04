@@ -1,5 +1,6 @@
 package br.com.unisenai.smartrent.model;
 
+import br.com.unisenai.smartrent.model.enums.StatusAnuncio;
 import br.com.unisenai.smartrent.model.enums.TipoImovel;
 import jakarta.persistence.*;
 
@@ -12,7 +13,8 @@ import java.util.List;
 @Entity
 @Table(name = "imoveis", indexes = {
         @Index(name = "idx_imoveis_usuario", columnList = "usuario_id"),
-        @Index(name = "idx_imoveis_ativo", columnList = "ativo")
+        @Index(name = "idx_imoveis_ativo", columnList = "ativo"),
+        @Index(name = "idx_imoveis_status", columnList = "status")
 })
 public class Imovel {
 
@@ -58,7 +60,8 @@ public class Imovel {
     @Column(name = "vagas_garagem")
     private Integer vagasGaragem;
 
-    @Column(name = "valor_diaria_base", nullable = false, precision = 10, scale = 2)
+    /** Nulo enquanto o gestor ainda nao definiu o preco (PRE_PUBLICACAO_SEM_PRECO). */
+    @Column(name = "valor_diaria_base", precision = 10, scale = 2)
     private BigDecimal valorDiariaBase;
 
     @ElementCollection(fetch = FetchType.LAZY)
@@ -67,6 +70,42 @@ public class Imovel {
                     foreignKey = @ForeignKey(name = "fk_comodidade_imovel")))
     @Column(name = "comodidade", length = 60)
     private List<String> comodidades = new ArrayList<>();
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 30)
+    private StatusAnuncio status = StatusAnuncio.PRE_PUBLICACAO_SEM_PRECO;
+
+    /** Instante da PRIMEIRA confirmacao de preco; nunca e reescrito. Ancora a janela de 24h. */
+    @Column(name = "preco_primeira_confirmacao_em")
+    private LocalDateTime precoPrimeiraConfirmacaoEm;
+
+    @Column(name = "publicado_em")
+    private LocalDateTime publicadoEm;
+
+    @Column(name = "edicao_iniciada_em")
+    private LocalDateTime edicaoIniciadaEm;
+
+    /** PUBLICADO ou REPUBLICACAO_AGENDADA: para onde o descarte devolve o imovel. */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "edicao_estado_origem", length = 30)
+    private StatusAnuncio edicaoEstadoOrigem;
+
+    @Column(name = "republicar_original_em")
+    private LocalDateTime republicarOriginalEm;
+
+    @Column(name = "edicao_confirmada_em")
+    private LocalDateTime edicaoConfirmadaEm;
+
+    @Column(name = "republicar_em")
+    private LocalDateTime republicarEm;
+
+    /** Quantidade minima de diarias por reserva (padrao 1). */
+    @Column(name = "minimo_diarias", nullable = false)
+    private int minimoDiarias = 1;
+
+    /** Taxa de limpeza em R$, cobrada uma vez por reserva (0 = sem taxa). */
+    @Column(name = "taxa_limpeza", nullable = false, precision = 10, scale = 2)
+    private java.math.BigDecimal taxaLimpeza = java.math.BigDecimal.ZERO;
 
     @Column(name = "ativo", nullable = false)
     private boolean ativo = true;
@@ -79,7 +118,7 @@ public class Imovel {
 
     @PrePersist
     protected void aoPersistir() {
-        this.dataCadastro = LocalDateTime.now();
+        this.dataCadastro = LocalDateTime.now(br.com.unisenai.smartrent.config.PlataformaTempo.zona());
     }
 
     public Long getId() {
@@ -200,5 +239,85 @@ public class Imovel {
 
     public void setDataCadastro(LocalDateTime dataCadastro) {
         this.dataCadastro = dataCadastro;
+    }
+
+    public StatusAnuncio getStatus() {
+        return status;
+    }
+
+    public void setStatus(StatusAnuncio status) {
+        this.status = status;
+    }
+
+    public LocalDateTime getPrecoPrimeiraConfirmacaoEm() {
+        return precoPrimeiraConfirmacaoEm;
+    }
+
+    public void setPrecoPrimeiraConfirmacaoEm(LocalDateTime precoPrimeiraConfirmacaoEm) {
+        this.precoPrimeiraConfirmacaoEm = precoPrimeiraConfirmacaoEm;
+    }
+
+    public LocalDateTime getPublicadoEm() {
+        return publicadoEm;
+    }
+
+    public void setPublicadoEm(LocalDateTime publicadoEm) {
+        this.publicadoEm = publicadoEm;
+    }
+
+    public LocalDateTime getEdicaoIniciadaEm() {
+        return edicaoIniciadaEm;
+    }
+
+    public void setEdicaoIniciadaEm(LocalDateTime edicaoIniciadaEm) {
+        this.edicaoIniciadaEm = edicaoIniciadaEm;
+    }
+
+    public StatusAnuncio getEdicaoEstadoOrigem() {
+        return edicaoEstadoOrigem;
+    }
+
+    public void setEdicaoEstadoOrigem(StatusAnuncio edicaoEstadoOrigem) {
+        this.edicaoEstadoOrigem = edicaoEstadoOrigem;
+    }
+
+    public LocalDateTime getRepublicarOriginalEm() {
+        return republicarOriginalEm;
+    }
+
+    public void setRepublicarOriginalEm(LocalDateTime republicarOriginalEm) {
+        this.republicarOriginalEm = republicarOriginalEm;
+    }
+
+    public LocalDateTime getEdicaoConfirmadaEm() {
+        return edicaoConfirmadaEm;
+    }
+
+    public void setEdicaoConfirmadaEm(LocalDateTime edicaoConfirmadaEm) {
+        this.edicaoConfirmadaEm = edicaoConfirmadaEm;
+    }
+
+    public LocalDateTime getRepublicarEm() {
+        return republicarEm;
+    }
+
+    public void setRepublicarEm(LocalDateTime republicarEm) {
+        this.republicarEm = republicarEm;
+    }
+
+    public int getMinimoDiarias() {
+        return minimoDiarias;
+    }
+
+    public void setMinimoDiarias(int minimoDiarias) {
+        this.minimoDiarias = minimoDiarias;
+    }
+
+    public java.math.BigDecimal getTaxaLimpeza() {
+        return taxaLimpeza;
+    }
+
+    public void setTaxaLimpeza(java.math.BigDecimal taxaLimpeza) {
+        this.taxaLimpeza = taxaLimpeza;
     }
 }

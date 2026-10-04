@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartRent B2B - Painel do Gestor</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col antialiased">
+
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="bg-blue-600 text-white p-2 rounded-xl shadow-md shadow-blue-500/20">
+          <i data-lucide="building-2" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <h1 class="text-base font-bold text-slate-900 tracking-tight">
+            SmartRent <span class="text-blue-600 font-semibold">B2B</span>
+          </h1>
+          <p class="text-[10px] text-slate-500 font-medium">Operação Canasvieiras • Painel do Gestor</p>
+        </div>
+      </div>
+      <nav id="navPrincipal" class="flex items-center space-x-1 sm:space-x-2"></nav>
+      <div id="areaAuth" class="flex items-center ml-4"></div>
+    </div>
+  </header>
+
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+
+    <div id="carregando" class="text-center py-20 text-sm text-slate-500">Carregando painel...</div>
+    <p id="erroPagina" class="hidden p-4 rounded-xl bg-rose-50 border border-rose-200 text-sm font-semibold text-rose-700"></p>
+
+    <div id="painel" class="hidden space-y-6">
+
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Painel do Gestor</h2>
+          <p class="text-xs text-slate-500 mt-1">Crie anúncios, defina preços, publique, edite e gerencie reservas.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="relative">
+            <button type="button" id="btnSino" aria-label="Notificações" aria-expanded="false"
+              class="relative p-2.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-50">
+              <i data-lucide="bell" class="w-4 h-4 text-slate-600"></i>
+              <span id="contSino" class="hidden absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-600 text-white text-[10px] font-bold flex items-center justify-center"></span>
+            </button>
+            <div id="menuSino" class="hidden absolute right-0 mt-2 w-80 max-w-[85vw] bg-white border border-slate-200 rounded-2xl shadow-xl z-50 overflow-hidden">
+              <div class="px-4 py-3 border-b border-slate-100 text-xs font-bold text-slate-700">Notificações</div>
+              <div id="listaNotificacoes" class="max-h-80 overflow-y-auto divide-y divide-slate-100"></div>
+            </div>
+          </div>
+          <a href="anuncio-form.html" id="btnCriar"
+            class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2.5 rounded-xl text-sm shadow-md shadow-blue-600/20 transition">
+            <i data-lucide="plus" class="w-4 h-4"></i> Criar anúncio
+          </a>
+        </div>
+      </div>
+
+      <!-- Abas -->
+      <div class="flex gap-1 border-b border-slate-200 overflow-x-auto" role="tablist">
+        <button type="button" data-aba="pre" role="tab" class="aba px-4 py-2.5 text-sm whitespace-nowrap -mb-px border-b-2">Pré-publicação <span id="cntPre" class="ml-1 text-[10px] bg-slate-200 text-slate-700 rounded-full px-1.5 py-0.5"></span></button>
+        <button type="button" data-aba="anuncios" role="tab" class="aba px-4 py-2.5 text-sm whitespace-nowrap -mb-px border-b-2">Meus anúncios <span id="cntAnuncios" class="ml-1 text-[10px] bg-slate-200 text-slate-700 rounded-full px-1.5 py-0.5"></span></button>
+        <button type="button" data-aba="reservas" role="tab" class="aba px-4 py-2.5 text-sm whitespace-nowrap -mb-px border-b-2">Reservas e calendário</button>
+      </div>
+
+      <section id="aba-pre" class="space-y-4 hidden"></section>
+
+    <!-- Sugestão de preço por IA para imóveis em pré-publicação (somente gestores) -->
+    <div id="ia-preco" class="hidden bg-white border border-slate-200 p-6 sm:p-8 rounded-2xl shadow-sm space-y-5">
+      <div class="border-b border-slate-100 pb-4">
+        <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+          <i data-lucide="sparkles" class="w-5 h-5 text-blue-600"></i>
+          Sugestão de preço por IA: imóveis em pré-publicação
+        </h3>
+        <p class="text-xs text-slate-500 mt-1">Selecione os imóveis e peça a sugestão. A IA considera tipo, localização, área,
+          características e a época do ano; <b>ela só sugere</b>: nada é salvo até você revisar e confirmar. A primeira
+          confirmação de preço inicia a janela de pré-publicação e alterações seguintes não a reiniciam.</p>
+      </div>
+      <div id="iaCarregando" class="text-xs text-slate-500">Carregando seus imóveis...</div>
+      <div id="iaVazio" class="hidden text-xs text-slate-500 bg-slate-50 border border-dashed border-slate-300 rounded-xl p-6 text-center">
+        Nenhum imóvel em pré-publicação. <a class="text-blue-700 font-semibold underline" href="anuncio-form.html">Criar anúncio</a>
+      </div>
+      <div id="iaConteudo" class="hidden space-y-4">
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs text-left">
+            <thead class="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider border-b border-slate-200">
+              <tr><th class="p-3 w-10"><input type="checkbox" id="iaTodos" class="accent-blue-600" aria-label="Selecionar todos"></th>
+                  <th class="p-3">Imóvel</th><th class="p-3">Situação</th><th class="p-3">Valor atual</th><th class="p-3">Sugestão da IA</th><th class="p-3">Ação</th></tr>
+            </thead>
+            <tbody id="iaTabela" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+        <div class="flex flex-wrap items-center gap-3">
+          <button type="button" id="iaSugerir" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs disabled:opacity-40 disabled:cursor-not-allowed" disabled>Sugerir preço com IA</button>
+          <span id="iaStatus" class="text-xs text-slate-500"></span>
+        </div>
+      </div>
+    </div>
+
+      <section id="aba-anuncios" class="space-y-4 hidden"></section>
+      <section id="aba-reservas" class="hidden"></section>
+    </div>
+  </main>
+
+  <footer class="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500 mt-auto">
+    <p>SmartRent B2B © 2026 • Operação Canasvieiras • Projeto Acadêmico</p>
+  </footer>
+
+  <script src="js/auth.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/header-auth.js"></script>
+  <script src="js/navegacao.js"></script>
+  <script src="js/aviso-restricao.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/anuncio-acoes.js"></script>
+  <script src="js/ia-preco.js"></script>
+  <script src="js/calendario.js"></script>
+  <script src="js/reservas-gestao.js"></script>
+  <script src="js/dashboard.js"></script>
+  <script>lucide.createIcons();</script>
+</body>
+
+</html>

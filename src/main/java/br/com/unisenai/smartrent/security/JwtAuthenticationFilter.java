@@ -47,10 +47,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (cabecalho != null && cabecalho.startsWith(PREFIXO)
                 && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-            String email = jwtService.emailDoTokenOuNull(cabecalho.substring(PREFIXO.length()));
+            String token = cabecalho.substring(PREFIXO.length());
+            String email = jwtService.emailDoTokenOuNull(token);
             if (email != null) {
                 Optional<Usuario> usuario = usuarioRepository.findByEmail(email);
-                usuario.filter(Usuario::isAtivo).ifPresent(u -> {
+                usuario.filter(Usuario::isAtivo)
+                        // Token emitido antes de uma troca de senha/e-mail nao vale mais.
+                        .filter(u -> jwtService.versaoDaSessao(token) == u.getSessaoVersao())
+                        .ifPresent(u -> {
                     var authorities = List.of(new SimpleGrantedAuthority("ROLE_" + u.getPapel().name()));
                     var auth = new UsernamePasswordAuthenticationToken(u, null, authorities);
                     SecurityContextHolder.getContext().setAuthentication(auth);

@@ -72,4 +72,19 @@ class JwtServiceTest {
         assertNull(jwtService.emailDoTokenOuNull("isto-nao-e-um-jwt"));
         assertNull(jwtService.emailDoTokenOuNull(""));
     }
+
+    @Test
+    @DisplayName("CT437 - Token carrega a versao de sessao do usuario; token antigo (sem a claim) vale versao 0")
+    void deveCarregarVersaoDaSessao() {
+        usuario.setSessaoVersao(3);
+        String token = jwtService.gerarToken(usuario);
+
+        assertEquals(3, jwtService.versaoDaSessao(token));
+        assertEquals(-1, jwtService.versaoDaSessao("lixo"), "token invalido nunca coincide com versao alguma");
+
+        String antigo = io.jsonwebtoken.Jwts.builder().subject("ana@smartrent.dev")
+                .signWith(io.jsonwebtoken.security.Keys.hmacShaKeyFor(
+                        SEGREDO.getBytes(java.nio.charset.StandardCharsets.UTF_8))).compact();
+        assertEquals(0, jwtService.versaoDaSessao(antigo));
+    }
 }

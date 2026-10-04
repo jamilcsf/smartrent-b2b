@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartRent B2B - Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col antialiased">
+
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="bg-blue-600 text-white p-2 rounded-xl shadow-md shadow-blue-500/20">
+          <i data-lucide="building-2" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <h1 class="text-base font-bold text-slate-900 tracking-tight">
+            SmartRent <span class="text-blue-600 font-semibold">B2B</span>
+          </h1>
+          <p class="text-[10px] text-slate-500 font-medium">Operação Canasvieiras • Dashboard</p>
+        </div>
+      </div>
+      <nav id="navPrincipal" class="flex items-center space-x-1 sm:space-x-2"></nav>
+      <div id="areaAuth" class="flex items-center ml-4"></div>
+    </div>
+  </header>
+
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+      <div>
+        <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Dashboard</h2>
+        <p class="text-xs text-slate-500 mt-1">Estatísticas dos seus imóveis. Datas em horário de Brasília. Para operar (criar, editar, publicar, bloquear datas), use o Painel do Gestor.</p>
+      </div>
+      <label class="text-xs font-semibold text-slate-600">Período
+        <select id="selMeses" class="ml-2 bg-white border border-slate-300 rounded-lg p-2 text-xs">
+          <option value="3">Últimos 3 meses</option>
+          <option value="6" selected>Últimos 6 meses</option>
+          <option value="12">Últimos 12 meses</option>
+        </select>
+      </label>
+    </div>
+
+    <div id="carregando" class="text-center py-20 text-sm text-slate-500">Carregando estatísticas...</div>
+    <p id="erroPagina" class="hidden p-4 rounded-xl bg-rose-50 border border-rose-200 text-sm font-semibold text-rose-700"></p>
+
+    <div id="conteudo" class="hidden space-y-6">
+      <section id="cartoes" class="grid grid-cols-2 lg:grid-cols-4 gap-4"></section>
+
+      <section class="grid lg:grid-cols-2 gap-6">
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+          <h3 class="text-sm font-bold text-slate-900 mb-3">Reservas por mês</h3>
+          <div class="relative h-64"><canvas id="grReservas" aria-label="Gráfico de reservas por mês" role="img"></canvas></div>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+          <h3 class="text-sm font-bold text-slate-900 mb-3">Receita líquida por mês (R$)</h3>
+          <div class="relative h-64"><canvas id="grReceita" aria-label="Gráfico de receita por mês" role="img"></canvas></div>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+          <h3 class="text-sm font-bold text-slate-900 mb-3">Noites ocupadas por mês</h3>
+          <div class="relative h-64"><canvas id="grNoites" aria-label="Gráfico de noites ocupadas por mês" role="img"></canvas></div>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+          <h3 class="text-sm font-bold text-slate-900 mb-3">Imóveis por situação</h3>
+          <ul id="listaStatus" class="text-xs divide-y divide-slate-100"></ul>
+        </div>
+      </section>
+
+      <p class="text-[11px] text-slate-500">
+        Ocupação = noites com reserva confirmada ou concluída ÷ noites disponíveis. Noites bloqueadas manualmente
+        saem do denominador e aparecem à parte. Reservas canceladas não contam como ocupação e os valores
+        reembolsados são descontados da receita.
+      </p>
+    </div>
+  </main>
+
+  <footer class="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500 mt-auto">
+    <p>SmartRent B2B © 2026 • Operação Canasvieiras • Projeto Acadêmico</p>
+  </footer>
+
+  <script src="js/auth.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/header-auth.js"></script>
+  <script src="js/navegacao.js"></script>
+  <script src="js/aviso-restricao.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/estatisticas.js"></script>
+  <script>lucide.createIcons();</script>
+</body>
+
+</html>

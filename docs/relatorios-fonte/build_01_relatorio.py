@@ -179,6 +179,90 @@ rf_list = [
     ("RF13", "Sincronização bidirecional de reservas com plataformas externas via iCal.",
      "Won't (Visão Futura)"),
     ("RF14", "Processamento de pagamentos reais por meio de um gateway.", "Won't (Visão Futura)"),
+    ("RF15", "O sistema deve permitir ao gestor cadastrar um anúncio com título, descrição, "
+             "características, endereço completo, até 14 imagens (fotos comuns e em 360 graus "
+             "somadas), até 2 vídeos de no máximo 1 minuto e 30 segundos, quantidade mínima de "
+             "diárias, taxa de limpeza, limite de hóspedes e aceite obrigatório do termo de uso, "
+             "validando limites e formatos também no servidor. O contato com o gestor é "
+             "exclusivamente pelo SmartChat: não há campo nem link de WhatsApp.",
+     "Must"),
+    ("RF16", "O anúncio deve seguir um ciclo de vida com transições validadas no servidor: "
+             "pré-publicação sem preço, janela de 24 horas contada da primeira confirmação de "
+             "preço (que não reinicia quando o preço muda), pronto para publicar e publicado, "
+             "este último exigindo novo aceite do termo.", "Must"),
+    ("RF17", "O sistema deve validar no servidor que o usuário comum acessa apenas o catálogo, "
+             "que o gestor vê e altera somente os próprios imóveis, reservas, bloqueios, "
+             "estatísticas e conversas.", "Must"),
+    ("RF18", "O sistema deve permitir editar um anúncio publicado: ele sai do catálogo ao "
+             "iniciar a edição, o progresso fica em rascunho, a confirmação o republica "
+             "automaticamente após 2 horas e o descarte o devolve ao ar imediatamente, sem "
+             "prazo máximo de edição.", "Must"),
+    ("RF19", "O sistema deve notificar o gestor, sem alterar o anúncio, quando uma edição "
+             "completar 24 horas aberta, repetindo o lembrete em intervalo configurável.",
+     "Should"),
+    ("RF20", "Cada reserva deve gravar um registro imutável do preço e dos dados do imóvel no "
+             "momento da criação, de modo que alterações posteriores de preço ou de anúncio "
+             "não afetem reservas existentes.", "Must"),
+    ("RF21", "O sistema deve permitir solicitar sugestão de preço por IA para vários imóveis em "
+             "pré-publicação, com revisão e confirmação explícitas do gestor e histórico de "
+             "origem (manual ou IA) de cada alteração de preço.", "Should"),
+    ("RF23", "O Dashboard deve exibir somente estatísticas dos imóveis do gestor autenticado "
+             "(reservas por mês, ocupação, receita líquida de reembolsos, imóveis por situação), "
+             "sem ações operacionais; cancelamentos não contam como ocupação.", "Should"),
+    ("RF24", "O Painel do Gestor deve exibir um calendário de três meses por imóvel selecionado, "
+             "com reservas confirmadas em cinza, pendentes e bloqueios identificados também sem "
+             "depender de cor, e detalhes do hóspede visíveis apenas ao gestor dono.", "Must"),
+    ("RF25", "O gestor deve poder bloquear e desbloquear datas do imóvel (total ou parcialmente), "
+             "sem conflito com reservas confirmadas, de forma segura sob concorrência, com "
+             "auditoria; para clientes as datas aparecem apenas como indisponíveis.", "Must"),
+    ("RF26", "A reserva deve registrar de forma imutável o mínimo de diárias, a taxa de limpeza, "
+             "o limite de hóspedes e os parâmetros da política de cancelamento vigentes; o "
+             "servidor rejeita reservas fora do mínimo ou do limite.", "Must"),
+    ("RF27", "O cliente logado deve poder reservar e pagar (gateway simulado, com chave de "
+             "idempotência), sabendo antes do pagamento a política e se a reserva nasce sem "
+             "direito a reembolso.", "Must"),
+    ("RF28", "O cancelamento deve seguir a regra decidida no servidor: reembolso integral até "
+             "2 dias antes do horário de check-in, sem reembolso depois, reembolso integral "
+             "quando o gestor cancela e cancelamento sem cobrança para reservas pendentes, com "
+             "reembolso idempotente, retry em falha do gateway e libertação imediata das datas.", "Must"),
+    ("RF29", "O sistema deve oferecer o SmartChat como canal único entre cliente e gestor, com "
+             "conversa única por cliente, gestor e imóvel, criada automaticamente de forma "
+             "idempotente na confirmação da reserva, tempo quase real e contador de não lidas.", "Must"),
+    ("RF30", "As mensagens do SmartChat devem ter telefones, links externos, e-mails e conteúdo "
+             "impróprio ocultados no servidor, preservando o original apenas em campo restrito; "
+             "denúncia e solicitação de bloqueio de usuário são registradas (protótipo, sem "
+             "efeito funcional).", "Must"),
+    ("RF31", "Vídeos do anúncio têm no máximo 1:30, são enviados em partes retomáveis, validados "
+             "no servidor e processados de forma assíncrona (estados ENVIANDO, PROCESSANDO, "
+             "PRONTO e FALHA); só vídeos prontos aparecem e a publicação os exige.", "Must"),
+    ("RF32", "Todas as regras e exibições que dependem de dia ou hora seguem o horário de "
+             "Brasília (America/Sao_Paulo), com instantes novos em UTC, datas de calendário sem "
+             "fuso e prazos como tempo decorrido.", "Must"),
+    ("RF33", "A região do usuário no cabeçalho (avatar e nome) deve levar à página de perfil, "
+             "acessível por teclado, mostrando a foto quando existir e, caso contrário, as "
+             "iniciais; a página exige login e cada usuário vê e altera apenas o próprio perfil.", "Must"),
+    ("RF34", "O usuário deve poder alterar o nome de exibição (2 a 60 caracteres, sem HTML, "
+             "telefone, e-mail, link ou termos ofensivos), sem alterar reservas, snapshots ou "
+             "auditorias já gravados.", "Must"),
+    ("RF35", "O usuário deve poder enviar e remover a foto de perfil: apenas PNG ou JPG, tipo "
+             "verificado pelo conteúdo, limites de tamanho e dimensões, reprocessada no "
+             "servidor (recorte quadrado, 512 por 512, sem metadados), uma por usuário.", "Must"),
+    ("RF36", "O usuário deve poder alterar a senha informando a atual, com política da nova "
+             "senha (tamanho mínimo, lista local de senhas comuns, diferente da atual), "
+             "encerramento das demais sessões e aviso por e-mail.", "Must"),
+    ("RF37", "A troca do e-mail de login deve exigir a senha atual e a confirmação por link de "
+             "uso único e validade curta enviado ao novo endereço, com resposta neutra, aviso ao "
+             "endereço antigo e encerramento das demais sessões.", "Must"),
+    ("RF38", "O usuário deve poder solicitar a exclusão de dados e cancelá-la; nada é excluído "
+             "automaticamente: o pedido é analisado pela equipe, com período mínimo de análise, "
+             "e-mail de confirmação com link para cancelar e sinais de risco registrados.", "Must"),
+    ("RF39", "Enquanto houver solicitação de exclusão em andamento, devem valer restrições "
+             "temporárias parciais (novas reservas, publicação e confirmação de edição, e-mail), "
+             "sem bloquear login, senha, chat, reservas confirmadas, reembolsos ou bloqueio de "
+             "datas; a aprovação é barrada por reservas futuras, reembolso pendente ou denúncia aberta.", "Must"),
+    ("RF22", "O sistema deve manter trilha de auditoria dos aceites do termo (usuário, imóvel, "
+             "versão, data, hora e IP), das alterações de preço e das ações sobre o anúncio.",
+     "Should"),
 ]
 rf_data = [[Paragraph("ID", styles["CellHeader"]), Paragraph("Descrição", styles["CellHeader"]),
             Paragraph("MoSCoW", styles["CellHeaderCenter"])]]
@@ -213,6 +297,11 @@ rnf_list = [
     ("RNF09", "A esteira de integração contínua deve executar a compilação e os testes a cada "
               "envio de código, impedindo a integração de alterações que quebrem o build.",
      "Confiabilidade"),
+    ("RNF10", "Senhas, hashes e tokens nunca devem ser registrados em log nem na auditoria; "
+              "tokens de uso único são guardados somente como hash.", "Segurança"),
+    ("RNF11", "Ações sensíveis da conta (senha, e-mail, exclusão de dados) devem exigir "
+              "reautenticação, limitar tentativas incorretas e ser auditadas com usuário, "
+              "endereço IP e instante em UTC.", "Segurança"),
 ]
 rnf_data = [[Paragraph("ID", styles["CellHeader"]), Paragraph("Descrição", styles["CellHeader"]),
              Paragraph("Categoria", styles["CellHeaderCenter"])]]
@@ -278,6 +367,21 @@ resumo_list = [
                           "sugerido."),
     ("Cancelar ou concluir reserva", "Atualização da situação de uma reserva; reservas "
                                       "canceladas liberam o período para uma nova reserva."),
+    ("Criar e publicar anúncio", "Cadastro com mídias e termo de uso, definição de preço "
+                                  "(manual ou por IA), janela de 24 horas e publicação com novo "
+                                  "aceite (RF15, RF16, RF21)."),
+    ("Editar anúncio publicado", "Início da edição (anúncio sai do ar), rascunho, confirmação "
+                                  "com republicação em 2 horas ou descarte imediato (RF18)."),
+    ("Gerenciar o próprio perfil", "Acesso pelo cabeçalho, alteração do nome de exibição e envio ou "
+                                    "remoção da foto de perfil (RF33 a RF35)."),
+    ("Alterar senha e e-mail", "Reautenticação, política da nova senha, encerramento das demais "
+                                "sessões e troca de e-mail confirmada por link de uso único (RF36, RF37)."),
+    ("Solicitar exclusão de dados", "Pedido com senha atual, e-mail com link para cancelar, "
+                                     "restrições temporárias durante a análise e cancelamento a "
+                                     "qualquer momento (RF38, RF39)."),
+    ("Analisar solicitação de exclusão", "Aprovação, negativa ou conclusão pela equipe, com período "
+                                          "mínimo e trava por impedimentos; serviço pronto, sem tela "
+                                          "(depende do módulo de administração)."),
 ]
 rdata2 = [[Paragraph("Caso de uso", styles["CellHeader"]), Paragraph("Resumo", styles["CellHeader"])]]
 for uc, res in resumo_list:
@@ -319,7 +423,9 @@ story.append(Paragraph(
     "O modelo lógico corresponde ao diagrama de classes apresentado na Seção 5.1: quatro "
     "entidades principais (usuário, imóvel, reserva e sugestão de preço) e um objeto de valor "
     "incorporado (endereço). Todos os relacionamentos entre as entidades principais são de um "
-    "para muitos.", styles["Body"]))
+    "para muitos. O fluxo de anúncios acrescentou entidades de apoio (mídias, rascunho de "
+    "edição, histórico de preço, aceites do termo, auditoria, lembretes e notificações), "
+    "descritas na Seção 6.2 e ainda não representadas no diagrama da Seção 5.1.", styles["Body"]))
 
 story.append(Paragraph("6.2 Modelo físico", styles["H2"]))
 story.append(Paragraph(
@@ -338,28 +444,47 @@ tables_ddl = [
         ("email", "varchar(150)", "obrigatório, único"), ("senha_hash", "varchar(60)", "obrigatório"),
         ("papel", "varchar(20)", "obrigatório"), ("telefone", "varchar(20)", "opcional"),
         ("ativo", "boolean", "obrigatório"), ("data_criacao", "timestamp", "obrigatório"),
+        ("smartchat_liberado", "boolean", "aba SmartChat do cliente; guardada no backend"),
+        ("foto_arquivo, foto_versao", "varchar(64) / integer", "foto de perfil: nome aleatório e versão contra cache"),
+        ("sessao_versao", "integer", "sobe na troca de senha ou e-mail; o token só vale na versão atual"),
+        ("senha_definida", "boolean", "falso em conta criada pelo Google, sem senha conhecida"),
     ]),
     ("imoveis", [
         ("id", "bigserial", "chave primária"), ("usuario_id", "bigint", "obrigatório, referencia usuarios"),
         ("titulo", "varchar(150)", "obrigatório"), ("descricao", "text", "opcional"),
         ("tipo_imovel", "varchar(20)", "obrigatório"),
         ("endereço (logradouro, bairro, cidade, estado, cep)", "varchar", "obrigatório"),
-        ("latitude, longitude", "numeric(10,7)", "obrigatório — microgeografia"),
+        ("latitude, longitude", "numeric(10,7)", "opcional — microgeografia"),
         ("capacidade_hospedes, numero_quartos, numero_banheiros", "integer", "obrigatório"),
         ("metragem_quadrada", "integer", "opcional — área útil em m²"),
         ("vagas_garagem", "integer", "opcional — nulo e zero são distintos"),
-        ("valor_diaria_base", "numeric(10,2)", "obrigatório"),
+        ("valor_diaria_base", "numeric(10,2)", "opcional até a confirmação do preço"),
+        ("status", "varchar(30)", "obrigatório — ciclo de vida do anúncio"),
+        ("preco_primeira_confirmacao_em", "timestamp", "âncora da janela de 24h; gravado uma única vez"),
+        ("publicado_em, edicao_iniciada_em, edicao_estado_origem, republicar_original_em, "
+         "edicao_confirmada_em, republicar_em", "timestamp / varchar", "fases de edição e republicação"),
+        ("minimo_diarias, taxa_limpeza", "integer / numeric(10,2)", "mínimo de diárias (padrão 1) e taxa de limpeza por reserva (padrão 0)"),
         ("ativo", "boolean", "obrigatório"), ("data_cadastro", "timestamp", "obrigatório"),
     ]),
     ("reservas", [
         ("id", "bigserial", "chave primária"), ("imovel_id", "bigint", "obrigatório, referencia imoveis"),
         ("hospede_nome, hospede_email", "varchar", "obrigatório"),
-        ("hospede_telefone", "varchar(20)", "opcional"),
+        ("cliente_id, numero_hospedes", "bigint / integer", "cliente dono da reserva (opcional) e quantidade de hóspedes"),
         ("data_checkin, data_checkout", "date", "obrigatório"),
         ("valor_total", "numeric(10,2)", "obrigatório"),
         ("status, origem", "varchar(20)", "obrigatório"),
         ("observacoes", "text", "opcional"), ("data_criacao", "timestamp", "obrigatório"),
         ("versao", "bigint", "controle de concorrência otimista"),
+        ("minimo_diarias_snapshot, taxa_limpeza_snapshot, limite_hospedes_snapshot", "integer / numeric",
+         "termos do anúncio vigentes na criação (imutáveis)"),
+        ("politica_antecedencia_horas, politica_regret_dias, politica_versao", "integer / varchar",
+         "política de cancelamento vigente na criação (imutável)"),
+        ("cancelada_em, cancelada_por, cancelamento_regra, cancelamento_motivo", "timestamptz / varchar",
+         "registro do cancelamento; status inclui CANCELADA_COM_REEMBOLSO, CANCELADA_SEM_REEMBOLSO e CANCELADA_PELO_GESTOR"),
+        ("moeda, numero_diarias, preco_diaria_snapshot, taxas_snapshot, total_snapshot",
+         "varchar / integer / numeric", "snapshot imutável das condições financeiras"),
+        ("imovel_titulo_snapshot, imovel_endereco_snapshot, imovel_caracteristicas_snapshot",
+         "varchar", "snapshot dos dados do imóvel na criação"),
     ]),
     ("sugestoes_preco", [
         ("id", "bigserial", "chave primária"), ("imovel_id", "bigint", "obrigatório, referencia imoveis"),
@@ -369,6 +494,115 @@ tables_ddl = [
         ("justificativa_ia", "text", "opcional"), ("modelo_ia_utilizado", "varchar(80)", "opcional"),
         ("origem_calculo", "varchar(30)", "obrigatório — IA generativa ou contingência"),
         ("data_geracao", "timestamp", "obrigatório"),
+    ]),
+    ("reserva_precos_diarios", [
+        ("reserva_id, data", "bigint, date", "chave composta — valor de cada diária da reserva"),
+        ("valor", "numeric(10,2)", "obrigatório — gravado uma única vez"),
+    ]),
+    ("imovel_midias", [
+        ("id", "bigserial", "chave primária"), ("imovel_id", "bigint", "obrigatório, referencia imoveis"),
+        ("chave", "varchar(36)", "obrigatório, único — UUID da URL pública"),
+        ("tipo", "varchar(10)", "FOTO, FOTO_360 ou VIDEO"),
+        ("estado", "varchar(10)", "ATIVA, NOVA ou REMOVIDA (edição em andamento)"),
+        ("arquivo, miniatura, mime, tamanho_bytes", "varchar / bigint", "metadados do arquivo guardado"),
+        ("largura, altura, duracao_segundos", "integer", "opcionais — lidos no servidor"),
+        ("ordem, capa, data_envio", "integer / boolean / timestamp", "obrigatório"),
+        ("status_processamento, motivo_falha", "varchar", "vídeo: ENVIANDO, PROCESSANDO, PRONTO ou FALHA, com motivo"),
+        ("poster, hls_mestre, original_arquivo", "varchar(160)", "arquivos gerados no processamento do vídeo"),
+        ("tentativas, proxima_tentativa_em", "integer / timestamptz", "fila e retry com espera crescente"),
+        ("tamanho_total, bytes_recebidos, atualizado_em", "bigint / timestamptz", "envio em partes retomável e limpeza de órfãos"),
+    ]),
+    ("anuncio_rascunhos", [
+        ("id", "bigserial", "chave primária"), ("imovel_id", "bigint", "obrigatório, único"),
+        ("dados", "text", "campos do formulário em JSON"),
+        ("midia_ordem, capa_midia_id", "text / bigint", "ordem e capa escolhidas na edição"),
+        ("criado_em, atualizado_em", "timestamp", "obrigatório"),
+    ]),
+    ("historico_preco", [
+        ("id", "bigserial", "chave primária"), ("imovel_id, autor_id", "bigint", "obrigatório"),
+        ("valor_anterior, valor_novo", "numeric(10,2)", "valor_anterior é nulo na primeira definição"),
+        ("origem", "varchar(10)", "MANUAL ou IA"), ("data_hora", "timestamp", "obrigatório"),
+    ]),
+    ("aceites_termo", [
+        ("id", "bigserial", "chave primária"), ("usuario_id, imovel_id", "bigint", "obrigatório"),
+        ("versao_termo", "varchar(20)", "obrigatório"),
+        ("contexto", "varchar(30)", "CADASTRO, PUBLICACAO ou CONFIRMACAO_EDICAO"),
+        ("data_hora, ip", "timestamp / varchar(45)", "auditoria do aceite"),
+    ]),
+    ("auditoria_anuncio", [
+        ("id", "bigserial", "chave primária"), ("imovel_id", "bigint", "obrigatório"),
+        ("usuario_id", "bigint", "nulo quando a ação parte do sistema"),
+        ("acao, detalhes, data_hora", "varchar / timestamp", "trilha das ações sobre o anúncio"),
+    ]),
+    ("lembretes_edicao", [
+        ("id", "bigserial", "chave primária"), ("imovel_id", "bigint", "obrigatório"),
+        ("edicao_iniciada_em, numero, canal", "timestamp / integer / varchar",
+         "chave única — garante o envio sem duplicidade"),
+        ("criado_em, enviado_em, tentativas, erro", "timestamp / integer / varchar",
+         "enviado_em nulo indica entrega pendente de nova tentativa"),
+    ]),
+    ("pagamentos", [
+        ("id, reserva_id", "bigserial / bigint", "cobrança de uma reserva"),
+        ("valor, moeda, status", "numeric / varchar", "APROVADO ou RECUSADO"),
+        ("chave_idempotencia", "varchar(100)", "única — impede cobrança dupla"),
+        ("ref_gateway, motivo_recusa, criado_em", "varchar / timestamptz", "referência do gateway e instante (UTC)"),
+    ]),
+    ("reembolsos", [
+        ("id, reserva_id", "bigserial / bigint", "um estorno por reserva (único)"),
+        ("valor, status", "numeric / varchar", "PENDENTE, PROCESSADO ou FALHA"),
+        ("chave_idempotencia", "varchar(100)", "única — impede estorno duplicado"),
+        ("tentativas, erro, proxima_tentativa_em", "integer / varchar / timestamptz", "retry com espera crescente e alerta"),
+    ]),
+    ("bloqueios_datas", [
+        ("id, imovel_id", "bigserial / bigint", "bloqueio manual de datas de um imóvel"),
+        ("data_inicio, data_fim", "date", "datas puras, inclusivas, sem fuso"),
+        ("motivo, observacao", "varchar", "internos: nunca expostos a clientes"),
+        ("criado_por, criado_em", "bigint / timestamptz", "auditoria"),
+    ]),
+    ("smartchat_conversas", [
+        ("id, cliente_id, gestor_id, imovel_id", "bigserial / bigint", "restrição de unicidade (cliente, gestor, imóvel)"),
+        ("criada_em, ultima_mensagem_em", "timestamptz", "ordenação da lista"),
+    ]),
+    ("smartchat_mensagens", [
+        ("id, conversa_id, autor_id", "bigserial / bigint", "autor nulo nas mensagens de sistema"),
+        ("tipo, texto_filtrado", "varchar", "NORMAL ou SISTEMA; único texto que sai do servidor"),
+        ("texto_original, categorias, ocorrencias", "varchar / integer", "restritos ao backend (moderação futura e métricas)"),
+        ("chave_idempotencia, criada_em, lida_em", "varchar / timestamptz", "chave única nas mensagens de sistema"),
+    ]),
+    ("smartchat_denuncias e smartchat_bloqueios_usuario", [
+        ("conversa_id, denunciante_id, denunciado_id", "bigint", "denúncia registrada (status PENDENTE)"),
+        ("motivo, descricao, mensagens_anexadas", "varchar", "dados para o futuro módulo de administração"),
+        ("bloqueador_id, bloqueado_id, status", "bigint / varchar", "pedido de bloqueio, sem efeito funcional"),
+    ]),
+    ("auditoria_conta", [
+        ("id, usuario_id", "bigserial / bigint", "trilha de eventos da conta"),
+        ("acao, detalhes", "varchar", "sem valores sensíveis: nunca senha, hash ou token"),
+        ("ip, ocorrida_em", "varchar(45) / timestamptz", "endereço IP e instante em UTC"),
+    ]),
+    ("troca_email", [
+        ("id, usuario_id", "bigserial / bigint", "no máximo um pedido pendente por usuário (índice único parcial)"),
+        ("email_novo", "varchar(150)", "só passa a ser o e-mail da conta ao confirmar o link"),
+        ("token_hash", "varchar(64)", "único — somente o SHA-256 do token; o token só vai no link"),
+        ("criada_em, expira_em, usado_em, cancelada_em", "timestamptz", "validade curta e uso único"),
+    ]),
+    ("solicitacoes_exclusao", [
+        ("id, usuario_id", "bigserial / bigint", "uma solicitação em andamento por usuário (índice único parcial)"),
+        ("estado", "varchar(30)", "PENDENTE, EM_ANALISE, APROVADA, NEGADA, CONCLUIDA ou CANCELADA_PELO_USUARIO"),
+        ("email_no_pedido, motivo, ip", "varchar", "cópia do e-mail no pedido e motivo opcional do usuário"),
+        ("sinais_risco", "varchar(2000)", "sim/não e contagens para a equipe; nenhum dado pessoal"),
+        ("criada_em, analise_apos", "timestamptz", "a equipe só pode aprovar depois do período mínimo"),
+        ("analista_id, decidida_em, observacao_interna", "bigint / timestamptz / varchar", "nulos até o módulo de administração"),
+        ("token_cancelamento_hash", "varchar(64)", "único — link “não fui eu”, somente o hash"),
+    ]),
+    ("solicitacao_exclusao_historico", [
+        ("id, solicitacao_id", "bigserial / bigint", "histórico de mudanças de estado"),
+        ("estado_anterior, estado_novo", "varchar(30)", "de qual estado para qual"),
+        ("ocorrida_em, autor_id, observacao", "timestamptz / bigint / varchar", "autor nulo quando é o usuário ou o sistema"),
+    ]),
+    ("notificacoes", [
+        ("id", "bigserial", "chave primária"), ("usuario_id", "bigint", "obrigatório"),
+        ("imovel_id", "bigint", "opcional"), ("titulo, mensagem, link", "varchar", "obrigatório (link opcional)"),
+        ("lida, criada_em", "boolean / timestamp", "obrigatório"),
     ]),
 ]
 for tname, cols in tables_ddl:
@@ -385,7 +619,9 @@ story.append(Paragraph(
     "idx_imoveis_ativo, idx_reservas_imovel, idx_reservas_periodo (usado pela verificação "
     "de conflito de datas) e idx_sugestoes_imovel_data. A unicidade do endereço de e-mail "
     "do usuário é garantida por restrição de unicidade na própria coluna, não por índice "
-    "nomeado.", styles["Body"]))
+    "nomeado. O fluxo de anúncios acrescentou os índices idx_imoveis_status, "
+    "idx_midias_imovel, idx_hist_preco_imovel, idx_aceites_imovel, idx_auditoria_imovel e "
+    "idx_notificacoes_usuario, além da restrição de unicidade uk_lembrete. As migrations V7 a V13 acrescentaram os campos comerciais e o snapshot da política, os pagamentos e reembolsos (com chaves de idempotência únicas), os bloqueios de datas, o SmartChat, o processamento de vídeo e o arquivamento seguido do descarte das colunas de WhatsApp. A migration V14 acrescentou a foto, a versão de sessão e o indicador de senha definida ao usuário, a auditoria de conta, os pedidos de troca de e-mail (com índice único parcial de um pedido pendente por usuário) e a solicitação de exclusão de dados com seu histórico (com índice único parcial de uma solicitação em andamento por usuário); nenhuma dessas tabelas guarda senha, hash em claro ou token, apenas o SHA-256 dos tokens de uso único.", styles["Body"]))
 story.append(PageBreak())
 
 # ---------------------------------------------------------------------
@@ -405,6 +641,8 @@ telas_list = [
                             "conflitos de data (RF05 a RF07, RF12)."),
     ("Precificação inteligente", "Solicitação e exibição da sugestão de preço, incluindo a "
                                   "justificativa da IA (RF08, RF09)."),
+    ("Meu perfil", "Foto, nome de exibição, e-mail, senha e pedido de exclusão de dados, com o "
+                    "aviso das restrições temporárias (RF33 a RF39)."),
 ]
 tel_data = [[Paragraph("Tela", styles["CellHeader"]), Paragraph("Propósito", styles["CellHeader"])]]
 for t, p in telas_list:

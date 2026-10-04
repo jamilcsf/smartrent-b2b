@@ -69,8 +69,26 @@ class AuthServiceTest {
 
         assertNotEquals("senhaSegura123", salvo.getSenhaHash());
         assertTrue(passwordEncoder.matches("senhaSegura123", salvo.getSenhaHash()));
-        assertEquals(PapelUsuario.ANFITRIAO, salvo.getPapel());
+        assertEquals(PapelUsuario.CLIENTE, salvo.getPapel(), "sem perfil, o cadastro e de menor privilegio");
         assertTrue(salvo.isAtivo());
+    }
+
+    @Test
+    @DisplayName("CT19b - Cadastro com perfil GESTOR cria ANFITRIAO; perfil desconhecido nunca vira ADMIN")
+    void deveMapearPerfilParaPapel() {
+        when(usuarioRepository.findByEmail(any())).thenReturn(Optional.empty());
+        when(usuarioRepository.save(any(Usuario.class))).thenAnswer(i -> i.getArgument(0));
+        when(jwtService.gerarToken(any())).thenReturn("token-ficticio");
+
+        authService.cadastrar(new CadastroRequest(
+                "Gestor", "g@smartrent.dev", "senhaSegura123", "senhaSegura123", null, "GESTOR"));
+        authService.cadastrar(new CadastroRequest(
+                "Esperto", "e@smartrent.dev", "senhaSegura123", "senhaSegura123", null, "ADMIN"));
+
+        ArgumentCaptor<Usuario> capturado = ArgumentCaptor.forClass(Usuario.class);
+        verify(usuarioRepository, times(2)).save(capturado.capture());
+        assertEquals(PapelUsuario.ANFITRIAO, capturado.getAllValues().get(0).getPapel());
+        assertEquals(PapelUsuario.CLIENTE, capturado.getAllValues().get(1).getPapel());
     }
 
     @Test
@@ -151,7 +169,7 @@ class AuthServiceTest {
     }
 
     @Test
-    @DisplayName("CT36 - Google: e-mail novo cria conta ANFITRIAO com senha aleatória")
+    @DisplayName("CT36 - Google: e-mail novo cria conta CLIENTE com senha aleatória")
     void googleDeveCriarContaNova() {
         when(usuarioRepository.findByEmail("nova@smartrent.dev")).thenReturn(Optional.empty());
         when(usuarioRepository.save(any(Usuario.class))).thenAnswer(i -> i.getArgument(0));
@@ -164,7 +182,7 @@ class AuthServiceTest {
         Usuario salvo = capturado.getValue();
         assertEquals("nova@smartrent.dev", salvo.getEmail());
         assertEquals("Nova Pessoa", salvo.getNome());
-        assertEquals(PapelUsuario.ANFITRIAO, salvo.getPapel());
+        assertEquals(PapelUsuario.CLIENTE, salvo.getPapel());
         assertTrue(salvo.getSenhaHash().startsWith("$2"), "deve ser um hash BCrypt");
     }
 

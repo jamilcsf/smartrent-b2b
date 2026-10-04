@@ -7,7 +7,8 @@ import java.math.BigDecimal;
 
 /**
  * Objeto de valor embutido em {@link Imovel}. Latitude e longitude sao
- * obrigatorias por serem insumo do fator de microgeografia da precificacao.
+ * insumo opcional do fator de microgeografia da precificacao: o cadastro do
+ * anuncio nao as exige.
  */
 @Embeddable
 public class Endereco {
@@ -33,10 +34,10 @@ public class Endereco {
     @Column(name = "cep", nullable = false, length = 9)
     private String cep;
 
-    @Column(name = "latitude", nullable = false, precision = 10, scale = 7)
+    @Column(name = "latitude", precision = 10, scale = 7)
     private BigDecimal latitude;
 
-    @Column(name = "longitude", nullable = false, precision = 10, scale = 7)
+    @Column(name = "longitude", precision = 10, scale = 7)
     private BigDecimal longitude;
 
     public Endereco() {

@@ -30,7 +30,8 @@
     opcoes = opcoes || {};
     var headers = Object.assign({}, opcoes.headers);
 
-    if (opcoes.body && !headers['Content-Type']) {
+    // FormData define o proprio Content-Type (com o boundary): nao forcar JSON.
+    if (opcoes.body && !headers['Content-Type'] && !(opcoes.body instanceof FormData)) {
       headers['Content-Type'] = 'application/json';
     }
 
@@ -78,6 +79,12 @@
     },
     put: function (url, dados, opcoes) {
       return request(url, Object.assign({ method: 'PUT', body: JSON.stringify(dados) }, opcoes));
+    },
+    postForm: function (url, formData, opcoes) {
+      return request(url, Object.assign({ method: 'POST', body: formData }, opcoes));
+    },
+    patch: function (url, dados, opcoes) {
+      return request(url, Object.assign({ method: 'PATCH', body: JSON.stringify(dados) }, opcoes));
     },
     del: function (url, opcoes) {
       return request(url, Object.assign({ method: 'DELETE' }, opcoes));

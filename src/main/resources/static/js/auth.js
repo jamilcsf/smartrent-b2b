@@ -71,6 +71,20 @@
       return estado.usuario;
     },
 
+    /**
+     * Gestor de imóveis (ou admin). Serve só para a interface decidir o que
+     * mostrar: quem protege de verdade é o servidor, que responde 403.
+     */
+    isGestor: function () {
+      var papel = estado.usuario && estado.usuario.papel;
+      return !!estado.token && (papel === 'ANFITRIAO' || papel === 'ADMIN');
+    },
+
+    /** Para onde mandar quem acabou de entrar: gestor no painel, os demais no catálogo. */
+    destinoPadrao: function () {
+      return Auth.isGestor() ? '/dashboard.html' : '/imoveis.html';
+    },
+
     getToken: function () {
       return estado.token;
     },

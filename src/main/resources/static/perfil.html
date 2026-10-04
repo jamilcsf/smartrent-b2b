@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartRent B2B - Meu perfil</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/header-auth.js"></script>
+  <script src="js/navegacao.js"></script>
+  <script src="js/ui.js"></script>
+</head>
+
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col antialiased">
+
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <a href="/imoveis.html" class="flex items-center space-x-3">
+        <div class="bg-blue-600 text-white p-2 rounded-xl shadow-md shadow-blue-500/20">
+          <i data-lucide="building-2" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <h1 class="text-base font-bold text-slate-900 tracking-tight">
+            SmartRent <span class="text-blue-600 font-semibold">B2B</span>
+          </h1>
+          <p class="text-[10px] text-slate-500 font-medium">Operação Canasvieiras • Meu perfil</p>
+        </div>
+      </a>
+      <nav id="navPrincipal" class="flex items-center space-x-1 sm:space-x-2"></nav>
+      <div id="areaAuth" class="flex items-center ml-4"></div>
+    </div>
+  </header>
+
+  <main class="flex-1 max-w-3xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+    <div>
+      <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Meu perfil</h2>
+      <p class="text-xs text-slate-500 mt-1">Datas e horários em horário de Brasília.</p>
+    </div>
+
+    <div id="carregando" class="text-center py-16 text-sm text-slate-500" role="status">Carregando seu perfil...</div>
+    <p id="erroPagina" class="hidden p-4 rounded-xl bg-rose-50 border border-rose-200 text-sm font-semibold text-rose-700" role="alert"></p>
+
+    <div id="conteudo" class="hidden space-y-6">
+
+      <div id="avisoRestricao" class="hidden p-4 rounded-xl bg-amber-50 border border-amber-200 text-xs font-semibold text-amber-800" role="status"></div>
+
+      <!-- 1. Dados da conta -->
+      <section class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-6" aria-labelledby="tituloConta">
+        <h3 id="tituloConta" class="text-base font-bold text-slate-900">Dados da conta</h3>
+
+        <div class="flex flex-col sm:flex-row gap-5 sm:items-center">
+          <div id="fotoAtual" class="w-24 h-24 rounded-full bg-blue-100 text-blue-700 text-2xl font-bold flex items-center justify-center overflow-hidden shrink-0" aria-label="Foto de perfil"></div>
+          <div class="space-y-2 flex-1">
+            <div id="zonaFoto" class="border-2 border-dashed border-slate-300 rounded-xl px-4 py-3 text-xs text-slate-500">
+              Arraste uma imagem PNG ou JPG até aqui ou
+              <label for="inputFoto" class="text-blue-700 font-semibold underline cursor-pointer focus-within:outline focus-within:outline-2">escolha um arquivo</label>.
+              <input type="file" id="inputFoto" accept="image/png,image/jpeg" class="sr-only">
+              <p class="mt-1 text-[11px]">PNG ou JPG, até <span id="limiteFoto">2 MB</span>, mínimo 128×128 pixels.</p>
+            </div>
+            <div id="previaFoto" class="hidden flex items-center gap-3">
+              <canvas id="canvasPrevia" width="96" height="96" class="w-24 h-24 rounded-full border border-slate-200" aria-label="Pré-visualização da nova foto"></canvas>
+              <div class="space-y-2">
+                <p class="text-[11px] text-slate-500">Pré-visualização. A imagem é recortada ao centro, em quadrado.</p>
+                <div class="flex gap-2">
+                  <button type="button" id="btnSalvarFoto" class="px-4 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-40">Salvar foto</button>
+                  <button type="button" id="btnCancelarFoto" class="px-4 py-2 rounded-xl text-xs font-bold border border-slate-300 text-slate-700 hover:bg-slate-50">Cancelar</button>
+                </div>
+              </div>
+            </div>
+            <button type="button" id="btnRemoverFoto" class="hidden px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-300 text-slate-700 hover:bg-slate-50">Remover foto</button>
+            <p id="msgFoto" class="hidden text-[11px] font-semibold" role="status"></p>
+          </div>
+        </div>
+
+        <form id="formNome" class="space-y-2" novalidate>
+          <label for="nomeExibicao" class="block text-xs font-medium text-slate-500">Nome de exibição</label>
+          <div class="flex gap-2">
+            <input type="text" id="nomeExibicao" maxlength="60" autocomplete="name"
+              class="flex-1 px-4 py-2.5 border rounded-xl border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <button type="submit" class="px-4 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-40">Salvar nome</button>
+          </div>
+          <p class="text-[11px] text-slate-500">Visível para outros usuários (por exemplo, no SmartChat). Entre 2 e 60 caracteres; sem telefone, e-mail ou link. Reservas já feitas não mudam.</p>
+          <p id="msgNome" class="hidden text-[11px] font-semibold" role="status"></p>
+        </form>
+
+        <div class="space-y-2">
+          <p class="block text-xs font-medium text-slate-500">E-mail de login</p>
+          <div class="flex flex-wrap items-center gap-2">
+            <span id="emailAtual" class="text-sm font-semibold text-slate-800 break-all"></span>
+            <button type="button" id="btnAlterarEmail" class="px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-300 text-slate-700 hover:bg-slate-50">Alterar e-mail</button>
+          </div>
+          <p id="emailPendente" class="hidden text-[11px] font-semibold text-amber-800"></p>
+          <form id="formEmail" class="hidden space-y-3 p-4 rounded-xl bg-slate-50 border border-slate-200" novalidate>
+            <div>
+              <label for="novoEmail" class="block text-xs font-medium text-slate-500 mb-1">Novo e-mail</label>
+              <input type="email" id="novoEmail" maxlength="150" autocomplete="off"
+                class="w-full px-4 py-2.5 border rounded-xl border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div data-reauth></div>
+            <p class="text-[11px] text-slate-500">Enviaremos um link de confirmação ao novo e-mail e um aviso ao atual. O e-mail só muda depois da confirmação.</p>
+            <div class="flex gap-2">
+              <button type="submit" class="px-4 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-40">Enviar link de confirmação</button>
+              <button type="button" id="btnFecharEmail" class="px-4 py-2 rounded-xl text-xs font-bold border border-slate-300 text-slate-700 hover:bg-slate-50">Cancelar</button>
+            </div>
+          </form>
+          <p id="msgEmail" class="hidden text-[11px] font-semibold" role="status"></p>
+        </div>
+
+        <dl class="grid sm:grid-cols-2 gap-3 text-xs">
+          <div><dt class="font-medium text-slate-500">Perfil</dt><dd id="papel" class="font-semibold text-slate-800"></dd></div>
+          <div><dt class="font-medium text-slate-500">Cadastrado em</dt><dd id="cadastro" class="font-semibold text-slate-800"></dd></div>
+        </dl>
+      </section>
+
+      <!-- 2. Segurança -->
+      <section class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4" aria-labelledby="tituloSeguranca">
+        <h3 id="tituloSeguranca" class="text-base font-bold text-slate-900">Segurança</h3>
+        <form id="formSenha" class="space-y-3 max-w-md" novalidate>
+          <p id="notaSenhaGoogle" class="hidden text-[11px] text-slate-500">Sua conta foi criada com o Google e ainda não tem senha. Você pode definir uma abaixo, confirmando sua identidade com o Google.</p>
+          <div data-reauth></div>
+          <div>
+            <label for="novaSenha" class="block text-xs font-medium text-slate-500 mb-1">Nova senha</label>
+            <input type="password" id="novaSenha" autocomplete="new-password"
+              class="w-full px-4 py-2.5 border rounded-xl border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <div class="mt-2 h-1.5 rounded-full bg-slate-200 overflow-hidden"><div id="forcaBarra" class="h-full w-0 bg-rose-500 transition-all"></div></div>
+            <p id="forcaTexto" class="mt-1 text-[11px] text-slate-500" aria-live="polite">Mínimo de 10 caracteres.</p>
+          </div>
+          <div>
+            <label for="confirmaSenha" class="block text-xs font-medium text-slate-500 mb-1">Confirme a nova senha</label>
+            <input type="password" id="confirmaSenha" autocomplete="new-password"
+              class="w-full px-4 py-2.5 border rounded-xl border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+          <label class="flex items-center gap-2 text-[11px] text-slate-600"><input type="checkbox" id="mostrarSenhas"> Mostrar senhas</label>
+          <button type="submit" class="px-4 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-40">Alterar senha</button>
+          <p id="msgSenha" class="hidden text-[11px] font-semibold" role="status"></p>
+        </form>
+      </section>
+
+      <!-- 3. Privacidade -->
+      <section class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-3" aria-labelledby="tituloPrivacidade">
+        <h3 id="tituloPrivacidade" class="text-base font-bold text-slate-900">Privacidade</h3>
+        <div id="exclusaoSemPedido" class="space-y-2">
+          <p class="text-xs text-slate-600">Você pode pedir a exclusão dos seus dados. O pedido é analisado pela equipe antes de qualquer exclusão.</p>
+          <button type="button" id="btnSolicitarExclusao" class="px-4 py-2 rounded-xl text-xs font-bold border border-rose-300 text-rose-700 hover:bg-rose-50">Solicitar exclusão de dados</button>
+        </div>
+        <div id="exclusaoEmAnalise" class="hidden space-y-2">
+          <p id="textoExclusao" class="text-xs font-semibold text-amber-800"></p>
+          <button type="button" id="btnCancelarExclusao" class="px-4 py-2 rounded-xl text-xs font-bold border border-slate-300 text-slate-700 hover:bg-slate-50">Cancelar solicitação</button>
+        </div>
+        <p id="msgExclusao" class="hidden text-[11px] font-semibold" role="status"></p>
+      </section>
+    </div>
+  </main>
+
+  <script src="js/perfil.js"></script>
+  <script>lucide.createIcons();</script>
+</body>
+
+</html>
