@@ -95,6 +95,7 @@ public class AuthService {
         // A coluna exige hash. Conta criada pelo Google recebe o hash de uma
         // senha aleatória que ninguém conhece: só entra pelo Google.
         usuario.setSenhaHash(passwordEncoder.encode(UUID.randomUUID().toString()));
+        usuario.setSenhaDefinida(false);
         usuario.setPapel(papelDoPerfil(perfil));
         usuario.setAtivo(true);
         return usuario;

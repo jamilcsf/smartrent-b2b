@@ -32,6 +32,7 @@ public class JwtService {
                 .subject(usuario.getEmail())
                 .claim("nome", usuario.getNome())
                 .claim("papel", usuario.getPapel().name())
+                .claim("sv", usuario.getSessaoVersao())
                 .issuedAt(Date.from(agora))
                 .expiration(Date.from(agora.plusSeconds(validadeSegundos)))
                 .signWith(chave)
@@ -56,6 +57,20 @@ public class JwtService {
             return claims.getSubject();
         } catch (Exception e) {
             return null;
+        }
+    }
+
+    /**
+     * Versao de sessao gravada no token (0 para tokens antigos, sem a claim).
+     * O filtro compara com a do usuario: trocar senha/e-mail invalida os demais tokens.
+     */
+    public int versaoDaSessao(String token) {
+        try {
+            Object sv = Jwts.parser().verifyWith(chave).build()
+                    .parseSignedClaims(token).getPayload().get("sv");
+            return sv instanceof Number n ? n.intValue() : 0;
+        } catch (Exception e) {
+            return -1;
         }
     }
 

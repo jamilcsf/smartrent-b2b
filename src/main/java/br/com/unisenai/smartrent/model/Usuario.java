@@ -43,6 +43,22 @@ public class Usuario {
     @Column(name = "smartchat_liberado", nullable = false)
     private boolean smartchatLiberado;
 
+    /** Nome do arquivo (aleatorio) da foto de perfil, ou nulo quando nao ha foto. */
+    @Column(name = "foto_arquivo", length = 64)
+    private String fotoArquivo;
+
+    /** Muda a cada troca de foto: entra na URL e evita cache antigo. */
+    @Column(name = "foto_versao", nullable = false)
+    private int fotoVersao;
+
+    /** Sobe a cada troca de senha/e-mail; o token carrega a versao e so vale se for a atual. */
+    @Column(name = "sessao_versao", nullable = false)
+    private int sessaoVersao;
+
+    /** false = conta criada pelo Google, sem senha conhecida. */
+    @Column(name = "senha_definida", nullable = false)
+    private boolean senhaDefinida = true;
+
     @Column(name = "data_criacao", nullable = false, updatable = false)
     private LocalDateTime dataCriacao;
 
@@ -124,5 +140,37 @@ public class Usuario {
 
     public void setSmartchatLiberado(boolean smartchatLiberado) {
         this.smartchatLiberado = smartchatLiberado;
+    }
+
+    public String getFotoArquivo() {
+        return fotoArquivo;
+    }
+
+    public void setFotoArquivo(String fotoArquivo) {
+        this.fotoArquivo = fotoArquivo;
+    }
+
+    public int getFotoVersao() {
+        return fotoVersao;
+    }
+
+    public void setFotoVersao(int fotoVersao) {
+        this.fotoVersao = fotoVersao;
+    }
+
+    public int getSessaoVersao() {
+        return sessaoVersao;
+    }
+
+    public void setSessaoVersao(int sessaoVersao) {
+        this.sessaoVersao = sessaoVersao;
+    }
+
+    public boolean isSenhaDefinida() {
+        return senhaDefinida;
+    }
+
+    public void setSenhaDefinida(boolean senhaDefinida) {
+        this.senhaDefinida = senhaDefinida;
     }
 }

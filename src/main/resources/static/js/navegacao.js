@@ -60,7 +60,10 @@
     try {
       var eu = await Api.get('/api/auth/me', { ignorar401: true });
       var atual = Auth.getUser() || {};
-      if (eu && eu.smartchatLiberado !== atual.smartchatLiberado) {
+      var campos = ['smartchatLiberado', 'nome', 'email', 'fotoUrl'];
+      var mudou = !!eu && (campos.some(function (c) { return eu[c] !== atual[c]; })
+        || JSON.stringify(eu.restricoes || []) !== JSON.stringify(atual.restricoes || []));
+      if (mudou) {
         Auth.definirSessao(Auth.getToken(), Object.assign({}, atual, eu));
       }
     } catch (e) { /* segue com o que ja se sabe */ }

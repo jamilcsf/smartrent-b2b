@@ -55,6 +55,12 @@ public class SecurityConfig {
                         // O fluxo SSE usa ticket de uso unico (EventSource nao envia Authorization).
                         .requestMatchers("/api/smartchat/stream").permitAll()
                         .requestMatchers("/api/cliente/**", "/api/smartchat/**").authenticated()
+                        // Foto de perfil e exibida a outros usuarios (nome de arquivo imprevisivel);
+                        // o resto do perfil e sempre do proprio usuario autenticado.
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/perfil/foto/*").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/perfil/exclusao-dados/cancelar").permitAll()
+                        .requestMatchers("/api/perfil/email/confirmar").permitAll()
+                        .requestMatchers("/api/perfil/**").authenticated()
                         .anyRequest().permitAll())
                 // Sem isto o Spring Security responderia 401 com WWW-Authenticate
                 // e o navegador abriria a caixa de dialogo do basic auth.

@@ -33,21 +33,57 @@
     }
 
     var u = estado.user || {};
-    area.innerHTML =
-      '<div class="flex items-center gap-2">' +
-        '<span class="w-7 h-7 rounded-full bg-blue-100 text-blue-700 text-[10px] font-bold ' +
-        'flex items-center justify-center" title="' + (u.email || '') + '">' +
-          iniciais(u.nome) +
-        '</span>' +
-        '<span class="text-xs font-semibold text-slate-700">' + (u.nome || 'Minha conta') + '</span>' +
-        '<button type="button" id="btnSair" class="ml-2 text-xs font-semibold text-slate-500 ' +
-        'hover:text-slate-900 underline underline-offset-2">Sair</button>' +
-      '</div>';
+    area.textContent = '';
 
-    var botao = document.getElementById('btnSair');
-    if (botao) {
-      botao.addEventListener('click', function () { Auth.logout(); });
+    var caixa = document.createElement('div');
+    caixa.className = 'flex items-center gap-2';
+
+    // Avatar + nome levam ao perfil. Tudo entra por textContent/atributos: o nome
+    // e escolhido pelo usuario e nunca pode virar HTML.
+    var link = document.createElement('a');
+    link.id = 'linkPerfil';
+    link.href = '/perfil.html';
+    link.setAttribute('aria-label', 'Abrir meu perfil');
+    link.title = 'Abrir meu perfil';
+    link.className = 'flex items-center gap-2 rounded-lg px-1.5 py-1 hover:bg-slate-100 ' +
+      'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 transition';
+
+    link.appendChild(avatar(u));
+
+    var nome = document.createElement('span');
+    nome.className = 'text-xs font-semibold text-slate-700';
+    nome.textContent = u.nome || 'Minha conta';
+    link.appendChild(nome);
+    caixa.appendChild(link);
+
+    var sair = document.createElement('button');
+    sair.type = 'button';
+    sair.id = 'btnSair';
+    sair.className = 'ml-2 text-xs font-semibold text-slate-500 hover:text-slate-900 underline underline-offset-2';
+    sair.textContent = 'Sair';
+    sair.addEventListener('click', function () { Auth.logout(); });
+    caixa.appendChild(sair);
+
+    area.appendChild(caixa);
+  }
+
+  /** Foto quando existir (com queda para as iniciais se a imagem falhar); senao, as iniciais. */
+  function avatar(u) {
+    var caixa = document.createElement('span');
+    caixa.className = 'w-7 h-7 rounded-full bg-blue-100 text-blue-700 text-[10px] font-bold ' +
+      'flex items-center justify-center overflow-hidden shrink-0';
+    function comoIniciais() { caixa.textContent = iniciais(u.nome); }
+    if (u.fotoUrl && /^\/api\/perfil\/foto\//.test(u.fotoUrl)) {
+      var img = document.createElement('img');
+      img.src = u.fotoUrl;
+      img.alt = '';
+      img.className = 'w-full h-full object-cover';
+      img.addEventListener('error', comoIniciais);
+      caixa.appendChild(img);
+    } else {
+      comoIniciais();
     }
+    return caixa;
   }
 
   /**

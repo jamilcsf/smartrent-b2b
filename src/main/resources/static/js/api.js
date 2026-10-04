@@ -79,6 +79,9 @@
     put: function (url, dados, opcoes) {
       return request(url, Object.assign({ method: 'PUT', body: JSON.stringify(dados) }, opcoes));
     },
+    patch: function (url, dados, opcoes) {
+      return request(url, Object.assign({ method: 'PATCH', body: JSON.stringify(dados) }, opcoes));
+    },
     del: function (url, opcoes) {
       return request(url, Object.assign({ method: 'DELETE' }, opcoes));
     }
