@@ -184,7 +184,7 @@
         '<td class="p-3 text-slate-600">' + esc(r.dataCheckin) + ' até ' + esc(r.dataCheckout) + '</td>' +
         '<td class="p-3 font-bold text-slate-900">' + moeda(r.valorTotal) +
           '<br><span class="text-[10px] font-normal text-slate-500">' + r.numeroDiarias + ' × ' + moeda(r.precoDiaria) + (Number(r.taxaLimpeza) > 0 ? ' + limpeza ' + moeda(r.taxaLimpeza) : '') + ' · ' + r.numeroHospedes + ' hóspede(s)</span></td>' +
-        '<td class="p-3"><span class="px-2.5 py-1 rounded-full text-[10px] font-bold border ' + cls + '">' + esc(rotulo) + '</span></td>' +
+        '<td class="p-3"><span class="inline-block whitespace-nowrap px-2.5 py-1 rounded-full text-[10px] font-bold border ' + cls + '">' + esc(rotulo) + '</span></td>' +
         '<td class="p-3 text-center space-x-1">' +
           (cancelada ? '' : '<button type="button" data-rg="cancelar" data-id="' + r.id + '" class="bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 px-2.5 py-1 rounded-lg text-xs font-semibold">Cancelar</button>') +
           (cancelada ? '' : '<button type="button" data-rg="editar" data-id="' + r.id + '" class="bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 px-2.5 py-1 rounded-lg text-xs font-semibold">Editar</button>') +
