@@ -211,6 +211,188 @@
     });
   }
 
+  // ------------------------------------------------------ reautenticacao (senha atual)
+
+  /**
+   * Cada formulario sensivel (senha, e-mail, exclusao) tem um espaco [data-reauth]. Conta com senha:
+   * campo "Senha atual". Conta criada pelo Google (sem senha): botao do Google, que entrega uma
+   * credencial recente, verificada no servidor. A confirmacao em si e sempre do servidor.
+   */
+  var Reauth = {
+    credencial: null,
+    clienteGoogle: undefined,
+    contador: 0,
+
+    atualizar: function (perfil) {
+      var self = this;
+      document.querySelectorAll('[data-reauth]').forEach(function (area) {
+        var modo = perfil.senhaDefinida ? 'senha' : 'google';
+        if (area.dataset.pronto === modo) { return; }
+        area.dataset.pronto = modo;
+        area.textContent = '';
+        if (perfil.senhaDefinida) {
+          self.contador++;
+          var id = 'senhaAtual' + self.contador;
+          var rotulo = document.createElement('label');
+          rotulo.className = 'block text-xs font-medium text-slate-500 mb-1';
+          rotulo.setAttribute('for', id);
+          rotulo.textContent = 'Senha atual';
+          var campo = document.createElement('input');
+          campo.type = 'password';
+          campo.id = id;
+          campo.autocomplete = 'current-password';
+          campo.dataset.senhaAtual = '1';
+          campo.className = 'w-full px-4 py-2.5 border rounded-xl border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
+          area.appendChild(rotulo);
+          area.appendChild(campo);
+        } else {
+          var info = document.createElement('p');
+          info.className = 'text-[11px] text-slate-600 mb-2';
+          info.textContent = 'Confirme sua identidade com o Google para continuar:';
+          var botao = document.createElement('div');
+          botao.dataset.googleBotao = '1';
+          var status = document.createElement('p');
+          status.dataset.googleStatus = '1';
+          status.className = 'text-[11px] font-semibold text-emerald-700 mt-1';
+          status.textContent = self.credencial ? 'Identidade confirmada com o Google.' : '';
+          area.appendChild(info);
+          area.appendChild(botao);
+          area.appendChild(status);
+        }
+      });
+      if (!perfil.senhaDefinida) { this.iniciarGoogle(); }
+    },
+
+    iniciarGoogle: async function () {
+      var self = this;
+      if (self.clienteGoogle !== undefined) { return self.desenharGoogle(); }
+      try {
+        var cfg = await Api.get('/api/auth/config');
+        self.clienteGoogle = cfg.googleClientId || null;
+      } catch (e) {
+        self.clienteGoogle = null;
+      }
+      if (!self.clienteGoogle) {
+        document.querySelectorAll('[data-google-status]').forEach(function (el) {
+          el.className = 'text-[11px] font-semibold text-rose-600 mt-1';
+          el.textContent = 'O acesso com o Google não está configurado neste ambiente.';
+        });
+        return;
+      }
+      var s = document.createElement('script');
+      s.src = 'https://accounts.google.com/gsi/client';
+      s.async = true;
+      s.onload = function () {
+        global.google.accounts.id.initialize({
+          client_id: self.clienteGoogle,
+          callback: function (resposta) {
+            self.credencial = resposta.credential;
+            document.querySelectorAll('[data-google-status]').forEach(function (el) {
+              el.textContent = 'Identidade confirmada com o Google.';
+            });
+          }
+        });
+        self.desenharGoogle();
+      };
+      document.head.appendChild(s);
+    },
+
+    desenharGoogle: function () {
+      if (!global.google || !global.google.accounts) { return; }
+      document.querySelectorAll('[data-google-botao]').forEach(function (el) {
+        el.textContent = '';
+        global.google.accounts.id.renderButton(el, { theme: 'outline', size: 'large', shape: 'pill', text: 'continue_with', locale: 'pt-BR' });
+      });
+    },
+
+    /** Credencial a enviar: { senhaAtual } ou { credencialGoogle }. */
+    ler: function (container) {
+      var campo = container.querySelector('[data-senha-atual]');
+      if (campo) { return { senhaAtual: campo.value }; }
+      return { credencialGoogle: this.credencial };
+    },
+
+    informada: function (dados) {
+      return !!(dados.senhaAtual || dados.credencialGoogle);
+    },
+
+    limpar: function (container) {
+      var campo = container.querySelector('[data-senha-atual]');
+      if (campo) { campo.value = ''; }
+    }
+  };
+  global.PerfilReauth = Reauth;
+
+  // ------------------------------------------------------------------- senha
+
+  /** Indicador de forca so de apoio: quem decide (tamanho, senhas comuns...) e o servidor. */
+  function forca(senha) {
+    if (!senha) { return { pontos: 0, texto: 'Mínimo de 10 caracteres.', cor: 'bg-slate-300' }; }
+    var classes = [/[a-z]/, /[A-Z]/, /[0-9]/, /[^A-Za-z0-9]/].filter(function (r) { return r.test(senha); }).length;
+    var pontos = Math.min(senha.length, 20) / 20 * 55 + classes * 11;
+    if (senha.length < 10) { return { pontos: Math.min(pontos, 30), texto: 'Curta demais: use ao menos 10 caracteres.', cor: 'bg-rose-500' }; }
+    if (pontos < 55) { return { pontos: pontos, texto: 'Fraca: misture letras, números e símbolos.', cor: 'bg-rose-500' }; }
+    if (pontos < 75) { return { pontos: pontos, texto: 'Razoável.', cor: 'bg-amber-500' }; }
+    if (pontos < 90) { return { pontos: pontos, texto: 'Boa.', cor: 'bg-lime-500' }; }
+    return { pontos: pontos, texto: 'Forte.', cor: 'bg-emerald-500' };
+  }
+
+  function iniciarSenha() {
+    var nova = $('novaSenha');
+    nova.addEventListener('input', function () {
+      var f = forca(nova.value);
+      var barra = $('forcaBarra');
+      barra.style.width = Math.max(4, Math.min(100, f.pontos)) + '%';
+      barra.className = 'h-full transition-all ' + f.cor;
+      $('forcaTexto').textContent = f.texto;
+    });
+    $('mostrarSenhas').addEventListener('change', function (e) {
+      document.querySelectorAll('#formSenha input[type="password"], #formSenha input[data-mostrar]').forEach(function (campo) {
+        campo.type = e.target.checked ? 'text' : 'password';
+        campo.dataset.mostrar = '1';
+      });
+    });
+    $('formSenha').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var form = e.currentTarget;
+      var botao = form.querySelector('button[type="submit"]');
+      var cred = Reauth.ler(form.querySelector('[data-reauth]'));
+      if (!Reauth.informada(cred)) {
+        mensagem('msgSenha', estado.perfil.senhaDefinida ? 'Informe a senha atual.' : 'Confirme sua identidade com o Google.', true);
+        return;
+      }
+      if (nova.value.length < 10) {
+        mensagem('msgSenha', 'A nova senha deve ter ao menos 10 caracteres.', true);
+        return;
+      }
+      if (nova.value !== $('confirmaSenha').value) {
+        mensagem('msgSenha', 'A confirmação não confere com a nova senha.', true);
+        return;
+      }
+      ocupado(botao, true);
+      mensagem('msgSenha', '');
+      try {
+        var resp = await Api.post('/api/perfil/senha', {
+          senhaAtual: cred.senhaAtual, credencialGoogle: cred.credencialGoogle,
+          novaSenha: nova.value, confirmacaoSenha: $('confirmaSenha').value
+        });
+        // As outras sessoes deixaram de valer; esta continua com o token novo.
+        Auth.definirSessao(resp.token, Object.assign({}, Auth.getUser() || {}, resp.usuario));
+        nova.value = '';
+        $('confirmaSenha').value = '';
+        nova.dispatchEvent(new Event('input'));
+        Reauth.limpar(form.querySelector('[data-reauth]'));
+        Reauth.credencial = null;
+        mensagem('msgSenha', 'Senha alterada. As outras sessões foram encerradas e enviamos um aviso ao seu e-mail.');
+        aplicar(await Api.get('/api/perfil'));
+      } catch (err) {
+        mensagem('msgSenha', err.message || 'Não foi possível alterar a senha.', true);
+      } finally {
+        ocupado(botao, false);
+      }
+    });
+  }
+
   global.Perfil = {
     $: $, iniciais: iniciais, mensagem: mensagem, ocupado: ocupado, pintarFoto: pintarFoto,
     aplicar: aplicar, sincronizarSessao: sincronizarSessao, perfil: function () { return estado.perfil; }
@@ -224,6 +406,7 @@
     }
     iniciarNome();
     iniciarFoto();
+    iniciarSenha();
     carregar();
   });
 })(window);

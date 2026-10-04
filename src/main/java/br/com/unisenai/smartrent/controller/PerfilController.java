@@ -1,10 +1,13 @@
 package br.com.unisenai.smartrent.controller;
 
 import br.com.unisenai.smartrent.dto.AtualizarPerfilRequest;
+import br.com.unisenai.smartrent.dto.AuthResponse;
 import br.com.unisenai.smartrent.dto.PerfilResponse;
+import br.com.unisenai.smartrent.dto.SenhaRequest;
 import br.com.unisenai.smartrent.model.Usuario;
 import br.com.unisenai.smartrent.service.FotoPerfilService;
 import br.com.unisenai.smartrent.service.PerfilService;
+import br.com.unisenai.smartrent.service.SenhaService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.http.MediaType;
@@ -23,10 +26,12 @@ public class PerfilController {
 
     private final PerfilService perfilService;
     private final FotoPerfilService fotoService;
+    private final SenhaService senhaService;
 
-    public PerfilController(PerfilService perfilService, FotoPerfilService fotoService) {
+    public PerfilController(PerfilService perfilService, FotoPerfilService fotoService, SenhaService senhaService) {
         this.perfilService = perfilService;
         this.fotoService = fotoService;
+        this.senhaService = senhaService;
     }
 
     @GetMapping
@@ -55,5 +60,12 @@ public class PerfilController {
     @DeleteMapping("/foto")
     public PerfilResponse removerFoto(@AuthenticationPrincipal Usuario usuario, HttpServletRequest http) {
         return fotoService.remover(usuario, http.getRemoteAddr());
+    }
+
+    /** Troca a senha e devolve um token novo para esta sessao (as demais deixam de valer). */
+    @PostMapping("/senha")
+    public AuthResponse alterarSenha(@AuthenticationPrincipal Usuario usuario, @RequestBody SenhaRequest req,
+                                     HttpServletRequest http) {
+        return senhaService.alterar(usuario, req, http.getRemoteAddr());
     }
 }

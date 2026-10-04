@@ -9,6 +9,7 @@ import br.com.unisenai.smartrent.security.JwtAuthenticationFilter;
 import br.com.unisenai.smartrent.security.JwtService;
 import br.com.unisenai.smartrent.service.FotoPerfilService;
 import br.com.unisenai.smartrent.service.PerfilService;
+import br.com.unisenai.smartrent.service.SenhaService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -39,6 +40,7 @@ class PerfilControllerTest {
     @Autowired private MockMvc mockMvc;
     @MockBean private PerfilService perfilService;
     @MockBean private FotoPerfilService fotoPerfilService;
+    @MockBean private SenhaService senhaService;
     @MockBean private JwtService jwtService;
     @MockBean private UsuarioRepository usuarioRepository;
 

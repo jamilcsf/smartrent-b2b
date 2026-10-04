@@ -41,4 +41,32 @@ public class LimitadorDeTaxa {
             return true;
         }
     }
+
+    /** So consulta: ja ha {@code limite} ou mais ocorrencias na janela? (Nao registra nada.) */
+    public boolean atingiu(String chave, int limite, Duration janela) {
+        Deque<Instant> fila = janelas.get(chave);
+        if (fila == null) {
+            return false;
+        }
+        synchronized (fila) {
+            Instant corte = clock.instant().minus(janela);
+            while (!fila.isEmpty() && fila.peekFirst().isBefore(corte)) {
+                fila.pollFirst();
+            }
+            return fila.size() >= limite;
+        }
+    }
+
+    /** Registra uma ocorrencia (por exemplo, uma senha errada) sem decidir nada. */
+    public void registrar(String chave) {
+        Deque<Instant> fila = janelas.computeIfAbsent(chave, k -> new ArrayDeque<>());
+        synchronized (fila) {
+            fila.addLast(clock.instant());
+        }
+    }
+
+    /** Esquece as ocorrencias da chave (depois de um sucesso). */
+    public void limpar(String chave) {
+        janelas.remove(chave);
+    }
 }
