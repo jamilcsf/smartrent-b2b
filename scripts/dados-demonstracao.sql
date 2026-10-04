@@ -15,6 +15,10 @@
 -- =====================================================================
 
 delete from smartchat_denuncias;
+delete from solicitacao_exclusao_historico;
+delete from solicitacoes_exclusao;
+delete from troca_email;
+delete from auditoria_conta;
 delete from smartchat_bloqueios_usuario;
 delete from smartchat_mensagens;
 delete from smartchat_conversa_reservas;

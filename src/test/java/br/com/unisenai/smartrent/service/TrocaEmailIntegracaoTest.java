@@ -158,7 +158,7 @@ class TrocaEmailIntegracaoTest {
     }
 
     @Test
-    @DisplayName("CT473 - Resposta neutra: e-mail livre e e-mail ja usado recebem exatamente a mesma mensagem; para o ja usado nada e enviado")
+    @DisplayName("CT473 - Resposta neutra: e-mail livre e e-mail ja usado recebem a mesma mensagem, o mesmo pedido pendente e o mesmo aviso ao antigo; ao endereco ja usado nada e enviado")
     void respostaNeutra() {
         String livre = service.solicitar(ana, "livre@exemplo.com", SENHA, null, "ip");
         String usado = service.solicitar(ana, bia.getEmail(), SENHA, null, "ip");
@@ -166,8 +166,11 @@ class TrocaEmailIntegracaoTest {
         confirmarTransacao();
 
         Mockito.verify(emailSender, Mockito.never()).enviar(eq(bia.getEmail()), anyString(), anyString());
-        // O pedido para o endereco ja usado cancelou o pendente anterior e nao criou outro: nao ha o que confirmar.
-        assertTrue(trocaRepository.abertas(ana.getId()).isEmpty());
+        // Neutralidade tambem na tela: nos dois casos ha UM pedido pendente (para o endereco usado ele nunca
+        // pode ser confirmado, ninguem recebe o token) e o aviso ao e-mail antigo sai igual.
+        assertEquals(1, trocaRepository.abertas(ana.getId()).size());
+        assertEquals(bia.getEmail(), trocaRepository.abertas(ana.getId()).get(0).getEmailNovo());
+        Mockito.verify(emailSender, Mockito.times(2)).enviar(eq(ana.getEmail()), anyString(), anyString());
     }
 
     @Test

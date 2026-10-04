@@ -22,8 +22,9 @@ import java.util.regex.Pattern;
  * <ol>
  *   <li>pedido: exige reautenticacao, valida o formato e responde SEMPRE com a mesma mensagem
  *       neutra, exista ou nao uma conta com o endereco (nao ha como descobrir quem tem conta);</li>
- *   <li>so se o endereco estiver livre: gera token de uso unico (guarda so o hash, validade
- *       curta), envia o link ao NOVO e-mail e um aviso ao e-mail ANTIGO (depois do commit);</li>
+ *   <li>gera token de uso unico (guarda so o hash, validade curta) e avisa o e-mail ANTIGO; o link
+ *       so e enviado ao NOVO e-mail se o endereco estiver livre (se nao, o pedido fica pendente do mesmo
+ *       jeito, para a tela nao denunciar a existencia da conta); e-mails saem depois do commit;</li>
  *   <li>confirmacao do link: reconfere a disponibilidade, troca o e-mail, sobe a versao da sessao
  *       (as outras sessoes caem), consome o token e audita.</li>
  * </ol>
@@ -93,22 +94,27 @@ public class TrocaEmailService {
 
         boolean livre = usuarioRepository.findByEmail(email).isEmpty();
         auditoria.registrar(u.getId(), AuditoriaContaService.EMAIL_TROCA_SOLICITADA,
-                livre ? "pedido de troca de e-mail registrado" : "pedido recusado em silencio (endereco indisponivel)", ip);
+                livre ? "pedido de troca de e-mail registrado" : "pedido registrado sem envio (endereco indisponivel)", ip);
+
+        // NEUTRALIDADE: o pedido fica pendente e o aviso ao e-mail antigo sai tanto para endereco livre
+        // quanto para endereco ja usado; assim nem a tela ("aguardando confirmacao") nem os e-mails
+        // revelam se existe conta com o endereco. Se estiver em uso, o token e gerado e descartado: ninguem
+        // o recebe, entao o pedido nunca pode ser confirmado.
+        String token = TokenSeguro.gerar();
+        trocaRepository.save(new TrocaEmail(u.getId(), email, TokenSeguro.hash(token), agora,
+                agora.plus(Duration.ofMinutes(props.emailTokenMinutos()))));
+        String nome = u.getNome();
+        String emailAntigo = u.getEmail();
+        String quando = QUANDO.format(LocalDateTime.now(clock));
         if (livre) {
-            String token = TokenSeguro.gerar();
-            trocaRepository.save(new TrocaEmail(u.getId(), email, TokenSeguro.hash(token), agora,
-                    agora.plus(Duration.ofMinutes(props.emailTokenMinutos()))));
             String link = props.baseUrl().replaceAll("/+$", "") + "/confirmar-email.html?token=" + token;
-            String nome = u.getNome();
-            String emailAntigo = u.getEmail();
-            String quando = QUANDO.format(LocalDateTime.now(clock));
             AposCommit.executar("link de confirmacao de e-mail", () -> emailSender.enviar(email,
                     textos.get("perfil.email.confirmar.assunto"),
                     textos.get("perfil.email.confirmar.corpo", nome, props.emailTokenMinutos(), link)));
-            AposCommit.executar("aviso ao e-mail antigo", () -> emailSender.enviar(emailAntigo,
-                    textos.get("perfil.email.troca-solicitada-antigo.assunto"),
-                    textos.get("perfil.email.troca-solicitada-antigo.corpo", nome, quando)));
         }
+        AposCommit.executar("aviso ao e-mail antigo", () -> emailSender.enviar(emailAntigo,
+                textos.get("perfil.email.troca-solicitada-antigo.assunto"),
+                textos.get("perfil.email.troca-solicitada-antigo.corpo", nome, quando)));
         return mensagemNeutra();
     }
 

@@ -102,4 +102,44 @@ class PerfilControllerTest {
             }
         }
     }
+
+    @Test
+    @DisplayName("CT503 - Todo endpoint do perfil exige login (401), exceto os tres publicos de proposito: foto por nome aleatorio e os dois links de e-mail com token de uso unico")
+    void tudoExigeLoginExcetoPublicosDeProposito() throws Exception {
+        String json = "{}";
+        var tipo = org.springframework.http.MediaType.APPLICATION_JSON;
+        mockMvc.perform(get("/api/perfil")).andExpect(status().isUnauthorized());
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch("/api/perfil")
+                .contentType(tipo).content(json)).andExpect(status().isUnauthorized());
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart("/api/perfil/foto"))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete("/api/perfil/foto"))
+                .andExpect(status().isUnauthorized());
+        for (String caminho : new String[]{"/api/perfil/senha", "/api/perfil/email", "/api/perfil/exclusao-dados"}) {
+            mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post(caminho)
+                    .contentType(tipo).content(json)).andExpect(status().isUnauthorized());
+        }
+        mockMvc.perform(get("/api/perfil/exclusao-dados")).andExpect(status().isUnauthorized());
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete("/api/perfil/exclusao-dados"))
+                .andExpect(status().isUnauthorized());
+
+        // publicos de proposito (a prova e o token/nome aleatorio): nao devolvem 401
+        mockMvc.perform(get("/api/perfil/foto/00000000000000000000000000000000.jpg")).andExpect(status().isNotFound());
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/api/perfil/email/confirmar")
+                .contentType(tipo).content("{\"token\":\"x\"}")).andExpect(status().isOk());
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/api/perfil/exclusao-dados/cancelar")
+                .contentType(tipo).content("{\"token\":\"x\"}")).andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("CT504 - Para outros usuarios (SmartChat) so saem nome e foto: o interlocutor nao tem e-mail, papel de conta, data de cadastro nem dados de seguranca")
+    void soNomeEFotoParaOutrosUsuarios() {
+        var campos = java.util.Arrays.stream(br.com.unisenai.smartrent.dto.SmartChatDtos.Interlocutor.class.getRecordComponents())
+                .map(c -> c.getName()).toList();
+        assertEquals(java.util.List.of("nome", "iniciais", "papel", "fotoUrl"), campos);
+        assertFalse(campos.contains("email"));
+        var mensagem = java.util.Arrays.stream(br.com.unisenai.smartrent.dto.SmartChatDtos.Mensagem.class.getRecordComponents())
+                .map(c -> c.getName()).toList();
+        assertFalse(mensagem.contains("email") || mensagem.contains("autorId"), mensagem.toString());
+    }
 }
