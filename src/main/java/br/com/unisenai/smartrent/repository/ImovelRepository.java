@@ -71,6 +71,22 @@ public interface ImovelRepository extends JpaRepository<Imovel, Long> {
             + "and i.republicarEm <= :agora")
     int promoverRepublicacoesVencidas(@Param("agora") LocalDateTime agora);
 
+    /**
+     * Igual a {@link #promoverRepublicacoesVencidas}, mas NAO republica anuncio de gestor com solicitacao
+     * de exclusao de dados em andamento (republicar e uma das acoes restritas): o anuncio fica agendado e
+     * a promocao seguinte o retoma quando as restricoes terminarem.
+     */
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("update Imovel i set i.status = br.com.unisenai.smartrent.model.enums.StatusAnuncio.PUBLICADO, "
+            + "i.republicarEm = null "
+            + "where i.status = br.com.unisenai.smartrent.model.enums.StatusAnuncio.REPUBLICACAO_AGENDADA "
+            + "and i.republicarEm <= :agora "
+            + "and not exists (select s.id from SolicitacaoExclusao s where s.usuarioId = i.usuario.id and s.estado in ("
+            + "br.com.unisenai.smartrent.model.enums.EstadoExclusao.PENDENTE, "
+            + "br.com.unisenai.smartrent.model.enums.EstadoExclusao.EM_ANALISE, "
+            + "br.com.unisenai.smartrent.model.enums.EstadoExclusao.APROVADA))")
+    int promoverRepublicacoesVencidasSemRestritos(@Param("agora") LocalDateTime agora);
+
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("update Imovel i set i.status = br.com.unisenai.smartrent.model.enums.StatusAnuncio.PRONTO_PARA_PUBLICAR "
             + "where i.status = br.com.unisenai.smartrent.model.enums.StatusAnuncio.PRE_PUBLICACAO_AGUARDANDO "

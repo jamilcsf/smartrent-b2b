@@ -46,6 +46,7 @@ public class AnuncioService {
     private final AnuncioProperties props;
     private final Clock clock;
     private final MidiaService midiaService;
+    private final AccountRestrictionService restricoes;
 
     public AnuncioService(ImovelRepository imovelRepository,
                           ImovelAcesso acesso,
@@ -53,8 +54,10 @@ public class AnuncioService {
                           AnuncioGestorMapper mapper,
                           AnuncioProperties props,
                           Clock clock,
-                          MidiaService midiaService) {
+                          MidiaService midiaService,
+                          AccountRestrictionService restricoes) {
         this.midiaService = midiaService;
+        this.restricoes = restricoes;
         this.imovelRepository = imovelRepository;
         this.acesso = acesso;
         this.auditoria = auditoria;
@@ -173,6 +176,7 @@ public class AnuncioService {
     @Transactional
     public AnuncioGestorResponse publicar(Usuario gestor, Long id, Boolean aceiteTermo, String ip) {
         Imovel imovel = acesso.doGestorParaAtualizar(gestor, id);
+        restricoes.exigirPodePublicar(gestor); // pedido de exclusao de dados em andamento: nao publica
         promoverSeVencido(imovel);
 
         switch (imovel.getStatus()) {
@@ -242,7 +246,10 @@ public class AnuncioService {
     @Transactional
     public int promoverVencidos() {
         LocalDateTime agora = Agora.de(clock);
-        int republicados = imovelRepository.promoverRepublicacoesVencidas(agora);
+        // Gestor com pedido de exclusao de dados em andamento nao republica (nem automaticamente).
+        int republicados = restricoes.habilitadas()
+                ? imovelRepository.promoverRepublicacoesVencidasSemRestritos(agora)
+                : imovelRepository.promoverRepublicacoesVencidas(agora);
         int prontos = imovelRepository.promoverProntosParaPublicar(
                 Agora.somar(agora, Duration.ofHours(props.janelaPrePublicacaoHoras()).negated(), clock));
         return republicados + prontos;

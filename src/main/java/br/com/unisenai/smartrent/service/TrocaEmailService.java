@@ -46,11 +46,14 @@ public class TrocaEmailService {
     private final LimitadorDeTaxa limitador;
     private final PerfilProperties props;
     private final Clock clock;
+    private final AccountRestrictionService restricoes;
 
     public TrocaEmailService(UsuarioRepository usuarioRepository, TrocaEmailRepository trocaRepository,
                              PerfilService perfilService, ReautenticacaoService reautenticacao,
                              AuditoriaContaService auditoria, EmailSender emailSender, TextosPoliticas textos,
-                             LimitadorDeTaxa limitador, PerfilProperties props, Clock clock) {
+                             LimitadorDeTaxa limitador, PerfilProperties props, Clock clock,
+                             AccountRestrictionService restricoes) {
+        this.restricoes = restricoes;
         this.usuarioRepository = usuarioRepository;
         this.trocaRepository = trocaRepository;
         this.perfilService = perfilService;
@@ -74,6 +77,7 @@ public class TrocaEmailService {
             throw new LimiteExcedidoException("Muitos pedidos de troca de e-mail. Tente novamente mais tarde.");
         }
         Usuario u = perfilService.carregar(sessao);
+        restricoes.exigirPodeAlterarEmail(u); // pedido de exclusao de dados em andamento: e-mail nao muda
         String email = normalizar(novoEmail);
         reautenticacao.exigir(u, senhaAtual, credencialGoogle, "troca de e-mail", ip);
         if (email.equalsIgnoreCase(u.getEmail())) {
@@ -125,6 +129,9 @@ public class TrocaEmailService {
                 .filter(t -> t.pendente(agora))
                 .orElseThrow(TrocaEmailService::linkInvalido);
         Usuario u = usuarioRepository.findById(troca.getUsuarioId()).orElseThrow(TrocaEmailService::linkInvalido);
+        // Vale tambem para link pedido ANTES da solicitacao de exclusao: recusa e o token segue valido
+        // (a transacao desfaz tudo) ate a solicitacao ser cancelada ou negada, ou o link vencer.
+        restricoes.exigirPodeAlterarEmail(u);
 
         // O endereco pode ter sido tomado por outra conta depois do pedido.
         if (usuarioRepository.findByEmail(troca.getEmailNovo()).isPresent()) {

@@ -41,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.*;
         "spring.jpa.hibernate.ddl-auto=create-drop",
         "spring.flyway.enabled=false"
 })
-@Import({PerfilService.class, NomeExibicaoValidador.class, MessageFilterService.class, AuditoriaContaService.class,
+@Import({AccountRestrictionService.class, PerfilService.class, NomeExibicaoValidador.class, MessageFilterService.class, AuditoriaContaService.class,
         LimitadorDeTaxa.class, SenhaService.class, ReautenticacaoService.class, PoliticaDeSenha.class,
         TextosPoliticas.class, SenhaIntegracaoTest.Config.class})
 class SenhaIntegracaoTest {
@@ -51,6 +51,11 @@ class SenhaIntegracaoTest {
         @Bean
         RelogioFalso relogio() {
             return new RelogioFalso(LocalDateTime.of(2026, 10, 3, 15, 0));
+        }
+
+        @Bean
+        br.com.unisenai.smartrent.config.ExclusaoDadosProperties exclusaoDadosProperties() {
+            return br.com.unisenai.smartrent.config.ExclusaoDadosProperties.padrao();
         }
 
         @Bean

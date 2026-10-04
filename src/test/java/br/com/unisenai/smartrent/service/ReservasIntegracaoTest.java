@@ -65,7 +65,8 @@ import static org.junit.jupiter.api.Assertions.*;
 @Import({ReservaService.class, ReservaClienteService.class, ReservaClienteMapper.class, CancelamentoService.class,
         ReembolsoService.class, RefundPolicyService.class, BloqueioService.class, CalendarioService.class,
         AuditoriaService.class, NotificacaoService.class, ImovelAcesso.class, TextosPoliticas.class,
-        NotificadorEmailLog.class, ReservasIntegracaoTest.Config.class})
+        NotificadorEmailLog.class, AccountRestrictionService.class, AuditoriaContaService.class,
+        ReservasIntegracaoTest.Config.class})
 class ReservasIntegracaoTest {
 
     /** Gateway controlavel: conta chamadas e pode falhar o estorno. */
@@ -112,6 +113,11 @@ class ReservasIntegracaoTest {
         @Bean
         ReservaProperties reservaProps() {
             return new ReservaProperties(30);
+        }
+
+        @Bean
+        br.com.unisenai.smartrent.config.ExclusaoDadosProperties exclusaoDadosProperties() {
+            return br.com.unisenai.smartrent.config.ExclusaoDadosProperties.padrao();
         }
 
         @Bean
@@ -537,5 +543,86 @@ class ReservasIntegracaoTest {
                 () -> reservaService.excluir(gestor, paga.id()));
         List<Reserva> todas = new ArrayList<>(reservaRepository.findAll());
         assertEquals(1, todas.size());
+    }
+
+    // ------------------------------------------- restricoes: pedido de exclusao de dados
+
+    private void abrirPedidoDeExclusao(Usuario u) {
+        em.persist(new br.com.unisenai.smartrent.model.SolicitacaoExclusao(u.getId(), u.getEmail(), null, "sinais", "ip",
+                relogio.instant(), relogio.instant().plus(Duration.ofHours(48)),
+                br.com.unisenai.smartrent.service.TokenSeguro.hash(br.com.unisenai.smartrent.service.TokenSeguro.gerar())));
+        em.flush();
+    }
+
+    private void encerrarPedidoDeExclusao(Usuario u) {
+        em.getEntityManager().createQuery("delete from SolicitacaoExclusao s where s.usuarioId = :id")
+                .setParameter("id", u.getId()).executeUpdate();
+    }
+
+    @Test
+    @DisplayName("CT493 - Cliente com pedido de exclusao em andamento nao cria reserva nova (nem pre-visualiza ou paga pendente); a reserva confirmada segue valendo e pode ser cancelada com reembolso")
+    void clienteRestrito() {
+        Resposta confirmada = reservarEPagar(LONGE, LONGE_FIM);
+        Resposta pendente = clienteService.criar(cliente, pedido(LONGE.plusDays(30), LONGE_FIM.plusDays(30), false));
+
+        abrirPedidoDeExclusao(cliente);
+
+        AcessoNegadoException e = assertThrows(AcessoNegadoException.class,
+                () -> clienteService.criar(cliente, pedido(LONGE.plusDays(60), LONGE_FIM.plusDays(60), false)));
+        assertTrue(e.getMessage().contains("exclusão de dados"), e.getMessage());
+        assertThrows(AcessoNegadoException.class,
+                () -> clienteService.previa(cliente, pedido(LONGE.plusDays(60), LONGE_FIM.plusDays(60), false)));
+        assertThrows(AcessoNegadoException.class, () -> clienteService.pagar(cliente, pendente.id(), "ok"),
+                "pagar uma reserva ainda pendente confirmaria uma reserva nova");
+
+        // o que ja estava confirmado segue valendo, e o cancelamento com reembolso nao e restrito
+        assertEquals(StatusReserva.CONFIRMADA, clienteService.buscar(cliente, confirmada.id()).status());
+        Reserva cancelada = cancelamento.cancelarPeloCliente(cliente, confirmada.id(), "mudei de planos");
+        assertEquals(StatusReserva.CANCELADA_COM_REEMBOLSO, cancelada.getStatus());
+
+        // outro cliente nao e afetado
+        assertDoesNotThrow(() -> clienteService.criar(outroCliente, pedido(LONGE.plusDays(60), LONGE_FIM.plusDays(60), false)));
+    }
+
+    @Test
+    @DisplayName("CT494 - Anuncios de gestor com pedido em andamento nao aceitam novas reservas (mensagem generica, sem revelar o motivo) e a disponibilidade publica mostra tudo indisponivel")
+    void gestorRestrito() {
+        Resposta confirmada = reservarEPagar(LONGE, LONGE_FIM);
+        Resposta pendente = clienteService.criar(outroCliente, pedido(LONGE.plusDays(30), LONGE_FIM.plusDays(30), false));
+        LocalDate de = LONGE.minusDays(5);
+        LocalDate ate = LONGE.plusDays(40);
+        assertEquals(2, calendarioService.indisponibilidade(imovel.getId(), de, ate).size(), "antes: so as duas reservas");
+
+        abrirPedidoDeExclusao(gestor);
+
+        AcessoNegadoException e = assertThrows(AcessoNegadoException.class,
+                () -> clienteService.criar(outroCliente, pedido(LONGE.plusDays(60), LONGE_FIM.plusDays(60), false)));
+        assertEquals("Este imóvel não está disponível para novas reservas no momento.", e.getMessage());
+        assertFalse(e.getMessage().toLowerCase().contains("exclus"), "o cliente nao fica sabendo do motivo");
+        assertThrows(AcessoNegadoException.class, () -> clienteService.pagar(outroCliente, pendente.id(), "ok"));
+
+        List<br.com.unisenai.smartrent.dto.CalendarioDtos.Faixa> faixas = calendarioService.indisponibilidade(imovel.getId(), de, ate);
+        assertEquals(1, faixas.size());
+        assertEquals(de, faixas.get(0).inicio());
+        assertEquals(ate, faixas.get(0).fim());
+
+        // Continuam funcionando para o gestor: bloquear datas, cancelar com reembolso integral, ver o calendario.
+        assertDoesNotThrow(() -> bloqueioService.criar(gestor, imovel.getId(), bloqueio(LONGE.plusDays(100), LONGE.plusDays(102), false, false)));
+        Reserva cancelada = cancelamento.cancelarPeloGestor(gestor, confirmada.id(), "imprevisto");
+        assertEquals(StatusReserva.CANCELADA_PELO_GESTOR, cancelada.getStatus());
+        assertNotNull(calendarioService.calendario(gestor, imovel.getId(), de, ate));
+
+        // e a reserva MANUAL do proprio gestor (nao e reserva de cliente) segue permitida
+        assertDoesNotThrow(() -> reservaService.criar(gestor, new ReservaRequest(imovel.getId(), "Hospede Manual", "h@e.com",
+                LONGE.plusDays(120), LONGE.plusDays(122), null, StatusReserva.CONFIRMADA, null, null, 2)));
+    }
+
+    @Test
+    @DisplayName("CT495 - Ao encerrar o pedido (cancelar, negar, concluir) as restricoes somem na hora; o catalogo continua listando o anuncio")
+    void restricaoTermina() {
+        abrirPedidoDeExclusao(cliente);
+        assertThrows(AcessoNegadoException.class, () -> clienteService.criar(cliente, pedido(LONGE, LONGE_FIM, false)));
+        encerrarPedidoDeExclusao(cliente);
+        assertDoesNotThrow(() -> clienteService.criar(cliente, pedido(LONGE, LONGE_FIM, false)));
     }
 }

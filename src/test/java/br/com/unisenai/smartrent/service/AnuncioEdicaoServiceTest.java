@@ -70,7 +70,8 @@ class AnuncioEdicaoServiceTest {
         service = new AnuncioEdicaoService(imovelRepository, rascunhoRepository,
                 new ImovelAcesso(imovelRepository), auditoria, mapper, midiaService,
                 new AnuncioProperties(24, 2, 24, 24, 5), relogio, objectMapper,
-                Validation.buildDefaultValidatorFactory().getValidator());
+                Validation.buildDefaultValidatorFactory().getValidator(),
+                org.mockito.Mockito.mock(AccountRestrictionService.class));
 
         gestor = new Usuario();
         gestor.setId(10L);
@@ -413,7 +414,8 @@ class AnuncioEdicaoServiceTest {
         AnuncioEdicaoService quatroHoras = new AnuncioEdicaoService(imovelRepository, rascunhoRepository,
                 new ImovelAcesso(imovelRepository), auditoria, mapper, midiaService,
                 new AnuncioProperties(24, 4, 24, 24, 5), relogio, objectMapper,
-                Validation.buildDefaultValidatorFactory().getValidator());
+                Validation.buildDefaultValidatorFactory().getValidator(),
+                org.mockito.Mockito.mock(AccountRestrictionService.class));
         quatroHoras.iniciar(gestor, 1L, true);
 
         quatroHoras.confirmar(gestor, 1L, true, "ip");

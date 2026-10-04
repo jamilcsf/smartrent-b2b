@@ -56,6 +56,7 @@ public class AnuncioEdicaoService {
     private final Clock clock;
     private final ObjectMapper objectMapper;
     private final Validator validator;
+    private final AccountRestrictionService restricoes;
 
     public AnuncioEdicaoService(ImovelRepository imovelRepository,
                                 AnuncioRascunhoRepository rascunhoRepository,
@@ -66,7 +67,9 @@ public class AnuncioEdicaoService {
                                 AnuncioProperties props,
                                 Clock clock,
                                 ObjectMapper objectMapper,
-                                Validator validator) {
+                                Validator validator,
+                                AccountRestrictionService restricoes) {
+        this.restricoes = restricoes;
         this.imovelRepository = imovelRepository;
         this.rascunhoRepository = rascunhoRepository;
         this.acesso = acesso;
@@ -158,6 +161,7 @@ public class AnuncioEdicaoService {
     @Transactional
     public AnuncioGestorResponse confirmar(Usuario gestor, Long id, Boolean aceiteTermo, String ip) {
         Imovel imovel = acesso.doGestorParaAtualizar(gestor, id);
+        restricoes.exigirPodeConfirmarEdicao(gestor); // pedido de exclusao de dados em andamento: nao confirma (descartar segue valendo)
         exigirEmEdicao(imovel);
         AuditoriaService.exigirAceite(aceiteTermo);
         midiaService.exigirVideosProntos(id); // video enviando, processando ou com falha impede confirmar

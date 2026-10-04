@@ -40,10 +40,12 @@ public class CalendarioService {
     private final BloqueioDataRepository bloqueioRepository;
     private final Clock clock;
     private final ZoneId zona;
+    private final AccountRestrictionService restricoes;
 
     public CalendarioService(ImovelAcesso acesso, ImovelRepository imovelRepository,
                              ReservaRepository reservaRepository, BloqueioDataRepository bloqueioRepository,
-                             Clock clock, ZoneId zonaDaPlataforma) {
+                             Clock clock, ZoneId zonaDaPlataforma, AccountRestrictionService restricoes) {
+        this.restricoes = restricoes;
         this.acesso = acesso;
         this.imovelRepository = imovelRepository;
         this.reservaRepository = reservaRepository;
@@ -74,9 +76,14 @@ public class CalendarioService {
      */
     @Transactional(readOnly = true)
     public List<Faixa> indisponibilidade(Long imovelId, LocalDate de, LocalDate ate) {
-        imovelRepository.findVisivelPorId(imovelId, Agora.de(clock))
+        var imovel = imovelRepository.findVisivelPorId(imovelId, Agora.de(clock))
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Imóvel não encontrado."));
         validarJanela(de, ate);
+        // Gestor com pedido de exclusao de dados em andamento nao aceita novas reservas: o periodo inteiro
+        // aparece como indisponivel, igual a uma reserva/bloqueio (sem revelar o motivo).
+        if (imovel.getUsuario() != null && restricoes.gestorRestrito(imovel.getUsuario().getId())) {
+            return List.of(new Faixa(de, ate));
+        }
 
         List<Faixa> bruto = new ArrayList<>();
         reservaRepository.findAtivasNoPeriodo(imovelId, de, ate.plusDays(1))

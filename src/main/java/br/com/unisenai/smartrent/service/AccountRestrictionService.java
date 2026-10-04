@@ -48,6 +48,11 @@ public class AccountRestrictionService {
         this.auditoria = auditoria;
     }
 
+    /** DATA_DELETION_RESTRICTIONS_ENABLED. Desligada, nenhuma restricao e aplicada em lugar nenhum. */
+    public boolean habilitadas() {
+        return props.restricoesAtivas();
+    }
+
     /** O usuario tem solicitacao em andamento E as restricoes estao habilitadas? */
     public boolean ativa(Long usuarioId) {
         return usuarioId != null && props.restricoesAtivas()

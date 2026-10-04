@@ -47,7 +47,7 @@ import static org.mockito.ArgumentMatchers.eq;
         "spring.jpa.hibernate.ddl-auto=create-drop",
         "spring.flyway.enabled=false"
 })
-@Import({PerfilService.class, NomeExibicaoValidador.class, MessageFilterService.class, AuditoriaContaService.class,
+@Import({AccountRestrictionService.class, PerfilService.class, NomeExibicaoValidador.class, MessageFilterService.class, AuditoriaContaService.class,
         LimitadorDeTaxa.class, ReautenticacaoService.class, TrocaEmailService.class, TextosPoliticas.class,
         TrocaEmailIntegracaoTest.Config.class})
 class TrocaEmailIntegracaoTest {
@@ -57,6 +57,11 @@ class TrocaEmailIntegracaoTest {
         @Bean
         RelogioFalso relogio() {
             return new RelogioFalso(LocalDateTime.of(2026, 10, 3, 15, 0));
+        }
+
+        @Bean
+        br.com.unisenai.smartrent.config.ExclusaoDadosProperties exclusaoDadosProperties() {
+            return br.com.unisenai.smartrent.config.ExclusaoDadosProperties.padrao();
         }
 
         @Bean

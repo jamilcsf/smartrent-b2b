@@ -57,7 +57,8 @@ class AnuncioServiceTest {
     void preparar() {
         relogio = new RelogioFalso(T0);
         service = new AnuncioService(imovelRepository, new ImovelAcesso(imovelRepository), auditoria, mapper,
-                new AnuncioProperties(24, 2, 24, 24, 5), relogio, midiaService);
+                new AnuncioProperties(24, 2, 24, 24, 5), relogio, midiaService,
+                org.mockito.Mockito.mock(AccountRestrictionService.class));
         gestor = usuario(10L, PapelUsuario.ANFITRIAO);
         lenient().when(imovelRepository.save(any(Imovel.class))).thenAnswer(i -> i.getArgument(0));
     }
@@ -268,7 +269,8 @@ class AnuncioServiceTest {
     @DisplayName("CT64 - A duracao da janela vem de configuracao")
     void janelaConfiguravel() {
         AnuncioService curto = new AnuncioService(imovelRepository, new ImovelAcesso(imovelRepository), auditoria,
-                mapper, new AnuncioProperties(1, 2, 24, 24, 5), relogio, midiaService);
+                mapper, new AnuncioProperties(1, 2, 24, 24, 5), relogio, midiaService,
+                org.mockito.Mockito.mock(AccountRestrictionService.class));
         Imovel i = aguardandoDesde(T0.minusMinutes(61));
 
         curto.publicar(gestor, 1L, true, "ip");

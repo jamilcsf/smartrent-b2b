@@ -53,11 +53,15 @@ public class ReservaClienteService {
     private final Clock clock;
     private final ZoneId zona;
 
+    private final AccountRestrictionService restricoes;
+
     public ReservaClienteService(ReservaRepository reservaRepository, ImovelRepository imovelRepository,
                                  PagamentoRepository pagamentoRepository, ReservaService reservaService,
                                  GatewayPagamento gateway, ReservaClienteMapper mapper, AuditoriaService auditoria,
                                  PoliticaCancelamentoProperties props, TextosPoliticas textos,
-                                 ApplicationEventPublisher publicador, Clock clock, ZoneId zonaDaPlataforma) {
+                                 ApplicationEventPublisher publicador, Clock clock, ZoneId zonaDaPlataforma,
+                                 AccountRestrictionService restricoes) {
+        this.restricoes = restricoes;
         this.reservaRepository = reservaRepository;
         this.imovelRepository = imovelRepository;
         this.pagamentoRepository = pagamentoRepository;
@@ -146,6 +150,9 @@ public class ReservaClienteService {
         if (mapper.expirada(r)) {
             throw new TransicaoInvalidaException("O prazo para pagar esta reserva expirou. Faça uma nova reserva.");
         }
+        // Pagar confirma uma reserva NOVA (a pendente ainda nao vale): vale a mesma restricao de criar.
+        restricoes.exigirPodeReservar(cliente);
+        restricoes.exigirAceitaNovasReservas(r.getImovel().getUsuario() == null ? null : r.getImovel().getUsuario().getId());
 
         long tentativa = pagamentoRepository.countByReservaId(r.getId()) + 1;
         String chave = "reserva:" + r.getId() + ":cobranca:" + tentativa;
@@ -210,6 +217,8 @@ public class ReservaClienteService {
         if (!AnuncioGestorMapper.noCatalogo(imovel, Agora.de(clock))) {
             throw new TransicaoInvalidaException("Este imóvel não está disponível para reservas no momento.");
         }
+        restricoes.exigirPodeReservar(cliente);
+        restricoes.exigirAceitaNovasReservas(imovel.getUsuario() == null ? null : imovel.getUsuario().getId());
         if (imovel.getValorDiariaBase() == null) {
             throw new IllegalArgumentException("O imóvel não tem valor de diária definido.");
         }
