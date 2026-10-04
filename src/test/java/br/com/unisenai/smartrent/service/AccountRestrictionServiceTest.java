@@ -94,7 +94,7 @@ class AccountRestrictionServiceTest {
 
     @SuppressWarnings("unchecked")
     @Test
-    @DisplayName("CT500 - Concluir a exclusao sem DataDeletionExecutor registrado recusa e nao muda nada (ponto de extensao sem implementacao)")
+    @DisplayName("CT900 - Concluir a exclusao sem DataDeletionExecutor registrado recusa e nao muda nada (ponto de extensao sem implementacao)")
     void concluirSemExecutor() {
         SolicitacaoExclusaoRepository repo = Mockito.mock(SolicitacaoExclusaoRepository.class);
         var s = new br.com.unisenai.smartrent.model.SolicitacaoExclusao(7L, "a@b.com", null, null, "ip",
@@ -115,7 +115,7 @@ class AccountRestrictionServiceTest {
     }
 
     @Test
-    @DisplayName("CT501 - A checagem e central: os fluxos afetados consultam o AccountRestrictionService e so ele conhece a solicitacao de exclusao")
+    @DisplayName("CT901 - A checagem e central: os fluxos afetados consultam o AccountRestrictionService e so ele conhece a solicitacao de exclusao")
     void checagemCentral() throws IOException {
         Path raiz = Path.of("src/main/java/br/com/unisenai/smartrent");
         // cada fluxo restrito passa pelo servico central

@@ -238,6 +238,28 @@ rf_list = [
     ("RF32", "Todas as regras e exibições que dependem de dia ou hora seguem o horário de "
              "Brasília (America/Sao_Paulo), com instantes novos em UTC, datas de calendário sem "
              "fuso e prazos como tempo decorrido.", "Must"),
+    ("RF33", "A região do usuário no cabeçalho (avatar e nome) deve levar à página de perfil, "
+             "acessível por teclado, mostrando a foto quando existir e, caso contrário, as "
+             "iniciais; a página exige login e cada usuário vê e altera apenas o próprio perfil.", "Must"),
+    ("RF34", "O usuário deve poder alterar o nome de exibição (2 a 60 caracteres, sem HTML, "
+             "telefone, e-mail, link ou termos ofensivos), sem alterar reservas, snapshots ou "
+             "auditorias já gravados.", "Must"),
+    ("RF35", "O usuário deve poder enviar e remover a foto de perfil: apenas PNG ou JPG, tipo "
+             "verificado pelo conteúdo, limites de tamanho e dimensões, reprocessada no "
+             "servidor (recorte quadrado, 512 por 512, sem metadados), uma por usuário.", "Must"),
+    ("RF36", "O usuário deve poder alterar a senha informando a atual, com política da nova "
+             "senha (tamanho mínimo, lista local de senhas comuns, diferente da atual), "
+             "encerramento das demais sessões e aviso por e-mail.", "Must"),
+    ("RF37", "A troca do e-mail de login deve exigir a senha atual e a confirmação por link de "
+             "uso único e validade curta enviado ao novo endereço, com resposta neutra, aviso ao "
+             "endereço antigo e encerramento das demais sessões.", "Must"),
+    ("RF38", "O usuário deve poder solicitar a exclusão de dados e cancelá-la; nada é excluído "
+             "automaticamente: o pedido é analisado pela equipe, com período mínimo de análise, "
+             "e-mail de confirmação com link para cancelar e sinais de risco registrados.", "Must"),
+    ("RF39", "Enquanto houver solicitação de exclusão em andamento, devem valer restrições "
+             "temporárias parciais (novas reservas, publicação e confirmação de edição, e-mail), "
+             "sem bloquear login, senha, chat, reservas confirmadas, reembolsos ou bloqueio de "
+             "datas; a aprovação é barrada por reservas futuras, reembolso pendente ou denúncia aberta.", "Must"),
     ("RF22", "O sistema deve manter trilha de auditoria dos aceites do termo (usuário, imóvel, "
              "versão, data, hora e IP), das alterações de preço e das ações sobre o anúncio.",
      "Should"),
@@ -275,6 +297,11 @@ rnf_list = [
     ("RNF09", "A esteira de integração contínua deve executar a compilação e os testes a cada "
               "envio de código, impedindo a integração de alterações que quebrem o build.",
      "Confiabilidade"),
+    ("RNF10", "Senhas, hashes e tokens nunca devem ser registrados em log nem na auditoria; "
+              "tokens de uso único são guardados somente como hash.", "Segurança"),
+    ("RNF11", "Ações sensíveis da conta (senha, e-mail, exclusão de dados) devem exigir "
+              "reautenticação, limitar tentativas incorretas e ser auditadas com usuário, "
+              "endereço IP e instante em UTC.", "Segurança"),
 ]
 rnf_data = [[Paragraph("ID", styles["CellHeader"]), Paragraph("Descrição", styles["CellHeader"]),
              Paragraph("Categoria", styles["CellHeaderCenter"])]]
@@ -345,6 +372,16 @@ resumo_list = [
                                   "aceite (RF15, RF16, RF21)."),
     ("Editar anúncio publicado", "Início da edição (anúncio sai do ar), rascunho, confirmação "
                                   "com republicação em 2 horas ou descarte imediato (RF18)."),
+    ("Gerenciar o próprio perfil", "Acesso pelo cabeçalho, alteração do nome de exibição e envio ou "
+                                    "remoção da foto de perfil (RF33 a RF35)."),
+    ("Alterar senha e e-mail", "Reautenticação, política da nova senha, encerramento das demais "
+                                "sessões e troca de e-mail confirmada por link de uso único (RF36, RF37)."),
+    ("Solicitar exclusão de dados", "Pedido com senha atual, e-mail com link para cancelar, "
+                                     "restrições temporárias durante a análise e cancelamento a "
+                                     "qualquer momento (RF38, RF39)."),
+    ("Analisar solicitação de exclusão", "Aprovação, negativa ou conclusão pela equipe, com período "
+                                          "mínimo e trava por impedimentos; serviço pronto, sem tela "
+                                          "(depende do módulo de administração)."),
 ]
 rdata2 = [[Paragraph("Caso de uso", styles["CellHeader"]), Paragraph("Resumo", styles["CellHeader"])]]
 for uc, res in resumo_list:
@@ -408,6 +445,9 @@ tables_ddl = [
         ("papel", "varchar(20)", "obrigatório"), ("telefone", "varchar(20)", "opcional"),
         ("ativo", "boolean", "obrigatório"), ("data_criacao", "timestamp", "obrigatório"),
         ("smartchat_liberado", "boolean", "aba SmartChat do cliente; guardada no backend"),
+        ("foto_arquivo, foto_versao", "varchar(64) / integer", "foto de perfil: nome aleatório e versão contra cache"),
+        ("sessao_versao", "integer", "sobe na troca de senha ou e-mail; o token só vale na versão atual"),
+        ("senha_definida", "boolean", "falso em conta criada pelo Google, sem senha conhecida"),
     ]),
     ("imoveis", [
         ("id", "bigserial", "chave primária"), ("usuario_id", "bigint", "obrigatório, referencia usuarios"),
@@ -534,6 +574,31 @@ tables_ddl = [
         ("motivo, descricao, mensagens_anexadas", "varchar", "dados para o futuro módulo de administração"),
         ("bloqueador_id, bloqueado_id, status", "bigint / varchar", "pedido de bloqueio, sem efeito funcional"),
     ]),
+    ("auditoria_conta", [
+        ("id, usuario_id", "bigserial / bigint", "trilha de eventos da conta"),
+        ("acao, detalhes", "varchar", "sem valores sensíveis: nunca senha, hash ou token"),
+        ("ip, ocorrida_em", "varchar(45) / timestamptz", "endereço IP e instante em UTC"),
+    ]),
+    ("troca_email", [
+        ("id, usuario_id", "bigserial / bigint", "no máximo um pedido pendente por usuário (índice único parcial)"),
+        ("email_novo", "varchar(150)", "só passa a ser o e-mail da conta ao confirmar o link"),
+        ("token_hash", "varchar(64)", "único — somente o SHA-256 do token; o token só vai no link"),
+        ("criada_em, expira_em, usado_em, cancelada_em", "timestamptz", "validade curta e uso único"),
+    ]),
+    ("solicitacoes_exclusao", [
+        ("id, usuario_id", "bigserial / bigint", "uma solicitação em andamento por usuário (índice único parcial)"),
+        ("estado", "varchar(30)", "PENDENTE, EM_ANALISE, APROVADA, NEGADA, CONCLUIDA ou CANCELADA_PELO_USUARIO"),
+        ("email_no_pedido, motivo, ip", "varchar", "cópia do e-mail no pedido e motivo opcional do usuário"),
+        ("sinais_risco", "varchar(2000)", "sim/não e contagens para a equipe; nenhum dado pessoal"),
+        ("criada_em, analise_apos", "timestamptz", "a equipe só pode aprovar depois do período mínimo"),
+        ("analista_id, decidida_em, observacao_interna", "bigint / timestamptz / varchar", "nulos até o módulo de administração"),
+        ("token_cancelamento_hash", "varchar(64)", "único — link “não fui eu”, somente o hash"),
+    ]),
+    ("solicitacao_exclusao_historico", [
+        ("id, solicitacao_id", "bigserial / bigint", "histórico de mudanças de estado"),
+        ("estado_anterior, estado_novo", "varchar(30)", "de qual estado para qual"),
+        ("ocorrida_em, autor_id, observacao", "timestamptz / bigint / varchar", "autor nulo quando é o usuário ou o sistema"),
+    ]),
     ("notificacoes", [
         ("id", "bigserial", "chave primária"), ("usuario_id", "bigint", "obrigatório"),
         ("imovel_id", "bigint", "opcional"), ("titulo, mensagem, link", "varchar", "obrigatório (link opcional)"),
@@ -556,7 +621,7 @@ story.append(Paragraph(
     "do usuário é garantida por restrição de unicidade na própria coluna, não por índice "
     "nomeado. O fluxo de anúncios acrescentou os índices idx_imoveis_status, "
     "idx_midias_imovel, idx_hist_preco_imovel, idx_aceites_imovel, idx_auditoria_imovel e "
-    "idx_notificacoes_usuario, além da restrição de unicidade uk_lembrete. As migrations V7 a V13 acrescentaram os campos comerciais e o snapshot da política, os pagamentos e reembolsos (com chaves de idempotência únicas), os bloqueios de datas, o SmartChat, o processamento de vídeo e o arquivamento seguido do descarte das colunas de WhatsApp.", styles["Body"]))
+    "idx_notificacoes_usuario, além da restrição de unicidade uk_lembrete. As migrations V7 a V13 acrescentaram os campos comerciais e o snapshot da política, os pagamentos e reembolsos (com chaves de idempotência únicas), os bloqueios de datas, o SmartChat, o processamento de vídeo e o arquivamento seguido do descarte das colunas de WhatsApp. A migration V14 acrescentou a foto, a versão de sessão e o indicador de senha definida ao usuário, a auditoria de conta, os pedidos de troca de e-mail (com índice único parcial de um pedido pendente por usuário) e a solicitação de exclusão de dados com seu histórico (com índice único parcial de uma solicitação em andamento por usuário); nenhuma dessas tabelas guarda senha, hash em claro ou token, apenas o SHA-256 dos tokens de uso único.", styles["Body"]))
 story.append(PageBreak())
 
 # ---------------------------------------------------------------------
@@ -576,6 +641,8 @@ telas_list = [
                             "conflitos de data (RF05 a RF07, RF12)."),
     ("Precificação inteligente", "Solicitação e exibição da sugestão de preço, incluindo a "
                                   "justificativa da IA (RF08, RF09)."),
+    ("Meu perfil", "Foto, nome de exibição, e-mail, senha e pedido de exclusão de dados, com o "
+                    "aviso das restrições temporárias (RF33 a RF39)."),
 ]
 tel_data = [[Paragraph("Tela", styles["CellHeader"]), Paragraph("Propósito", styles["CellHeader"])]]
 for t, p in telas_list:

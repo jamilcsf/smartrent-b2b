@@ -123,6 +123,28 @@ casos = [
     ("CT800–802, CT810–812, CT820–823", "Remoção do WhatsApp (busca final e rascunho antigo legível), "
                     "renomeação para Dashboard, botão Criar anúncio só no Painel e fuso de Brasília "
                     "(virada de dia, datas puras, durações absolutas)", "RF17, RF32", "Unitário", "Alta", "Implementado"),
+    ("CT437–CT440, CT902–CT906", "Perfil e cabeçalho: token com versão de sessão, perfil exige login e "
+                    "só do próprio usuário (sem id em nenhum endpoint), cabeçalho acessível que leva ao "
+                    "perfil, links do e-mail sem token na URL, só nome e foto para outros usuários", "RF33", "Unitário e @WebMvcTest", "Crítica", "Implementado"),
+    ("CT441–CT446", "Nome de exibição: tamanho, caracteres, HTML, telefone, e-mail, link e ofensas "
+                    "rejeitados; reservas e snapshots inalterados; auditoria sem o valor", "RF34", "Unitário e banco (H2)", "Alta", "Implementado"),
+    ("CT447–CT456", "Foto de perfil: aceita PNG e JPG; rejeita SVG, GIF, WebP e extensão falsa, arquivo "
+                    "grande, imagem pequena e pixels demais (bomba); EXIF e GPS removidos; orientação "
+                    "respeitada; foto antiga apagada; remover volta às iniciais; limite de envios", "RF35", "Unitário e banco (H2)", "Crítica", "Implementado"),
+    ("CT457–CT460, CT466–CT470", "Senha: política (tamanho, senhas comuns com variações, repetição, "
+                    "e-mail), senha atual obrigatória, igual à atual, limite de tentativas, conta do "
+                    "Google, sessões invalidadas, aviso por e-mail e senha nunca em log", "RF36", "Unitário e banco (H2)", "Crítica", "Implementado"),
+    ("CT471–CT479", "E-mail: reautenticação, resposta neutra para e-mail novo ou já usado, só o hash do "
+                    "token no banco, uso único, expiração com relógio injetável, pedido substitui o "
+                    "pendente, endereço tomado depois, limites e avisos", "RF37", "Serviço e banco (H2)", "Crítica", "Implementado"),
+    ("CT480–CT488", "Exclusão de dados: pedido PENDENTE com senha, e-mails ao titular e à equipe, uma "
+                    "solicitação por usuário, cancelamento (inclusive pelo link), sinais de risco, "
+                    "período mínimo, trava por impedimentos, negar e concluir; nada é excluído", "RF38", "Serviço e banco (H2)", "Crítica", "Implementado"),
+    ("CT489–CT499, CT900–CT901", "Restrições temporárias: cliente sem novas reservas, anúncios do gestor "
+                    "sem novas reservas e indisponíveis sem revelar o motivo, publicação, republicação "
+                    "e confirmação de edição barradas, e-mail travado (inclusive link anterior); "
+                    "senha, chat, reembolsos, descarte e bloqueio liberados; chave desligada; "
+                    "checagem central", "RF39", "Serviço, banco e unitário", "Crítica", "Implementado"),
 ]
 cdata = [[Paragraph("ID", styles["CellHeader"]), Paragraph("Caso de teste", styles["CellHeader"]),
           Paragraph("RF", styles["CellHeaderCenter"]), Paragraph("Nível", styles["CellHeader"]),
@@ -140,9 +162,9 @@ story.extend(quadro(styles, "Matriz de casos de teste", quadro_table(
     header_align_center=[2, 4, 5])))
 
 story.append(Paragraph(
-    "A suíte automatizada executa hoje 381 testes a cada integração; as faixas de "
+    "A suíte automatizada executa hoje 446 testes a cada integração; as faixas de "
     "identificadores acrescentadas ao quadro (CT50 em diante) agrupam os casos do fluxo de "
-    "anúncios, do calendário, do cancelamento, do SmartChat, dos vídeos e do fuso horário. Nenhum deles depende de rede ou de um PostgreSQL externo: as consultas são "
+    "anúncios, do calendário, do cancelamento, do SmartChat, dos vídeos, do fuso horário e do perfil do usuário. Nenhum deles depende de rede ou de um PostgreSQL externo: as consultas são "
     "exercitadas em banco H2 em memória e as chamadas externas são simuladas, de modo que a "
     "esteira de integração contínua executa a suíte completa sem infraestrutura auxiliar, "
     "conforme o RNF04. As migrations, por sua vez, foram validadas manualmente contra "

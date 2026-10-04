@@ -82,6 +82,28 @@ riscos = [
      "Documentado; trocar por limitador distribuído mantendo a mesma interface."),
     ("R17", "A remoção das colunas de WhatsApp apagar dados que alguém ainda precise.", "Baixa", "Médio", "Baixa",
      "Os valores são arquivados em tabelas próprias antes do descarte, em migration separada."),
+    ("R18", "O pedido de exclusão de dados ser usado como rota de fuga em golpe, ou feito por quem "
+            "invadiu a conta.", "Média", "Alto", "Alta",
+     "Nada é excluído automaticamente; análise da equipe com período mínimo, e-mail ao titular com "
+     "link para cancelar, sinais de risco, restrições temporárias e trava de aprovação por reservas, "
+     "reembolsos e denúncias."),
+    ("R19", "A execução da exclusão acontecer sem definição do setor jurídico (o que apagar, o que reter).",
+     "Média", "Alto", "Alta",
+     "A execução é uma interface sem implementação: concluir recusa e nada é tocado; textos e prazos "
+     "provisórios em arquivo único, listados como pendentes de revisão."),
+    ("R20", "Avisos de segurança e links de confirmação não chegarem ao usuário em produção "
+            "(e-mail ainda só em log).", "Alta", "Médio", "Alta",
+     "Interface EmailSender pronta para SMTP; o corpo (com links) só vai ao log em desenvolvimento "
+     "(EMAIL_LOG_CORPO); SMTP real registrado como pendência."),
+    ("R21", "Imagem maliciosa ou gigante enviada como foto de perfil (decompression bomb, SVG com script, "
+            "metadados com localização).", "Média", "Médio", "Média",
+     "Tipo real pelos bytes (só PNG e JPEG), limites lidos do cabeçalho antes de decodificar, "
+     "recodificação em JPEG sem metadados e nome aleatório; original nunca guardado."),
+    ("R22", "Sessões antigas continuarem válidas depois da troca de senha ou de e-mail.", "Média", "Alto", "Alta",
+     "Versão de sessão no token (sv): trocar senha ou e-mail invalida os demais tokens."),
+    ("R23", "As restrições temporárias trancarem o usuário legítimo para fora da própria conta.", "Baixa", "Médio", "Baixa",
+     "Restrições parciais (login, senha, chat, reembolsos e bloqueio de datas nunca são restritos), "
+     "cancelamento a qualquer momento, link “não fui eu”, aviso fixo e chave para desligar."),
 ]
 rdata = [[Paragraph("ID", styles["CellHeader"]), Paragraph("Risco", styles["CellHeader"]),
           Paragraph("Prob.", styles["CellHeaderCenter"]), Paragraph("Impacto", styles["CellHeaderCenter"]),

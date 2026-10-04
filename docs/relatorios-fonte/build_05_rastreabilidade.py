@@ -55,6 +55,13 @@ rows = [
     ("RF30", "Filtro de conteúdo, denúncia e bloqueio (protótipo)", "4.3", "MessageFilterService, ContentModerationService, SmartChatService", "CT400–CT436, CT520–CT524, CT530–CT533"),
     ("RF31", "Vídeos: 1:30, envio retomável e processamento", "4.3", "VideoUploadService, VideoWorker, VideoProcessingService", "CT600–CT650, CT700–CT707"),
     ("RF32", "Fuso horário de Brasília", "4.3", "ClockConfig, PlataformaTempo, Agora, ConfigController", "CT820–CT823"),
+    ("RF33", "Perfil pelo cabeçalho; só o próprio usuário", "4.3", "header-auth.js, perfil.html, PerfilController, JwtAuthenticationFilter", "CT437–CT440, CT902–CT906"),
+    ("RF34", "Nome de exibição", "4.3", "NomeExibicaoValidador, PerfilService, MessageFilterService", "CT441–CT446"),
+    ("RF35", "Foto de perfil", "4.3", "FotoPerfilProcessador, FotoPerfilService, MidiaStorage", "CT447–CT456"),
+    ("RF36", "Alteração de senha", "4.3", "SenhaService, PoliticaDeSenha, ReautenticacaoService", "CT457–CT460, CT466–CT470"),
+    ("RF37", "Alteração de e-mail com verificação", "4.3", "TrocaEmailService, TokenSeguro, EmailSender", "CT471–CT479"),
+    ("RF38", "Solicitação de exclusão de dados", "4.3", "ExclusaoDadosService, SinaisDeRisco, DataDeletionReviewService", "CT480–CT488"),
+    ("RF39", "Restrições temporárias e trava de aprovação", "4.3", "AccountRestrictionService", "CT489–CT499, CT900–CT901"),
 ]
 tdata = [[Paragraph("RF", styles["CellHeader"]), Paragraph("Descrição", styles["CellHeader"]),
           Paragraph("Caso de uso", styles["CellHeaderCenter"]), Paragraph("Componente", styles["CellHeader"]),

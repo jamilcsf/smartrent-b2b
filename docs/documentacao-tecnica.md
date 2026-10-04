@@ -222,6 +222,89 @@ sequenceDiagram
     G-->>U: Exibe gráfico de preços sugeridos
 ```
 
+## 3.5 Perfil, segurança da conta e exclusão de dados (migration V14)
+
+Decisões, suposições e pendências jurídicas: [ADR-005](adr/ADR-005-perfil-seguranca-da-conta-e-exclusao-de-dados.md).
+As tabelas abaixo acrescentam-se às da Seção 3.3 (que ainda mostra só o núcleo do domínio).
+
+```mermaid
+erDiagram
+    USUARIO ||--o{ AUDITORIA_CONTA : registra
+    USUARIO ||--o| TROCA_EMAIL : "no maximo 1 pendente"
+    USUARIO ||--o{ SOLICITACAO_EXCLUSAO : pede
+    SOLICITACAO_EXCLUSAO ||--|{ SOLICITACAO_EXCLUSAO_HISTORICO : "muda de estado"
+
+    USUARIO {
+        Long id PK
+        String fotoArquivo "nome aleatorio"
+        Integer fotoVersao
+        Integer sessaoVersao "invalida tokens antigos"
+        Boolean senhaDefinida
+    }
+    AUDITORIA_CONTA {
+        Long id PK
+        Long usuarioId
+        String acao
+        String ip
+        Instant ocorridaEm
+    }
+    TROCA_EMAIL {
+        Long id PK
+        Long usuarioId FK
+        String emailNovo
+        String tokenHash "so o SHA-256"
+        Instant expiraEm
+    }
+    SOLICITACAO_EXCLUSAO {
+        Long id PK
+        Long usuarioId FK
+        String estado
+        String sinaisRisco
+        Instant analiseApos
+        String tokenCancelamentoHash
+    }
+    SOLICITACAO_EXCLUSAO_HISTORICO {
+        Long id PK
+        Long solicitacaoId FK
+        String estadoAnterior
+        String estadoNovo
+        Instant ocorridaEm
+    }
+```
+
+```mermaid
+stateDiagram-v2
+    [*] --> PENDENTE: usuario pede (senha atual)
+    PENDENTE --> EM_ANALISE: equipe inicia a analise
+    PENDENTE --> APROVADA: aprovar (periodo minimo vencido e sem impedimentos)
+    EM_ANALISE --> APROVADA: aprovar (periodo minimo vencido e sem impedimentos)
+    PENDENTE --> NEGADA: negar
+    EM_ANALISE --> NEGADA: negar
+    APROVADA --> NEGADA: negar
+    APROVADA --> CONCLUIDA: concluir (exige DataDeletionExecutor)
+    PENDENTE --> CANCELADA_PELO_USUARIO: cancelar ou "nao fui eu"
+    EM_ANALISE --> CANCELADA_PELO_USUARIO: cancelar ou "nao fui eu"
+    APROVADA --> CANCELADA_PELO_USUARIO: cancelar ou "nao fui eu"
+```
+
+```mermaid
+sequenceDiagram
+    actor U as Usuario
+    participant P as perfil.html
+    participant A as ExclusaoDadosService
+    participant R as AccountRestrictionService
+    participant E as EmailSender
+    U->>P: Solicitar exclusao de dados (senha atual)
+    P->>A: POST /api/perfil/exclusao-dados
+    A->>A: reautentica, limita pedidos, calcula sinais de risco
+    A->>A: grava PENDENTE + historico + auditoria (nada e excluido)
+    A->>R: restricoes passam a valer
+    A-)E: depois do commit: e-mail ao titular (link "nao fui eu") e a equipe
+    U->>P: Cancelar solicitacao (ou link do e-mail)
+    P->>A: DELETE /api/perfil/exclusao-dados
+    A->>R: restricoes terminam (auditado)
+```
+
 ---
 
 # CAPÍTULO 4 — IMPLEMENTAÇÃO TÉCNICA E CÓDIGO-FONTE

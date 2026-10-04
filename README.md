@@ -209,6 +209,42 @@ sem fuso, prazos (24h, 2h, lembretes) como tempo decorrido.
 Contas de demonstração (`scripts/dados-demonstracao.sql`, senha `senhaSegura123`): `ana@smartrent.dev` (gestora) e
 `cliente@smartrent.dev` (cliente). Decisões, suposições e pendências jurídicas: [ADR-004](docs/adr/ADR-004-calendario-smartchat-cancelamento-video-e-fuso.md).
 
+## 👤 Meu perfil, segurança da conta e exclusão de dados
+
+Avatar + nome no cabeçalho de todas as páginas levam a `/perfil.html` (login obrigatório; o usuário só vê e altera o
+**próprio** perfil — nenhum endpoint recebe id de usuário). Seções: dados da conta (foto, nome de exibição, e-mail), segurança
+(senha) e privacidade (pedido de exclusão de dados). Decisões e pendências jurídicas: [ADR-005](docs/adr/ADR-005-perfil-seguranca-da-conta-e-exclusao-de-dados.md).
+
+| Método | Endpoint | Descrição |
+|---|---|---|
+| `GET` · `PATCH` | `/api/perfil` | Lê o perfil (com pedido de exclusão e restrições ativas) · altera o nome de exibição |
+| `POST` · `DELETE` | `/api/perfil/foto` | Envia a foto (PNG/JPG, reprocessada no servidor) · remove (volta às iniciais) |
+| `GET` | `/api/perfil/foto/{arquivo}` | Foto pública (nome aleatório); é o que aparece a outros usuários no SmartChat |
+| `POST` | `/api/perfil/senha` | Troca a senha (exige a atual); derruba as outras sessões e devolve token novo |
+| `POST` | `/api/perfil/email` | Pede a troca do e-mail (exige a senha atual; resposta sempre neutra) |
+| `POST` | `/api/perfil/email/confirmar` | Confirma o link recebido no novo e-mail (público; token de uso único) |
+| `GET` · `POST` · `DELETE` | `/api/perfil/exclusao-dados` | Situação e textos · pede a exclusão (exige a senha atual) · cancela o pedido |
+| `POST` | `/api/perfil/exclusao-dados/cancelar` | "Não fui eu": cancela pelo link do e-mail (público; token de uso único) |
+
+**Nada é excluído automaticamente.** O pedido entra em análise da equipe (sem tela ainda: `DataDeletionReviewService`, sem endpoint)
+e, enquanto está em andamento, a conta sofre restrições temporárias parciais: o cliente não cria reservas novas, os anúncios do gestor
+não aceitam novas reservas, e o gestor não publica, não republica nem confirma alteração; ninguém altera o e-mail. Login, leitura,
+troca de senha, SmartChat, reservas confirmadas, cancelamentos e reembolsos, descarte de edição e bloqueio de datas **não** são restritos.
+
+| Variável | Efeito |
+|---|---|
+| `PERFIL_FOTO_MAX_MB` (2) · `PERFIL_FOTO_MIN_LADO` (128) · `PERFIL_FOTO_MAX_PIXELS` (25000000) · `PERFIL_FOTO_LADO` (512) | Limites e tamanho final da foto |
+| `PERFIL_SENHA_MINIMA` (10) · `PERFIL_SENHAS_COMUNS_ARQUIVO` | Política da nova senha e lista local de senhas comuns |
+| `PERFIL_SENHA_TENTATIVAS` (5) · `PERFIL_SENHA_JANELA_MINUTOS` (15) · `PERFIL_EMAIL_PEDIDOS_POR_HORA` (3) · `PERFIL_FOTO_UPLOADS_POR_HORA` (10) | Limites de tentativas |
+| `PERFIL_EMAIL_TOKEN_MINUTOS` (60) · `APP_BASE_URL` | Validade e endereço dos links enviados por e-mail |
+| `EMAIL_LOG_CORPO` (true) | Enquanto o e-mail é só log: `false` em produção, para links e tokens não irem ao log |
+| `DATA_DELETION_MIN_REVIEW_HOURS` (48) · `DATA_DELETION_RISK_DAYS` (30) · `DATA_DELETION_NOTIFY_EMAIL` · `DATA_DELETION_RESTRICTIONS_ENABLED` (true) · `DATA_DELETION_REQUESTS_PER_DAY` (3) | Pedido de exclusão: análise mínima, sinais de risco, aviso à equipe e restrições |
+
+Como testar à mão: entre como `cliente@smartrent.dev`, clique no nome no cabeçalho e experimente nome, foto, senha (a de demonstração, `senhaSegura123`,
+está na lista de senhas comuns: ela vale como senha **atual**, mas não como nova), e-mail (o link aparece no log do servidor, `[e-mail simulado]`) e
+"Solicitar exclusão de dados" (o link "Não fui eu" também sai no log). Textos de e-mail, modal e avisos são **provisórios** e ficam em
+`src/main/resources/textos-pendentes-juridico.properties`, pendentes de revisão do setor responsável.
+
 ## 🧪 Testes
 
 O projeto utiliza JUnit 5 e Mockito, isolando a chamada externa à API de IA para evitar dependência de rede e custos desnecessários durante a suíte de testes:

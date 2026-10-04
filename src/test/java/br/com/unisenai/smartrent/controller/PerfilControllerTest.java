@@ -104,7 +104,7 @@ class PerfilControllerTest {
     }
 
     @Test
-    @DisplayName("CT503 - Todo endpoint do perfil exige login (401), exceto os tres publicos de proposito: foto por nome aleatorio e os dois links de e-mail com token de uso unico")
+    @DisplayName("CT902 - Todo endpoint do perfil exige login (401), exceto os tres publicos de proposito: foto por nome aleatorio e os dois links de e-mail com token de uso unico")
     void tudoExigeLoginExcetoPublicosDeProposito() throws Exception {
         String json = "{}";
         var tipo = org.springframework.http.MediaType.APPLICATION_JSON;
@@ -132,7 +132,7 @@ class PerfilControllerTest {
     }
 
     @Test
-    @DisplayName("CT504 - Para outros usuarios (SmartChat) so saem nome e foto: o interlocutor nao tem e-mail, papel de conta, data de cadastro nem dados de seguranca")
+    @DisplayName("CT903 - Para outros usuarios (SmartChat) so saem nome e foto: o interlocutor nao tem e-mail, papel de conta, data de cadastro nem dados de seguranca")
     void soNomeEFotoParaOutrosUsuarios() {
         var campos = java.util.Arrays.stream(br.com.unisenai.smartrent.dto.SmartChatDtos.Interlocutor.class.getRecordComponents())
                 .map(c -> c.getName()).toList();

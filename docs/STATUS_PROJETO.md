@@ -2,7 +2,7 @@
 
 **Projeto:** SmartRent B2B — Sistema de Gestão Inteligente para Aluguel por Temporada  
 **Instituição:** UniSENAI — ADS (Florianópolis/SC)[cite: 1, 4]  
-**Última Atualização:** 2026-10-03 — Calendário, bloqueio de datas, reserva e cancelamento com reembolso, SmartChat com filtro de conteúdo, vídeos de 1:30 com processamento assíncrono, fuso de Brasília e remoção do WhatsApp  
+**Última Atualização:** 2026-10-04 — Página de perfil (nome, foto, senha, e-mail), pedido de exclusão de dados com análise manual e restrições temporárias; antes: calendário, bloqueio de datas, reserva e cancelamento com reembolso, SmartChat, vídeos de 1:30, fuso de Brasília e remoção do WhatsApp  
 
 ---
 
@@ -47,7 +47,9 @@
 - [x] Reserva do cliente com gateway de pagamento **simulado**, política de cancelamento e reembolso (idempotente, com retry) e snapshot dos termos e da política
 - [x] SmartChat (conversa única, criação idempotente na confirmação, SSE, filtro de conteúdo no servidor, denúncia e bloqueio como protótipo)
 - [x] Vídeos de até 1:30 com envio em partes retomável e processamento assíncrono (FFmpeg com fallback); fuso de Brasília; WhatsApp removido de ponta a ponta
-- [x] Suíte de testes automatizados — 381 testes (JUnit 5, Mockito, `@WebMvcTest`, `@DataJpaTest` em H2, concorrência); falta cobertura automatizada do front (JavaScript)
+- [x] Página **Meu perfil** acessada pelo cabeçalho: nome de exibição, foto (PNG/JPG reprocessada, sem metadados), troca de senha (política, lista local de senhas comuns, encerramento das demais sessões) e troca de e-mail com verificação por link de uso único ([ADR-005](adr/ADR-005-perfil-seguranca-da-conta-e-exclusao-de-dados.md))
+- [x] Solicitação de **exclusão de dados** com análise manual (nada é excluído automaticamente), antifraude (período mínimo, link "não fui eu", sinais de risco), restrições temporárias parciais centralizadas em `AccountRestrictionService` e trava de aprovação; serviço de revisão pronto, sem tela
+- [x] Suíte de testes automatizados — 446 testes (JUnit 5, Mockito, `@WebMvcTest`, `@DataJpaTest` em H2, concorrência); o front tem só verificações estáticas dos arquivos (falta teste automatizado de interface)
 - [ ] Primeiro boot contra o Supabase com o schema aplicado
 
 ---
@@ -102,3 +104,15 @@ termo de uso (ainda cita o WhatsApp), direito de arrependimento (`CANCEL_REGRET_
 real; SMTP real; armazenamento de mídia em objeto (S3) com upload pré-assinado; FFmpeg em produção (em contêiner com
 limites); moderação de imagens e vídeos; módulo de administração (consome denúncias e bloqueios); rate limit distribuído;
 testes automatizados do front; diagrama de classes ainda sem as entidades novas.
+
+Em 2026-10-04 foi entregue a terceira rodada (ver [ADR-005](adr/ADR-005-perfil-seguranca-da-conta-e-exclusao-de-dados.md) e o `README.md`):
+migration V14 (foto, versão de sessão, auditoria de conta, troca de e-mail e solicitação de exclusão com histórico), página `/perfil.html`
+e as restrições temporárias durante o pedido de exclusão. A V14 foi aplicada em PostgreSQL 16 e os fluxos (nome, foto, senha com
+sessão antiga derrubada, e-mail por link, pedido e cancelamento de exclusão, restrições e aviso fixo) foram exercitados no navegador
+contra a aplicação em execução.
+
+Pendente (depende de decisão ou de terceiros), além da lista anterior: **revisão jurídica** dos textos do pedido de exclusão e dos e-mails
+de segurança, do período mínimo de análise, dos prazos de retenção e do que anonimizar ou reter (`DataDeletionExecutor` é só uma interface:
+**concluir a exclusão não está implementado**); SMTP real (os links de e-mail só saem em log); tela de análise e perfil de administrador;
+recuperação de senha (contas criadas só pelo Google e anteriores à V14 não têm caminho para definir a primeira senha); foto em
+armazenamento de objetos; moderação do conteúdo da foto; rate limit distribuído; testes automatizados do front.

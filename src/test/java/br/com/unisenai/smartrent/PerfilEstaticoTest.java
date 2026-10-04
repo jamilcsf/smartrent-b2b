@@ -25,7 +25,7 @@ class PerfilEstaticoTest {
     }
 
     @Test
-    @DisplayName("CT505 - Cabecalho: toda pagina com area do usuario usa o componente compartilhado; avatar+nome sao um link acessivel para o perfil e o Sair e separado")
+    @DisplayName("CT904 - Cabecalho: toda pagina com area do usuario usa o componente compartilhado; avatar+nome sao um link acessivel para o perfil e o Sair e separado")
     void cabecalhoLevaAoPerfil() throws IOException {
         String componente = ler("js/header-auth.js");
         assertTrue(componente.contains("link.href = '/perfil.html'"));
@@ -57,7 +57,7 @@ class PerfilEstaticoTest {
     }
 
     @Test
-    @DisplayName("CT506 - Pagina do perfil: exige login (volta depois), nao recebe id de usuario e tem as tres secoes")
+    @DisplayName("CT905 - Pagina do perfil: exige login (volta depois), nao recebe id de usuario e tem as tres secoes")
     void paginaDoPerfil() throws IOException {
         String html = ler("perfil.html");
         for (String secao : new String[]{"Dados da conta", "Segurança", "Privacidade", "Solicitar exclusão de dados"}) {
@@ -71,7 +71,7 @@ class PerfilEstaticoTest {
     }
 
     @Test
-    @DisplayName("CT507 - Paginas de link do e-mail: token sai da URL, nao vaza por Referer e o cancelamento exige o clique (leitor de e-mail que so abre o link nao cancela)")
+    @DisplayName("CT906 - Paginas de link do e-mail: token sai da URL, nao vaza por Referer e o cancelamento exige o clique (leitor de e-mail que so abre o link nao cancela)")
     void paginasDeLinkDoEmail() throws IOException {
         for (String pagina : new String[]{"confirmar-email.html", "cancelar-exclusao.html"}) {
             String html = ler(pagina);
