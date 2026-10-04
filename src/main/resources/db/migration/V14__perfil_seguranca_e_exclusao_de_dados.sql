@@ -57,9 +57,9 @@ create table solicitacoes_exclusao (
     constraint ck_exclusao_estado check (estado in
         ('PENDENTE', 'EM_ANALISE', 'APROVADA', 'NEGADA', 'CONCLUIDA', 'CANCELADA_PELO_USUARIO'))
 );
--- Uma unica solicitacao aberta por usuario.
+-- Uma unica solicitacao em andamento por usuario (aprovada e ainda nao concluida tambem conta).
 create unique index uk_exclusao_aberta on solicitacoes_exclusao (usuario_id)
-    where estado in ('PENDENTE', 'EM_ANALISE');
+    where estado in ('PENDENTE', 'EM_ANALISE', 'APROVADA');
 create index idx_exclusao_estado on solicitacoes_exclusao (estado, criada_em);
 
 create table solicitacao_exclusao_historico (

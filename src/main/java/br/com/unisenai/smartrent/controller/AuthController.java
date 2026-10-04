@@ -7,9 +7,12 @@ import br.com.unisenai.smartrent.dto.GoogleLoginRequest;
 import br.com.unisenai.smartrent.dto.LoginRequest;
 import br.com.unisenai.smartrent.dto.UsuarioResponse;
 import br.com.unisenai.smartrent.model.Usuario;
+import br.com.unisenai.smartrent.service.AccountRestrictionService;
+import br.com.unisenai.smartrent.service.AuditoriaContaService;
 import br.com.unisenai.smartrent.service.AuthService;
 import br.com.unisenai.smartrent.service.CaptchaService;
 import br.com.unisenai.smartrent.service.GoogleTokenVerifier;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -23,13 +26,19 @@ public class AuthController {
     private final AuthService authService;
     private final CaptchaService captchaService;
     private final GoogleTokenVerifier googleTokenVerifier;
+    private final AuditoriaContaService auditoriaConta;
+    private final AccountRestrictionService restricoes;
 
     public AuthController(AuthService authService,
                           CaptchaService captchaService,
-                          GoogleTokenVerifier googleTokenVerifier) {
+                          GoogleTokenVerifier googleTokenVerifier,
+                          AuditoriaContaService auditoriaConta,
+                          AccountRestrictionService restricoes) {
         this.authService = authService;
         this.captchaService = captchaService;
         this.googleTokenVerifier = googleTokenVerifier;
+        this.auditoriaConta = auditoriaConta;
+        this.restricoes = restricoes;
     }
 
     /** Chaves públicas para o front montar o captcha e o botão do Google. */
@@ -47,17 +56,28 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest req) {
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest req, HttpServletRequest http) {
         // O captcha vem antes de tocar na senha: sem ele, a API seria um
         // oráculo de tentativa e erro para robôs.
         captchaService.verificar(req.captchaToken());
-        return ResponseEntity.ok(authService.autenticar(req));
+        AuthResponse resposta = authService.autenticar(req);
+        registrarLogin(resposta, http);
+        return ResponseEntity.ok(resposta);
     }
 
     @PostMapping("/google")
-    public ResponseEntity<AuthResponse> loginGoogle(@Valid @RequestBody GoogleLoginRequest req) {
+    public ResponseEntity<AuthResponse> loginGoogle(@Valid @RequestBody GoogleLoginRequest req, HttpServletRequest http) {
         var identidade = googleTokenVerifier.verificar(req.credential());
-        return ResponseEntity.ok(authService.entrarComGoogle(identidade.email(), identidade.nome(), req.perfil()));
+        AuthResponse resposta = authService.entrarComGoogle(identidade.email(), identidade.nome(), req.perfil());
+        registrarLogin(resposta, http);
+        return ResponseEntity.ok(resposta);
+    }
+
+    /** O IP de cada login alimenta o sinal "IP novo" da analise de pedidos de exclusao de dados. */
+    private void registrarLogin(AuthResponse resposta, HttpServletRequest http) {
+        if (resposta != null && resposta.usuario() != null && resposta.usuario().id() != null) {
+            auditoriaConta.registrar(resposta.usuario().id(), AuditoriaContaService.LOGIN, null, http.getRemoteAddr());
+        }
     }
 
     /**
@@ -67,6 +87,6 @@ public class AuthController {
      */
     @GetMapping("/me")
     public ResponseEntity<UsuarioResponse> eu(@AuthenticationPrincipal Usuario usuario) {
-        return ResponseEntity.ok(UsuarioResponse.de(usuario));
+        return ResponseEntity.ok(UsuarioResponse.de(usuario, restricoes.restricoesAtivas(usuario)));
     }
 }

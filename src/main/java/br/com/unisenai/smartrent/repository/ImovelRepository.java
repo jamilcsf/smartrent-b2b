@@ -37,6 +37,8 @@ public interface ImovelRepository extends JpaRepository<Imovel, Long> {
 
     List<Imovel> findByUsuarioId(Long usuarioId);
 
+    long countByUsuarioIdAndStatusIn(Long usuarioId, java.util.Collection<br.com.unisenai.smartrent.model.enums.StatusAnuncio> status);
+
     /**
      * Fonte unica da visibilidade publica. Alem de PUBLICADO, vale o
      * REPUBLICACAO_AGENDADA cujo horario ja chegou: assim um atraso ou falha do

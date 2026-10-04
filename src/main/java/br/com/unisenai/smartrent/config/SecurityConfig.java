@@ -58,7 +58,7 @@ public class SecurityConfig {
                         // Foto de perfil e exibida a outros usuarios (nome de arquivo imprevisivel);
                         // o resto do perfil e sempre do proprio usuario autenticado.
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/perfil/foto/*").permitAll()
-                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/perfil/exclusao-dados/cancelar").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/perfil/exclusao-dados/cancelar").permitAll()
                         .requestMatchers("/api/perfil/email/confirmar").permitAll()
                         .requestMatchers("/api/perfil/**").authenticated()
                         .anyRequest().permitAll())

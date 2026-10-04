@@ -7,6 +7,7 @@ import br.com.unisenai.smartrent.model.enums.PapelUsuario;
 import br.com.unisenai.smartrent.repository.UsuarioRepository;
 import br.com.unisenai.smartrent.security.JwtAuthenticationFilter;
 import br.com.unisenai.smartrent.security.JwtService;
+import br.com.unisenai.smartrent.service.ExclusaoDadosService;
 import br.com.unisenai.smartrent.service.FotoPerfilService;
 import br.com.unisenai.smartrent.service.PerfilService;
 import br.com.unisenai.smartrent.service.SenhaService;
@@ -43,6 +44,7 @@ class PerfilControllerTest {
     @MockBean private FotoPerfilService fotoPerfilService;
     @MockBean private SenhaService senhaService;
     @MockBean private TrocaEmailService trocaEmailService;
+    @MockBean private ExclusaoDadosService exclusaoDadosService;
     @MockBean private JwtService jwtService;
     @MockBean private UsuarioRepository usuarioRepository;
 

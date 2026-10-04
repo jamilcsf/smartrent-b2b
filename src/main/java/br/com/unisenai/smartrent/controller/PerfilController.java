@@ -4,10 +4,12 @@ import br.com.unisenai.smartrent.dto.AtualizarPerfilRequest;
 import br.com.unisenai.smartrent.dto.AuthResponse;
 import br.com.unisenai.smartrent.dto.ConfirmarEmailRequest;
 import br.com.unisenai.smartrent.dto.EmailRequest;
+import br.com.unisenai.smartrent.dto.ExclusaoDadosDtos;
 import br.com.unisenai.smartrent.dto.MensagemResponse;
 import br.com.unisenai.smartrent.dto.PerfilResponse;
 import br.com.unisenai.smartrent.dto.SenhaRequest;
 import br.com.unisenai.smartrent.model.Usuario;
+import br.com.unisenai.smartrent.service.ExclusaoDadosService;
 import br.com.unisenai.smartrent.service.FotoPerfilService;
 import br.com.unisenai.smartrent.service.PerfilService;
 import br.com.unisenai.smartrent.service.SenhaService;
@@ -32,9 +34,11 @@ public class PerfilController {
     private final FotoPerfilService fotoService;
     private final SenhaService senhaService;
     private final TrocaEmailService trocaEmailService;
+    private final ExclusaoDadosService exclusaoService;
 
     public PerfilController(PerfilService perfilService, FotoPerfilService fotoService, SenhaService senhaService,
-                            TrocaEmailService trocaEmailService) {
+                            TrocaEmailService trocaEmailService, ExclusaoDadosService exclusaoService) {
+        this.exclusaoService = exclusaoService;
         this.perfilService = perfilService;
         this.fotoService = fotoService;
         this.senhaService = senhaService;
@@ -89,5 +93,33 @@ public class PerfilController {
     public MensagemResponse confirmarTrocaEmail(@RequestBody ConfirmarEmailRequest req, HttpServletRequest http) {
         trocaEmailService.confirmar(req.token(), http.getRemoteAddr());
         return new MensagemResponse("E-mail alterado com sucesso. Entre novamente com o novo endereço.");
+    }
+
+    // ------------------------------------------------------------ exclusao de dados
+
+    /** Situacao do pedido (se houver) mais os textos e as acoes que ficam restritas durante a analise. */
+    @GetMapping("/exclusao-dados")
+    public ExclusaoDadosDtos.Status exclusaoStatus(@AuthenticationPrincipal Usuario usuario) {
+        return exclusaoService.status(usuario);
+    }
+
+    /** Registra o pedido (PENDENTE). Nada e excluido: a equipe analisa antes de qualquer exclusao. */
+    @PostMapping("/exclusao-dados")
+    public ExclusaoDadosDtos.Status solicitarExclusao(@AuthenticationPrincipal Usuario usuario,
+                                                      @RequestBody ExclusaoDadosDtos.Pedido pedido, HttpServletRequest http) {
+        return exclusaoService.solicitar(usuario, pedido.motivo(), pedido.senhaAtual(), pedido.credencialGoogle(),
+                http.getRemoteAddr());
+    }
+
+    @DeleteMapping("/exclusao-dados")
+    public ExclusaoDadosDtos.Status cancelarExclusao(@AuthenticationPrincipal Usuario usuario, HttpServletRequest http) {
+        return exclusaoService.cancelar(usuario, http.getRemoteAddr());
+    }
+
+    /** "Nao fui eu": cancela pelo link do e-mail. Publico; o token de uso unico e a prova (ver SecurityConfig). */
+    @PostMapping("/exclusao-dados/cancelar")
+    public MensagemResponse cancelarExclusaoPorLink(@RequestBody ExclusaoDadosDtos.CancelamentoPorLink req,
+                                                    HttpServletRequest http) {
+        return new MensagemResponse(exclusaoService.cancelarPorLink(req.token(), http.getRemoteAddr()));
     }
 }

@@ -59,6 +59,12 @@ class AuthControllerTest {
     @MockBean
     private UsuarioRepository usuarioRepository;
 
+    @MockBean
+    private br.com.unisenai.smartrent.service.AuditoriaContaService auditoriaContaService;
+
+    @MockBean
+    private br.com.unisenai.smartrent.service.AccountRestrictionService accountRestrictionService;
+
     @Test
     @DisplayName("CT27 - /api/auth/me sem token deve responder 401 em JSON")
     void deveResponder401SemToken() throws Exception {

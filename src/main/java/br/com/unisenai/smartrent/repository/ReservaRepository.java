@@ -64,6 +64,18 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
          + "AND r.cliente IS NOT NULL AND r.dataCriacao < :limite")
     List<Reserva> findPendentesExpiradas(@Param("limite") LocalDateTime limite);
 
+    /** Reservas do cliente que ainda importam (status dados) e cujo check-out e hoje ou depois. */
+    @Query("SELECT COUNT(r) FROM Reserva r WHERE r.cliente.id = :usuarioId AND r.status IN :status AND r.dataCheckout >= :hoje")
+    long contarVigentesDoCliente(@Param("usuarioId") Long usuarioId,
+                                 @Param("status") java.util.Collection<br.com.unisenai.smartrent.model.enums.StatusReserva> status,
+                                 @Param("hoje") LocalDate hoje);
+
+    /** Reservas dos imoveis do gestor que ainda importam (status dados) e cujo check-out e hoje ou depois. */
+    @Query("SELECT COUNT(r) FROM Reserva r WHERE r.imovel.usuario.id = :usuarioId AND r.status IN :status AND r.dataCheckout >= :hoje")
+    long contarVigentesDoGestor(@Param("usuarioId") Long usuarioId,
+                                @Param("status") java.util.Collection<br.com.unisenai.smartrent.model.enums.StatusReserva> status,
+                                @Param("hoje") LocalDate hoje);
+
     List<Reserva> findByImovelId(Long imovelId);
 
     List<Reserva> findByImovelUsuarioIdOrderByDataCheckinDesc(Long usuarioId);

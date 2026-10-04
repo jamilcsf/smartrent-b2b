@@ -444,6 +444,110 @@
     });
   }
 
+  // ------------------------------------------------------- exclusao de dados
+
+  var ESTADO_EXCLUSAO = {
+    PENDENTE: 'em análise (aguardando a equipe)', EM_ANALISE: 'em análise', APROVADA: 'aprovada, aguardando a conclusão pela equipe'
+  };
+
+  /** Mostra o pedido em andamento (ou o botao de pedir). Textos e regras vem do servidor. */
+  global.PerfilExclusao = {
+    atualizar: function (perfil) {
+      var emAnalise = !!perfil.exclusao;
+      $('exclusaoSemPedido').classList.toggle('hidden', emAnalise);
+      $('exclusaoEmAnalise').classList.toggle('hidden', !emAnalise);
+      if (emAnalise) {
+        $('textoExclusao').textContent = 'Solicitação ' + (ESTADO_EXCLUSAO[perfil.exclusao.estado] || 'em andamento') +
+          ' desde ' + UI.dataHora(perfil.exclusao.desde) + '.';
+      }
+    }
+  };
+
+  async function atualizarPerfilEmTela() {
+    aplicar(await Api.get('/api/perfil'));
+    sincronizarSessao(); // as restricoes entram/saem do aviso das outras paginas
+  }
+
+  function iniciarExclusao() {
+    $('btnSolicitarExclusao').addEventListener('click', async function (e) {
+      var botao = e.currentTarget;
+      mensagem('msgExclusao', '');
+      ocupado(botao, true);
+      var info;
+      try {
+        info = await Api.get('/api/perfil/exclusao-dados');
+      } catch (err) {
+        mensagem('msgExclusao', err.message || 'Não foi possível abrir o pedido agora.', true);
+        return;
+      } finally {
+        ocupado(botao, false);
+      }
+
+      var lista = (info.acoesRestritas || []).map(function (t) { return '<li>' + UI.escapar(t) + '</li>'; }).join('');
+      var corpo =
+        '<p>' + UI.escapar(info.textoModal) + '</p>' +
+        '<p class="mt-3 font-semibold text-slate-800">Enquanto o pedido estiver em análise, ficam temporariamente indisponíveis:</p>' +
+        '<ul class="list-disc pl-5 mt-1 text-xs">' + lista + '</ul>' +
+        '<p class="mt-2 text-xs">Continuam funcionando: login, troca de senha, SmartChat, reservas já confirmadas, cancelamentos e reembolsos.</p>' +
+        '<label for="motivoExclusao" class="block text-xs font-medium text-slate-500 mt-4 mb-1">Motivo (opcional)</label>' +
+        '<textarea id="motivoExclusao" maxlength="500" rows="3" class="w-full px-3 py-2 border rounded-xl border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>' +
+        '<div class="mt-3" data-reauth></div>' +
+        '<p id="erroModalExclusao" class="hidden mt-2 text-[11px] font-semibold text-rose-600" role="alert"></p>';
+
+      var m = UI.modal({
+        titulo: 'Solicitar exclusão de dados', largura: 'max-w-lg', corpo: corpo,
+        botoes: [
+          { texto: 'Cancelar', classe: UI.BTN_NEUTRO, aoClicar: function (fechar) { fechar(); } },
+          { texto: 'Confirmar pedido', classe: UI.BTN_PERIGO, aoClicar: async function (fechar, fundo, btn) {
+            var erro = fundo.querySelector('#erroModalExclusao');
+            var cred = Reauth.ler(fundo.querySelector('[data-reauth]'));
+            erro.classList.add('hidden');
+            if (!Reauth.informada(cred)) {
+              erro.textContent = estado.perfil.senhaDefinida ? 'Informe a senha atual para confirmar.' : 'Confirme sua identidade com o Google.';
+              erro.classList.remove('hidden');
+              return;
+            }
+            btn.disabled = true;
+            try {
+              await Api.post('/api/perfil/exclusao-dados', {
+                motivo: fundo.querySelector('#motivoExclusao').value,
+                senhaAtual: cred.senhaAtual, credencialGoogle: cred.credencialGoogle
+              });
+              Reauth.credencial = null;
+              fechar();
+              await atualizarPerfilEmTela();
+              mensagem('msgExclusao', 'Pedido registrado. Enviamos um e-mail de confirmação ao seu endereço. Nada foi excluído.');
+            } catch (err) {
+              erro.textContent = err.message || 'Não foi possível registrar o pedido.';
+              erro.classList.remove('hidden');
+              btn.disabled = false;
+            }
+          } }
+        ]
+      });
+      Reauth.atualizar(estado.perfil); // desenha a senha atual (ou o Google) dentro do modal
+      var campo = m.el.querySelector('[data-senha-atual]');
+      if (campo) { campo.focus(); }
+    });
+
+    $('btnCancelarExclusao').addEventListener('click', async function (e) {
+      var sim = await UI.confirmar({ titulo: 'Cancelar solicitação',
+        mensagem: 'Cancelar o pedido de exclusão de dados? As restrições temporárias da conta serão removidas.',
+        confirmarTexto: 'Cancelar solicitação', cancelarTexto: 'Manter pedido' });
+      if (!sim) { return; }
+      ocupado(e.currentTarget, true);
+      try {
+        await Api.del('/api/perfil/exclusao-dados');
+        await atualizarPerfilEmTela();
+        mensagem('msgExclusao', 'Solicitação cancelada.');
+      } catch (err) {
+        mensagem('msgExclusao', err.message || 'Não foi possível cancelar a solicitação.', true);
+      } finally {
+        ocupado(e.currentTarget, false);
+      }
+    });
+  }
+
   global.Perfil = {
     $: $, iniciais: iniciais, mensagem: mensagem, ocupado: ocupado, pintarFoto: pintarFoto,
     aplicar: aplicar, sincronizarSessao: sincronizarSessao, perfil: function () { return estado.perfil; }
@@ -459,6 +563,7 @@
     iniciarFoto();
     iniciarSenha();
     iniciarEmail();
+    iniciarExclusao();
     carregar();
   });
 })(window);

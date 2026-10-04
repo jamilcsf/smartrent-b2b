@@ -23,4 +23,10 @@ public interface ReembolsoRepository extends JpaRepository<Reembolso, Long> {
     List<Reembolso> findParaTentar(@Param("agora") Instant agora, @Param("max") int max);
 
     List<Reembolso> findByReservaImovelUsuarioIdAndStatus(Long gestorId, StatusReembolso status);
+
+    /** Reembolsos ainda nao concluidos (pendentes ou com falha) de reservas em que o usuario e cliente ou gestor. */
+    @Query("SELECT COUNT(r) FROM Reembolso r WHERE r.status IN (br.com.unisenai.smartrent.model.enums.StatusReembolso.PENDENTE, "
+         + "br.com.unisenai.smartrent.model.enums.StatusReembolso.FALHA) "
+         + "AND (r.reserva.cliente.id = :usuarioId OR r.reserva.imovel.usuario.id = :usuarioId)")
+    long contarNaoConcluidosDoUsuario(@org.springframework.data.repository.query.Param("usuarioId") Long usuarioId);
 }
