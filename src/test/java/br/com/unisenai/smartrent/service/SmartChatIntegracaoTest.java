@@ -109,6 +109,7 @@ class SmartChatIntegracaoTest {
         u.setSenhaHash("x".repeat(60));
         u.setPapel(papel);
         u.setAtivo(true);
+        u.setEmailVerificadoEm(relogio.instant()); // a regra de e-mail verificado tem testes proprios
         return em.persist(u);
     }
 
@@ -716,5 +717,58 @@ class SmartChatIntegracaoTest {
         relogio.avancar(Duration.ofMinutes(61));
         chat.enviar(cliente, c.id(), "Aceita deposito antecipado?");
         assertEquals(2, alertas(br.com.unisenai.smartrent.model.enums.TipoAlertaInterno.SUSPEITA_FRAUDE), "novo alerta so depois da janela");
+    }
+
+    // --------------------------------------------------- e-mail verificado
+
+    @Test
+    @DisplayName("E-mail nao verificado - le as conversas, mas nao envia mensagem nem abre conversa nova (regra no backend)")
+    void semEmailVerificadoSoLe() {
+        Conversa c = chat.abrirPorImovel(cliente, imovel.getId());
+        chat.enviar(cliente, c.id(), "Mensagem enviada com o e-mail verificado.");
+        chat.enviar(gestor, c.id(), "Resposta do gestor.");
+
+        cliente.setEmailVerificadoEm(null);
+        assertThrows(br.com.unisenai.smartrent.service.erro.EmailNaoVerificadoException.class,
+                () -> chat.enviar(cliente, c.id(), "Tentando enviar sem verificar."));
+        assertEquals(2, chat.listarMensagens(cliente, c.id(), 0L).size(), "a mensagem recusada nao foi gravada");
+        assertEquals(1, chat.listar(cliente, null).size(), "a lista continua");
+        assertEquals(c.id(), chat.abrirPorImovel(cliente, imovel.getId()).id(), "conversa existente abre (leitura)");
+
+        Imovel outro = novoImovel(gestor, StatusAnuncio.PUBLICADO);
+        em.flush();
+        assertThrows(br.com.unisenai.smartrent.service.erro.EmailNaoVerificadoException.class,
+                () -> chat.abrirPorImovel(cliente, outro.getId()), "conversa nova exige verificacao");
+        Reserva r = reserva(cliente, outro, StatusReserva.CONFIRMADA, 20);
+        assertThrows(br.com.unisenai.smartrent.service.erro.EmailNaoVerificadoException.class,
+                () -> chat.abrirPorReserva(cliente, r.getId()));
+        assertEquals(1, conversas.count(), "nenhuma conversa nova foi criada");
+
+        cliente.setEmailVerificadoEm(relogio.instant());
+        assertDoesNotThrow(() -> chat.enviar(cliente, c.id(), "Agora sim, e-mail verificado."));
+    }
+
+    @Test
+    @DisplayName("E-mail nao verificado - a mensagem de sistema e a criacao automatica da conversa pela reserva continuam funcionando")
+    void sistemaContinuaSemVerificacao() {
+        cliente.setEmailVerificadoEm(null);
+        Reserva r = reserva(cliente, imovel, StatusReserva.CONFIRMADA, 0);
+        em.flush();
+        chat.garantirConversaDaReserva(r.getId());
+        assertEquals(1, conversas.count());
+        List<Mensagem> msgs = chat.listarMensagens(cliente, conversas.findAll().get(0).getId(), 0L);
+        assertEquals(1, msgs.size());
+        assertEquals("SISTEMA", msgs.get(0).tipo());
+    }
+
+    @Test
+    @DisplayName("Perfil da conversa - mostra se o e-mail do interlocutor esta verificado (selo), sem falar em identidade")
+    void perfilMostraSeloDeEmail() {
+        Conversa c = chat.abrirPorImovel(cliente, imovel.getId());
+        assertTrue(chat.perfil(cliente, c.id()).interlocutor().verificado());
+        gestor.setEmailVerificadoEm(null);
+        assertFalse(chat.perfil(cliente, c.id()).interlocutor().verificado());
+        assertTrue(chat.perfil(gestor, c.id()).interlocutor().verificado(), "o cliente continua verificado");
+        assertFalse(chat.perfil(cliente, c.id()).toString().toLowerCase().contains("identidade"));
     }
 }

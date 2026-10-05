@@ -32,4 +32,26 @@ class SmartChatEstaticoTest {
         assertTrue(html.indexOf("id=\"avisoSeguranca\"") < html.indexOf("id=\"mensagens\""), "acima da lista");
         assertFalse(ler("js/smartchat.js").contains("avisoSeguranca"), "o JS nao a esconde nem remove");
     }
+
+    @Test
+    @DisplayName("E-mail verificado: aviso com reenvio no chat, selo no perfil e pagina do link sem token na URL; nunca 'identidade verificada'")
+    void verificacaoDeEmail() throws IOException {
+        String html = ler("smartchat.html");
+        assertTrue(html.contains("id=\"avisoVerificacao\"") && html.contains("id=\"btnReenviarVerificacao\""));
+        String js = ler("js/smartchat.js");
+        assertTrue(js.contains("E-mail verificado"), "selo");
+        assertTrue(js.contains("/api/perfil/email/verificacao/reenviar"));
+        String pagina = ler("verificar-email.html");
+        assertTrue(pagina.contains("name=\"referrer\" content=\"no-referrer\""));
+        assertTrue(pagina.contains("history.replaceState"), "tira o token da barra de enderecos");
+        assertTrue(pagina.contains("/api/perfil/email/verificar"));
+        try (java.util.stream.Stream<Path> arquivos = Files.walk(Path.of("src/main"))) {
+            for (Path p : (Iterable<Path>) arquivos.filter(Files::isRegularFile)::iterator) {
+                String nome = p.getFileName().toString();
+                if (nome.endsWith(".java") || nome.endsWith(".js") || nome.endsWith(".html") || nome.endsWith(".properties")) {
+                    assertFalse(Files.readString(p).toLowerCase().contains("identidade verificada"), p.toString());
+                }
+            }
+        }
+    }
 }

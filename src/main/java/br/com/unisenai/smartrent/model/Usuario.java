@@ -59,6 +59,10 @@ public class Usuario {
     @Column(name = "senha_definida", nullable = false)
     private boolean senhaDefinida = true;
 
+    /** Quando o e-mail da conta foi verificado (link ou login Google com e-mail verificado). Nulo = nao verificado. */
+    @Column(name = "email_verificado_em")
+    private java.time.Instant emailVerificadoEm;
+
     @Column(name = "data_criacao", nullable = false, updatable = false)
     private LocalDateTime dataCriacao;
 
@@ -124,6 +128,18 @@ public class Usuario {
 
     public void setAtivo(boolean ativo) {
         this.ativo = ativo;
+    }
+
+    public java.time.Instant getEmailVerificadoEm() {
+        return emailVerificadoEm;
+    }
+
+    public void setEmailVerificadoEm(java.time.Instant emailVerificadoEm) {
+        this.emailVerificadoEm = emailVerificadoEm;
+    }
+
+    public boolean isEmailVerificado() {
+        return emailVerificadoEm != null;
     }
 
     public LocalDateTime getDataCriacao() {

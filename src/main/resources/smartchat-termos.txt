@@ -84,7 +84,7 @@ SEXUAL|me manda foto pelada
 # SUSPEITA_FRAUDE: NAO borra nem bloqueia. Marca a mensagem para o destinatario ver um alerta
 # ("pagamento ou contato fora da plataforma") e gera um alerta interno. Mesma tolerancia a
 # acento, repeticao, simbolos e espacamento. Um arquivo proprio sem linhas desta categoria
-# mantem a lista abaixo.
+# mantem a lista abaixo. ("whatsap" cobre as grafias com um ou dois P: letras repetidas sao toleradas.)
 SUSPEITA_FRAUDE|deposito antecipado
 SUSPEITA_FRAUDE|desconto por fora
 SUSPEITA_FRAUDE|pagamento por fora
@@ -97,5 +97,5 @@ SUSPEITA_FRAUDE|fora da plataforma
 SUSPEITA_FRAUDE|fora do site
 SUSPEITA_FRAUDE|me chama no zap
 SUSPEITA_FRAUDE|me chama no whats
-SUSPEITA_FRAUDE|me chama no whatsapp
+SUSPEITA_FRAUDE|me chama no whatsap
 SUSPEITA_FRAUDE|me chama no telegram

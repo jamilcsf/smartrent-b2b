@@ -146,6 +146,9 @@ public class TrocaEmailService {
         String emailAntigo = u.getEmail();
         u.setEmail(troca.getEmailNovo());
         u.setSessaoVersao(u.getSessaoVersao() + 1); // as sessoes abertas (token com o e-mail antigo) caem
+        if (!u.isEmailVerificado()) {
+            u.setEmailVerificadoEm(agora); // clicar no link enviado ao novo endereco prova que ele e do usuario
+        }
         troca.setUsadoEm(agora);
         try {
             usuarioRepository.saveAndFlush(u);

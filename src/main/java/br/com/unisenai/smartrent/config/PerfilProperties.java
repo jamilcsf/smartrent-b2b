@@ -20,6 +20,7 @@ import org.springframework.boot.context.properties.bind.DefaultValue;
  * @param emailPedidosPorHora  pedidos de troca de e-mail por hora e usuario
  * @param fotoUploadsPorHora   envios de foto por hora e usuario
  * @param baseUrl              endereco publico do site, usado nos links enviados por e-mail
+ * @param emailVerificacaoHoras validade do link de verificacao do e-mail da conta (cadastro e reenvio)
  */
 @ConfigurationProperties(prefix = "smartrent.perfil")
 public record PerfilProperties(
@@ -35,9 +36,10 @@ public record PerfilProperties(
         @DefaultValue("15") int senhaJanelaMinutos,
         @DefaultValue("3") int emailPedidosPorHora,
         @DefaultValue("10") int fotoUploadsPorHora,
-        @DefaultValue("http://localhost:8080") String baseUrl) {
+        @DefaultValue("http://localhost:8080") String baseUrl,
+        @DefaultValue("24") int emailVerificacaoHoras) {
 
     public static PerfilProperties padrao() {
-        return new PerfilProperties(2, 128, 25_000_000L, 512, 0.88f, 10, "", 60, 5, 15, 3, 10, "http://localhost:8080");
+        return new PerfilProperties(2, 128, 25_000_000L, 512, 0.88f, 10, "", 60, 5, 15, 3, 10, "http://localhost:8080", 24);
     }
 }

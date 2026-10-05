@@ -17,8 +17,12 @@ public final class SmartChatDtos {
     private SmartChatDtos() {
     }
 
-    /** Interlocutor da conversa: so o nome (e iniciais para o avatar) e o papel. */
-    public record Interlocutor(String nome, String iniciais, String papel, String fotoUrl) {
+    /**
+     * Interlocutor da conversa: so o nome (e iniciais para o avatar), o papel e {@code verificado}: o
+     * e-mail da conta esta verificado (selo "E-mail verificado"; NAO e verificacao de identidade, nenhum documento e
+     * conferido). O campo nao se chama "email" de proposito: o endereco nunca sai daqui.
+     */
+    public record Interlocutor(String nome, String iniciais, String papel, String fotoUrl, boolean verificado) {
     }
 
     public record ReservaResumo(

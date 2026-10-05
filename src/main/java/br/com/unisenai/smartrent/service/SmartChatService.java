@@ -28,6 +28,7 @@ import br.com.unisenai.smartrent.repository.SmartChatMensagemRepository;
 import br.com.unisenai.smartrent.repository.UsuarioRepository;
 import br.com.unisenai.smartrent.service.MessageFilterService.Resultado;
 import br.com.unisenai.smartrent.service.erro.AcessoNegadoException;
+import br.com.unisenai.smartrent.service.erro.EmailNaoVerificadoException;
 import br.com.unisenai.smartrent.service.erro.LimiteExcedidoException;
 import br.com.unisenai.smartrent.service.erro.RecursoNaoEncontradoException;
 import br.com.unisenai.smartrent.service.erro.TransicaoInvalidaException;
@@ -128,6 +129,7 @@ public class SmartChatService {
         if (imovel.getUsuario().getId().equals(cliente.getId())) {
             throw new AcessoNegadoException("Você não pode conversar consigo mesmo.");
         }
+        exigirEmailVerificadoParaIniciar(cliente, cliente, imovel);
         SmartChatConversa c = obter(cliente, imovel);
         liberarAba(cliente);
         return resposta(c, cliente);
@@ -146,12 +148,29 @@ public class SmartChatService {
         if (r.getCliente() == null) {
             throw new TransicaoInvalidaException("Este hóspede não tem conta na plataforma, então não há conversa no SmartChat.");
         }
+        exigirEmailVerificadoParaIniciar(usuario, r.getCliente(), r.getImovel());
         SmartChatConversa c = obter(r.getCliente(), r.getImovel());
         c.getReservaIds().add(r.getId());
         if (ehCliente) {
             liberarAba(usuario);
         }
         return resposta(c, usuario);
+    }
+
+    /**
+     * Abrir uma conversa que ainda nao existe exige e-mail verificado de quem abre. A que ja existe continua
+     * abrindo (leitura). A criacao automatica depois da reserva ({@link #garantirConversaDaReserva}) nao passa
+     * por aqui e segue funcionando.
+     */
+    private void exigirEmailVerificadoParaIniciar(Usuario ator, Usuario cliente, Imovel imovel) {
+        if (ator.isEmailVerificado()) {
+            return;
+        }
+        boolean existe = conversas.findByClienteIdAndGestorIdAndImovelId(cliente.getId(),
+                imovel.getUsuario().getId(), imovel.getId()).isPresent();
+        if (!existe) {
+            throw new EmailNaoVerificadoException();
+        }
     }
 
     /** Procura ou cria, serializando pelo imovel (travado), para nunca criar duas conversas iguais. */
@@ -289,6 +308,9 @@ public class SmartChatService {
     @Transactional
     public EnvioResposta enviar(Usuario usuario, Long conversaId, String texto) {
         SmartChatConversa c = participante(usuario, conversaId);
+        if (!usuario.isEmailVerificado()) { // regra no backend; o front so mostra o motivo
+            throw new EmailNaoVerificadoException();
+        }
         if (texto == null || texto.isBlank()) {
             throw new IllegalArgumentException("Escreva uma mensagem.");
         }
@@ -451,7 +473,7 @@ public class SmartChatService {
         String[] partes = outro.getNome().trim().split("\\s+");
         String iniciais = (partes[0].substring(0, 1) + (partes.length > 1 ? partes[partes.length - 1].substring(0, 1) : "")).toUpperCase();
         return new Interlocutor(outro.getNome(), iniciais, c.getGestor().getId().equals(outro.getId()) ? "Gestor" : "Cliente",
-                br.com.unisenai.smartrent.dto.UsuarioResponse.fotoUrl(outro));
+                br.com.unisenai.smartrent.dto.UsuarioResponse.fotoUrl(outro), outro.isEmailVerificado());
     }
 
     /** Reserva exibida no cabecalho: a ativa mais proxima, senao a mais recente do cliente naquele imovel. */
