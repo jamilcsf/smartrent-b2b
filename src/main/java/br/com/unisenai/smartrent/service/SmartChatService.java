@@ -491,14 +491,19 @@ public class SmartChatService {
         ultimaNotificacao.put(chave, agora);
         // sempre o texto filtrado: o borrao vira "[ocultado]"
         String previa = abreviar(MessageFilterService.semMarcadores(textoFiltrado), 80);
+        // O e-mail (hoje so log) nao leva o texto: texto de mensagem nunca vai a log (ADR-006).
         avisar(destino, c.getImovel().getId(), "Nova mensagem de " + autor.getNome(), previa,
-                "/smartchat.html?conversa=" + c.getId());
+                "Você recebeu uma nova mensagem no SmartChat.", "/smartchat.html?conversa=" + c.getId());
     }
 
     private void avisar(Usuario destino, Long imovelId, String titulo, String mensagem, String link) {
+        avisar(destino, imovelId, titulo, mensagem, mensagem, link);
+    }
+
+    private void avisar(Usuario destino, Long imovelId, String titulo, String mensagem, String corpoEmail, String link) {
         try {
             notificacoes.criar(destino, imovelId, titulo, mensagem, link);
-            email.enviar(destino, titulo, mensagem);
+            email.enviar(destino, titulo, corpoEmail);
         } catch (RuntimeException e) {
             log.warn("Falha ao avisar {} sobre o SmartChat", destino.getId(), e);
         }

@@ -104,6 +104,9 @@ riscos = [
     ("R23", "As restrições temporárias trancarem o usuário legítimo para fora da própria conta.", "Baixa", "Médio", "Baixa",
      "Restrições parciais (login, senha, chat, reembolsos e bloqueio de datas nunca são restritos), "
      "cancelamento a qualquer momento, link “não fui eu”, aviso fixo e chave para desligar."),
+    ("R24", "Perda ou vazamento da chave de cifra do SmartChat (SMARTCHAT_CRYPTO_KEY).", "Baixa", "Alto", "Média",
+     "Perder a chave torna as mensagens irrecuperáveis: guardá-la em cofre, com backup separado do banco. "
+     "Vazar a chave junto com o banco anula a proteção. Formato versionado (v1) prepara a rotação, ainda sem rotina."),
 ]
 rdata = [[Paragraph("ID", styles["CellHeader"]), Paragraph("Risco", styles["CellHeader"]),
           Paragraph("Prob.", styles["CellHeaderCenter"]), Paragraph("Impacto", styles["CellHeaderCenter"]),

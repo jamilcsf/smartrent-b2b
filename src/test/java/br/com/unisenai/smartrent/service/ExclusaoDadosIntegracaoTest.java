@@ -88,6 +88,11 @@ class ExclusaoDadosIntegracaoTest {
         }
 
         @Bean
+        br.com.unisenai.smartrent.security.CifraCampo cifraCampo() {
+            return new br.com.unisenai.smartrent.security.CifraCampo(new byte[32]);
+        }
+
+        @Bean
         PerfilProperties perfilProperties() {
             return PerfilProperties.padrao();
         }

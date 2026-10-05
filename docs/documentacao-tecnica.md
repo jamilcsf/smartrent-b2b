@@ -305,6 +305,39 @@ sequenceDiagram
     A->>R: restricoes terminam (auditado)
 ```
 
+## 3.6 SmartChat: cifragem em repouso (migration V15)
+
+Decisões, modelo de ameaça e pendências: [ADR-006](adr/ADR-006-cifragem-em-repouso-do-smartchat.md). É cifragem **na aplicação**,
+em repouso; o servidor continua lendo o texto, porque o filtro de conteúdo e as denúncias (ADR-004, decisões 8 e 9) dependem disso.
+
+| Item | Valor |
+|---|---|
+| Algoritmo | `AES/GCM/NoPadding` (JDK), chave de 256 bits, IV aleatório de 12 bytes por valor, tag de 128 bits |
+| Formato gravado | `v1:` + Base64(IV ‖ ciphertext+tag); o prefixo é a versão da chave. Valor sem prefixo é texto puro legado e é devolvido como está |
+| Campos | `smartchat_mensagens.texto_filtrado`, `smartchat_mensagens.texto_original`, `smartchat_denuncias.descricao` e `notificacoes.mensagem` (prévia; todas `TEXT` na V15) |
+| Aplicação | `TextoCifradoConverter` (`AttributeConverter`) sobre os atributos; `SmartChatService` e DTOs não mudam |
+| Chave | `smartrent.chat.crypto-key` ← `SMARTCHAT_CRYPTO_KEY` (Base64 de 32 bytes); sem ela, fora de `dev`/`test`, a aplicação não inicia |
+| Migração | `MigracaoCifraChat`: lotes por id via JDBC, só valores sem prefixo, idempotente, registra só contagens |
+
+```mermaid
+sequenceDiagram
+    participant S as SmartChatService
+    participant J as JPA + TextoCifradoConverter
+    participant C as CifraCampo
+    participant B as PostgreSQL (Supabase)
+    S->>J: save(mensagem) com texto filtrado e original
+    J->>C: cifrar(texto)
+    C-->>J: "v1:" + Base64(IV, ciphertext+tag)
+    J->>B: grava somente texto cifrado
+    B-->>J: leitura devolve "v1:..."
+    J->>C: decifrar(valor)
+    C-->>S: texto (legado sem prefixo passa; tag invalida lanca excecao)
+```
+
+Nenhuma query filtra ou ordena por essas colunas, e essa é uma regra de projeto. Perder a chave torna as mensagens irrecuperáveis.
+Em produção, `DATABASE_URL` deve usar `sslmode=require`. Pendentes: retenção de `texto_original`, mensagens na exclusão de conta,
+cofre e rotação da chave.
+
 ---
 
 # CAPÍTULO 4 — IMPLEMENTAÇÃO TÉCNICA E CÓDIGO-FONTE

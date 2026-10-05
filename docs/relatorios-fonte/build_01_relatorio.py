@@ -302,6 +302,9 @@ rnf_list = [
     ("RNF11", "Ações sensíveis da conta (senha, e-mail, exclusão de dados) devem exigir "
               "reautenticação, limitar tentativas incorretas e ser auditadas com usuário, "
               "endereço IP e instante em UTC.", "Segurança"),
+    ("RNF12", "O texto das mensagens do SmartChat, o das denúncias e a prévia das notificações devem ser "
+              "gravados cifrados em repouso (AES-256-GCM, chave fora do código) e o texto das mensagens "
+              "não pode ser registrado em log; o servidor continua lendo o texto para filtro e denúncia.", "Segurança"),
 ]
 rnf_data = [[Paragraph("ID", styles["CellHeader"]), Paragraph("Descrição", styles["CellHeader"]),
              Paragraph("Categoria", styles["CellHeaderCenter"])]]
@@ -621,7 +624,7 @@ story.append(Paragraph(
     "do usuário é garantida por restrição de unicidade na própria coluna, não por índice "
     "nomeado. O fluxo de anúncios acrescentou os índices idx_imoveis_status, "
     "idx_midias_imovel, idx_hist_preco_imovel, idx_aceites_imovel, idx_auditoria_imovel e "
-    "idx_notificacoes_usuario, além da restrição de unicidade uk_lembrete. As migrations V7 a V13 acrescentaram os campos comerciais e o snapshot da política, os pagamentos e reembolsos (com chaves de idempotência únicas), os bloqueios de datas, o SmartChat, o processamento de vídeo e o arquivamento seguido do descarte das colunas de WhatsApp. A migration V14 acrescentou a foto, a versão de sessão e o indicador de senha definida ao usuário, a auditoria de conta, os pedidos de troca de e-mail (com índice único parcial de um pedido pendente por usuário) e a solicitação de exclusão de dados com seu histórico (com índice único parcial de uma solicitação em andamento por usuário); nenhuma dessas tabelas guarda senha, hash em claro ou token, apenas o SHA-256 dos tokens de uso único.", styles["Body"]))
+    "idx_notificacoes_usuario, além da restrição de unicidade uk_lembrete. As migrations V7 a V13 acrescentaram os campos comerciais e o snapshot da política, os pagamentos e reembolsos (com chaves de idempotência únicas), os bloqueios de datas, o SmartChat, o processamento de vídeo e o arquivamento seguido do descarte das colunas de WhatsApp. A migration V14 acrescentou a foto, a versão de sessão e o indicador de senha definida ao usuário, a auditoria de conta, os pedidos de troca de e-mail (com índice único parcial de um pedido pendente por usuário) e a solicitação de exclusão de dados com seu histórico (com índice único parcial de uma solicitação em andamento por usuário); nenhuma dessas tabelas guarda senha, hash em claro ou token, apenas o SHA-256 dos tokens de uso único. A migration V15 passou para TEXT as colunas de texto do SmartChat (mensagens, denúncias e a prévia das notificações), que agora guardam o valor cifrado no formato v1:Base64.", styles["Body"]))
 story.append(PageBreak())
 
 # ---------------------------------------------------------------------

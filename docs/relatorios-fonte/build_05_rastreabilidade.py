@@ -62,6 +62,7 @@ rows = [
     ("RF37", "Alteração de e-mail com verificação", "4.3", "TrocaEmailService, TokenSeguro, EmailSender", "CT471–CT479"),
     ("RF38", "Solicitação de exclusão de dados", "4.3", "ExclusaoDadosService, SinaisDeRisco, DataDeletionReviewService", "CT480–CT488"),
     ("RF39", "Restrições temporárias e trava de aprovação", "4.3", "AccountRestrictionService", "CT489–CT499, CT900–CT901"),
+    ("RNF12", "Cifra em repouso do SmartChat (AES-256-GCM)", "4.3", "CifraCampo, TextoCifradoConverter, CifraCampoConfig, MigracaoCifraChat", "CT540–CT556"),
 ]
 tdata = [[Paragraph("RF", styles["CellHeader"]), Paragraph("Descrição", styles["CellHeader"]),
           Paragraph("Caso de uso", styles["CellHeaderCenter"]), Paragraph("Componente", styles["CellHeader"]),

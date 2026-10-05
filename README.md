@@ -68,6 +68,7 @@ src/main/java/com/temporada/gestao
    export IA_API_KEY=<sua-chave-groq-ou-openai>
    export IA_API_URL=https://api.groq.com/openai/v1/chat/completions
    export IA_API_MODEL=llama-3.3-70b-versatile
+   export SMARTCHAT_CRYPTO_KEY=<base64-de-32-bytes>   # ver "Cifragem em repouso do SmartChat"
    ```
 
 3. Compile e execute os testes:
@@ -203,11 +204,36 @@ sem fuso, prazos (24h, 2h, lembretes) como tempo decorrido.
 |---|---|
 | `APP_TIMEZONE` (`America/Sao_Paulo`) | Fuso oficial da plataforma |
 | `CANCEL_ANTECEDENCIA_HORAS` (48) · `CHECKIN_HORA_PADRAO` (14:00) · `CANCEL_REGRET_DAYS` (0) · `RESERVA_PENDENTE_EXPIRA_MINUTOS` (30) | Política de cancelamento e expiração de pendente |
+| `SMARTCHAT_CRYPTO_KEY` · `SMARTCHAT_CRYPTO_MIGRATE_ON_START` (true) | Chave AES-256 (Base64 de 32 bytes) da cifra em repouso e migração das linhas antigas; ver abaixo |
 | `SMARTCHAT_DOMINIOS_PERMITIDOS` · `SMARTCHAT_TERMOS_ARQUIVO` · `SMARTCHAT_BLOCK_ENFORCEMENT` (false) · `SMARTCHAT_MENSAGENS_POR_MINUTO` (20) | Filtro de conteúdo, termos e limites do chat |
 | `VIDEO_FFMPEG_PATH` · `VIDEO_DURACAO_MAX_SEGUNDOS` (90) · `VIDEO_TAMANHO_MAX_MB` (500) · `VIDEO_APAGAR_ORIGINAL` (true) | Processamento e limites de vídeo |
 
 Contas de demonstração (`scripts/dados-demonstracao.sql`, senha `senhaSegura123`): `ana@smartrent.dev` (gestora) e
 `cliente@smartrent.dev` (cliente). Decisões, suposições e pendências jurídicas: [ADR-004](docs/adr/ADR-004-calendario-smartchat-cancelamento-video-e-fuso.md).
+
+### 🔐 Cifragem em repouso do SmartChat
+
+O texto das mensagens (`texto_filtrado`, `texto_original`), a descrição das denúncias e a prévia das notificações são gravados **cifrados** com
+AES-256-GCM pela aplicação (formato `v1:` + Base64). Isto protege contra vazamento do banco, de backups e contra acesso
+direto ao Supabase. **Não é cifragem entre os usuários**: o servidor continua lendo o texto, pois o filtro de conteúdo e
+as denúncias dependem disso, e quem tiver a chave e o banco ao mesmo tempo lê tudo. Detalhes: [ADR-006](docs/adr/ADR-006-cifragem-em-repouso-do-smartchat.md).
+
+- **Gerar a chave** (32 bytes em Base64) e exportá-la como variável de ambiente:
+  ```bash
+  openssl rand -base64 32
+  export SMARTCHAT_CRYPTO_KEY="<saida-do-comando>"
+  ```
+- **Fora dos perfis `dev` e `test` a aplicação não sobe** sem a chave, ou com chave que não decodifica para 32 bytes.
+  Para desenvolvimento local, `SPRING_PROFILES_ACTIVE=dev` (o `executar.bat` já define) usa uma chave pública de
+  desenvolvimento, que **não protege nada**.
+- ⚠️ **Perder a chave torna as mensagens irrecuperáveis.** Guarde-a em um cofre de segredos, com backup separado do banco.
+  Não a coloque no repositório nem em log, e não a troque sem um plano de rotação (a versão `v1` do formato existe para isso).
+- Ao subir, a aplicação cifra as linhas antigas em texto puro (idempotente, só registra contagens). Depois de concluída,
+  pode desligar com `SMARTCHAT_CRYPTO_MIGRATE_ON_START=false`.
+- Não filtre nem ordene por essas colunas em queries: o banco só enxerga texto cifrado.
+- **Trânsito:** em produção, `DATABASE_URL` deve exigir TLS, por exemplo
+  `jdbc:postgresql://<host-supabase>:5432/postgres?sslmode=require`.
+- Os logs do chat não registram o texto das mensagens.
 
 ## 👤 Meu perfil, segurança da conta e exclusão de dados
 

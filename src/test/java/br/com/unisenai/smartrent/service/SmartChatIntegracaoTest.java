@@ -69,6 +69,11 @@ class SmartChatIntegracaoTest {
         ChatProperties chatProps() {
             return ChatProperties.padrao();
         }
+
+        @Bean
+        br.com.unisenai.smartrent.security.CifraCampo cifraCampo() {
+            return new br.com.unisenai.smartrent.security.CifraCampo(new byte[32]);
+        }
     }
 
     @Autowired private TestEntityManager em;
@@ -79,6 +84,7 @@ class SmartChatIntegracaoTest {
     @Autowired private SmartChatMensagemRepository mensagens;
     @Autowired private DenunciaChatRepository denuncias;
     @Autowired private BloqueioUsuarioRepository bloqueios;
+    @Autowired private org.springframework.jdbc.core.JdbcTemplate jdbc;
 
     private Usuario gestor;
     private Usuario outroGestor;
@@ -535,5 +541,32 @@ class SmartChatIntegracaoTest {
         assertEquals("Gestor", chat.perfil(cliente, id).interlocutor().papel());
         String json = doGestor.toString() + chat.perfil(cliente, id);
         assertFalse(json.contains("@"), json);
+    }
+
+    @Test
+    @DisplayName("Cifra em repouso - o banco guarda so texto cifrado e a leitura devolve o texto; sem mudar a API")
+    void textoFicaCifradoNoBanco() {
+        Conversa c = chat.abrirPorImovel(cliente, imovel.getId());
+        EnvioResposta r = chat.enviar(cliente, c.id(), "Olá! Posso levar meu cachorro? 🐶 Ligue 48 99999-0000");
+        em.flush();
+
+        String filtradoNoBanco = jdbc.queryForObject("select texto_filtrado from smartchat_mensagens where id = ?",
+                String.class, r.mensagem().id());
+        String originalNoBanco = jdbc.queryForObject("select texto_original from smartchat_mensagens where id = ?",
+                String.class, r.mensagem().id());
+        assertTrue(filtradoNoBanco.startsWith("v1:") && !filtradoNoBanco.contains("cachorro"));
+        assertTrue(originalNoBanco.startsWith("v1:") && !originalNoBanco.contains("99999"));
+
+        em.clear();
+        SmartChatMensagem lida = mensagens.findById(r.mensagem().id()).orElseThrow();
+        assertTrue(lida.getTextoFiltrado().contains("cachorro"));
+        assertEquals("Olá! Posso levar meu cachorro? 🐶 Ligue 48 99999-0000", lida.getTextoOriginal());
+        assertTrue(chat.listarMensagens(gestor, c.id(), 0L).stream().anyMatch(m -> m.texto().contains("cachorro")));
+
+        chat.denunciar(cliente, c.id(), new DenunciaPedido("ASSEDIO_OFENSAS", "ele pediu o meu telefone", List.of(r.mensagem().id())));
+        em.flush();
+        assertTrue(jdbc.queryForObject("select descricao from smartchat_denuncias", String.class).startsWith("v1:"));
+        em.clear();
+        assertEquals("ele pediu o meu telefone", denuncias.findAll().get(0).getDescricao());
     }
 }

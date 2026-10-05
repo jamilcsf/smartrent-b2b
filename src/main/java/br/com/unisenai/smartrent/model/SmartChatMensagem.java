@@ -1,6 +1,7 @@
 package br.com.unisenai.smartrent.model;
 
 import br.com.unisenai.smartrent.model.enums.TipoMensagem;
+import br.com.unisenai.smartrent.security.TextoCifradoConverter;
 import jakarta.persistence.*;
 
 import java.time.Instant;
@@ -8,7 +9,8 @@ import java.time.Instant;
 /**
  * Mensagem do SmartChat. {@code textoFiltrado} e o unico texto que sai do
  * servidor. {@code textoOriginal} e restrito ao backend (futura moderacao): nao
- * ha getter em nenhum DTO e nenhum endpoint de usuario o devolve.
+ * ha getter em nenhum DTO e nenhum endpoint de usuario o devolve. Os dois textos sao cifrados em repouso
+ * (AES-256-GCM, {@link TextoCifradoConverter}): nao filtrar nem ordenar por eles em query.
  */
 @Entity
 @Table(name = "smartchat_mensagens")
@@ -31,11 +33,13 @@ public class SmartChatMensagem {
     @Column(name = "tipo", nullable = false, length = 10)
     private TipoMensagem tipo = TipoMensagem.NORMAL;
 
-    @Column(name = "texto_filtrado", nullable = false, length = 4000)
+    @Convert(converter = TextoCifradoConverter.class)
+    @Column(name = "texto_filtrado", nullable = false, columnDefinition = "TEXT")
     private String textoFiltrado;
 
     /** RESTRITO: nunca expor por endpoint de usuario, notificacao ou pre-visualizacao. */
-    @Column(name = "texto_original", length = 2000)
+    @Convert(converter = TextoCifradoConverter.class)
+    @Column(name = "texto_original", columnDefinition = "TEXT")
     private String textoOriginal;
 
     /** Categorias detectadas, separadas por virgula (metricas). */

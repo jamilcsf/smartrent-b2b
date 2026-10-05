@@ -2,7 +2,7 @@
 
 **Projeto:** SmartRent B2B — Sistema de Gestão Inteligente para Aluguel por Temporada  
 **Instituição:** UniSENAI — ADS (Florianópolis/SC)[cite: 1, 4]  
-**Última Atualização:** 2026-10-04 — Página de perfil (nome, foto, senha, e-mail), pedido de exclusão de dados com análise manual e restrições temporárias; antes: calendário, bloqueio de datas, reserva e cancelamento com reembolso, SmartChat, vídeos de 1:30, fuso de Brasília e remoção do WhatsApp  
+**Última Atualização:** 2026-10-05 — Cifragem em repouso (AES-256-GCM) das mensagens do SmartChat; antes: página de perfil (nome, foto, senha, e-mail), pedido de exclusão de dados com análise manual e restrições temporárias; antes: calendário, bloqueio de datas, reserva e cancelamento com reembolso, SmartChat, vídeos de 1:30, fuso de Brasília e remoção do WhatsApp  
 
 ---
 
@@ -49,7 +49,8 @@
 - [x] Vídeos de até 1:30 com envio em partes retomável e processamento assíncrono (FFmpeg com fallback); fuso de Brasília; WhatsApp removido de ponta a ponta
 - [x] Página **Meu perfil** acessada pelo cabeçalho: nome de exibição, foto (PNG/JPG reprocessada, sem metadados), troca de senha (política, lista local de senhas comuns, encerramento das demais sessões) e troca de e-mail com verificação por link de uso único ([ADR-005](adr/ADR-005-perfil-seguranca-da-conta-e-exclusao-de-dados.md))
 - [x] Solicitação de **exclusão de dados** com análise manual (nada é excluído automaticamente), antifraude (período mínimo, link "não fui eu", sinais de risco), restrições temporárias parciais centralizadas em `AccountRestrictionService` e trava de aprovação; serviço de revisão pronto, sem tela
-- [x] Suíte de testes automatizados — 446 testes (JUnit 5, Mockito, `@WebMvcTest`, `@DataJpaTest` em H2, concorrência); o front tem só verificações estáticas dos arquivos (falta teste automatizado de interface)
+- [x] **Cifragem em repouso** do texto do SmartChat (AES-256-GCM na aplicação, chave `SMARTCHAT_CRYPTO_KEY`, migração idempotente dos dados antigos, logs sem texto de mensagem). O servidor continua lendo o texto (filtro e denúncias); a cifragem entre os usuários (E2EE) ficou como Visão Futura V2 ([ADR-006](adr/ADR-006-cifragem-em-repouso-do-smartchat.md))
+- [x] Suíte de testes automatizados — 463 testes (JUnit 5, Mockito, `@WebMvcTest`, `@DataJpaTest` em H2, concorrência); o front tem só verificações estáticas dos arquivos (falta teste automatizado de interface)
 - [ ] Primeiro boot contra o Supabase com o schema aplicado
 
 ---
@@ -116,3 +117,12 @@ de segurança, do período mínimo de análise, dos prazos de retenção e do qu
 **concluir a exclusão não está implementado**); SMTP real (os links de e-mail só saem em log); tela de análise e perfil de administrador;
 recuperação de senha (contas criadas só pelo Google e anteriores à V14 não têm caminho para definir a primeira senha); foto em
 armazenamento de objetos; moderação do conteúdo da foto; rate limit distribuído; testes automatizados do front.
+
+Em 2026-10-05 foi entregue a cifragem em repouso do SmartChat (ver [ADR-006](adr/ADR-006-cifragem-em-repouso-do-smartchat.md) e o `README.md`):
+migration V15 (as três colunas de texto viram `TEXT`), `CifraCampo` (AES-256-GCM, `v1:` + Base64), conversor JPA, falha na inicialização
+sem `SMARTCHAT_CRYPTO_KEY` fora de `dev`/`test` e job idempotente que cifra o legado. A V15 e a migração foram exercitadas em PostgreSQL 16
+com `ddl-auto=validate`.
+
+Pendente (decisão do jurídico ou de infraestrutura): **prazo de retenção de `texto_original`**; **tratamento das mensagens na exclusão de
+conta** (ADR-005, executor ainda sem implementação); cofre e backup
+da chave (perdê-la torna as mensagens irrecuperáveis) e rotina de rotação; E2EE como V2.

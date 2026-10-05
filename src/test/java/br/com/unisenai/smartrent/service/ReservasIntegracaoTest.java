@@ -96,6 +96,11 @@ class ReservasIntegracaoTest {
     @TestConfiguration
     static class Config {
         @Bean
+        br.com.unisenai.smartrent.security.CifraCampo cifraCampo() {
+            return new br.com.unisenai.smartrent.security.CifraCampo(new byte[32]);
+        }
+
+        @Bean
         RelogioFalso relogio() {
             return new RelogioFalso(LocalDateTime.of(2026, 10, 3, 15, 0)); // 12:00 em Brasilia
         }
