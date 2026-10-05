@@ -219,7 +219,7 @@ public class SmartChatService {
                 + " · " + r.getNumeroHospedes() + (r.getNumeroHospedes() == 1 ? " hóspede" : " hóspedes");
         boolean nova = gravarSistema(c, "reserva-confirmada:" + r.getId(), texto);
         if (nova) {
-            String link = "/smartchat.html?conversa=" + c.getId();
+            String link = "/smartchat.html?conversa=" + c.getCodigoPublico();
             avisar(r.getCliente(), r.getImovel().getId(), "Reserva confirmada", "Seu chat com o gestor está pronto. " + texto.split("\n")[1]
                     + ". A política de cancelamento da sua reserva está em /reserva.html?id=" + r.getId()
                     + " (texto provisório).", link);
@@ -281,12 +281,12 @@ public class SmartChatService {
     }
 
     @Transactional(readOnly = true)
-    public Conversa buscar(Usuario usuario, Long id) {
-        return resposta(participante(usuario, id), usuario);
+    public Conversa buscar(Usuario usuario, java.util.UUID codigo) {
+        return resposta(participante(usuario, codigo), usuario);
     }
 
     @Transactional(readOnly = true)
-    public List<Mensagem> listarMensagens(Usuario usuario, Long conversaId, Long depoisDe) {
+    public List<Mensagem> listarMensagens(Usuario usuario, java.util.UUID conversaId, Long depoisDe) {
         SmartChatConversa c = participante(usuario, conversaId);
         return mensagens.findDepoisDe(c.getId(), depoisDe == null ? 0L : depoisDe, PageRequest.of(0, 200)).stream()
                 .map(m -> mensagem(m, usuario)).toList();
@@ -298,7 +298,7 @@ public class SmartChatService {
     }
 
     @Transactional(readOnly = true)
-    public Perfil perfil(Usuario usuario, Long conversaId) {
+    public Perfil perfil(Usuario usuario, java.util.UUID conversaId) {
         SmartChatConversa c = participante(usuario, conversaId);
         return new Perfil(interlocutor(c, usuario), imovelResumo(c.getImovel()), reservaResumo(c));
     }
@@ -306,7 +306,7 @@ public class SmartChatService {
     // --------------------------------------------------------------- escrita
 
     @Transactional
-    public EnvioResposta enviar(Usuario usuario, Long conversaId, String texto) {
+    public EnvioResposta enviar(Usuario usuario, java.util.UUID conversaId, String texto) {
         SmartChatConversa c = participante(usuario, conversaId);
         if (!usuario.isEmailVerificado()) { // regra no backend; o front so mostra o motivo
             throw new EmailNaoVerificadoException();
@@ -360,11 +360,11 @@ public class SmartChatService {
     }
 
     @Transactional
-    public void marcarLidas(Usuario usuario, Long conversaId) {
+    public void marcarLidas(Usuario usuario, java.util.UUID conversaId) {
         SmartChatConversa c = participante(usuario, conversaId);
         int n = mensagens.marcarLidas(c.getId(), usuario.getId(), clock.instant());
         if (n > 0) {
-            eventos.publicar(c.outroLado(usuario).getId(), "lida", Map.of("conversaId", c.getId()));
+            eventos.publicar(c.outroLado(usuario).getId(), "lida", Map.of("conversa", c.getCodigoPublico().toString()));
         }
     }
 
@@ -375,7 +375,7 @@ public class SmartChatService {
      * funcional: nada e bloqueado nem avisado ao denunciado.
      */
     @Transactional
-    public Confirmacao denunciar(Usuario usuario, Long conversaId, DenunciaPedido p) {
+    public Confirmacao denunciar(Usuario usuario, java.util.UUID conversaId, DenunciaPedido p) {
         SmartChatConversa c = participante(usuario, conversaId);
         Usuario denunciado = c.outroLado(usuario);
         if (denunciado.getId().equals(usuario.getId())) {
@@ -414,7 +414,7 @@ public class SmartChatService {
      * de aplicacao futura e {@link #exigirSemBloqueio(SmartChatConversa)}.
      */
     @Transactional
-    public Confirmacao bloquear(Usuario usuario, Long conversaId) {
+    public Confirmacao bloquear(Usuario usuario, java.util.UUID conversaId) {
         SmartChatConversa c = participante(usuario, conversaId);
         Usuario bloqueado = c.outroLado(usuario);
         Instant agora = clock.instant();
@@ -446,20 +446,21 @@ public class SmartChatService {
 
     // ----------------------------------------------------------------- apoio
 
-    private SmartChatConversa participante(Usuario usuario, Long id) {
-        SmartChatConversa c = conversas.findById(id)
+    /**
+     * Conversa pelo UUID publico, SO para quem participa. Conversa inexistente e conversa de terceiros dao a MESMA
+     * resposta (404, mesma mensagem): nao ha como descobrir quais conversas existem.
+     */
+    private SmartChatConversa participante(Usuario usuario, java.util.UUID codigo) {
+        return conversas.findByCodigoPublico(codigo)
+                .filter(c -> c.participa(usuario))
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Conversa não encontrada."));
-        if (!c.participa(usuario)) {
-            throw new AcessoNegadoException("Você não participa desta conversa.");
-        }
-        return c;
     }
 
     private Conversa resposta(SmartChatConversa c, Usuario usuario) {
         SmartChatMensagem ultima = mensagens.findFirstByConversaIdOrderByIdDesc(c.getId()).orElse(null);
         String previa = ultima == null ? null : abreviar(MessageFilterService.semMarcadores(ultima.getTextoFiltrado()), 80);
         boolean publicado = AnuncioGestorMapper.noCatalogo(c.getImovel(), Agora.de(clock));
-        return new Conversa(c.getId(), imovelResumo(c.getImovel()), interlocutor(c, usuario), previa,
+        return new Conversa(c.getCodigoPublico(), imovelResumo(c.getImovel()), interlocutor(c, usuario), previa,
                 c.getUltimaMensagemEm(), mensagens.contarNaoLidas(c.getId(), usuario.getId()), reservaResumo(c), publicado,
                 c.getCliente().getId().equals(usuario.getId()) ? "CLIENTE" : "GESTOR");
     }
@@ -507,7 +508,7 @@ public class SmartChatService {
             if (autor != null && u.getId().equals(autor.getId())) {
                 continue;
             }
-            eventos.publicar(u.getId(), "mensagem", Map.of("conversaId", c.getId(), "mensagemId", mensagemId));
+            eventos.publicar(u.getId(), "mensagem", Map.of("conversa", c.getCodigoPublico().toString())); // so o UUID: nenhum id numerico
         }
     }
 
@@ -527,7 +528,7 @@ public class SmartChatService {
         String previa = abreviar(MessageFilterService.semMarcadores(textoFiltrado), 80);
         // O e-mail (hoje so log) nao leva o texto: texto de mensagem nunca vai a log (ADR-006).
         avisar(destino, c.getImovel().getId(), "Nova mensagem de " + autor.getNome(), previa,
-                "Você recebeu uma nova mensagem no SmartChat.", "/smartchat.html?conversa=" + c.getId());
+                "Você recebeu uma nova mensagem no SmartChat.", "/smartchat.html?conversa=" + c.getCodigoPublico());
     }
 
     private void avisar(Usuario destino, Long imovelId, String titulo, String mensagem, String link) {

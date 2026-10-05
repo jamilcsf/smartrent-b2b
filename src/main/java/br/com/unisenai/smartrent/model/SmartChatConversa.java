@@ -18,6 +18,10 @@ public class SmartChatConversa {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /** Identificador que sai pela API (rotas, DTOs, eventos e links). O id sequencial nunca sai do servidor. */
+    @Column(name = "codigo_publico", nullable = false, unique = true, updatable = false)
+    private java.util.UUID codigoPublico = java.util.UUID.randomUUID();
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "cliente_id", nullable = false)
     private Usuario cliente;
@@ -43,6 +47,7 @@ public class SmartChatConversa {
     private Set<Long> reservaIds = new LinkedHashSet<>();
 
     public Long getId() { return id; }
+    public java.util.UUID getCodigoPublico() { return codigoPublico; }
     public Usuario getCliente() { return cliente; }
     public void setCliente(Usuario cliente) { this.cliente = cliente; }
     public Usuario getGestor() { return gestor; }

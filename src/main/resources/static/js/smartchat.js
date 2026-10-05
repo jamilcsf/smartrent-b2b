@@ -76,8 +76,8 @@
   // ------------------------------------------------------------------ lista
 
   function itemLista(c) {
-    var ativa = S.atual && S.atual.id === c.id;
-    return '<li><button type="button" data-conversa="' + c.id + '" class="w-full text-left flex gap-3 p-3 hover:bg-slate-50 ' + (ativa ? 'bg-blue-50' : '') + '">' +
+    var ativa = S.atual && S.atual.codigo === c.codigo;
+    return '<li><button type="button" data-conversa="' + c.codigo + '" class="w-full text-left flex gap-3 p-3 hover:bg-slate-50 ' + (ativa ? 'bg-blue-50' : '') + '">' +
       '<span class="w-11 h-11 rounded-full bg-blue-100 text-blue-700 font-bold text-sm flex items-center justify-center shrink-0 overflow-hidden">' + avatarConteudo(c.interlocutor) + '</span>' +
       '<span class="min-w-0 flex-1">' +
         '<span class="flex items-baseline justify-between gap-2"><span class="font-bold text-sm text-slate-900 truncate">' + esc(c.interlocutor.nome) + '</span>' +
@@ -114,7 +114,7 @@
       S.conversas = await Api.get('/api/smartchat/conversas' + (S.filtro ? '?imovelId=' + S.filtro : ''));
       $('listaErro').classList.add('hidden');
       renderLista();
-      if (S.atual) { var c = S.conversas.filter(function (x) { return x.id === S.atual.id; })[0]; if (c) { S.atual = c; } }
+      if (S.atual) { var c = S.conversas.filter(function (x) { return x.codigo === S.atual.codigo; })[0]; if (c) { S.atual = c; } }
     } catch (e) {
       $('listaCarregando').classList.add('hidden');
       $('listaErro').innerText = 'Não foi possível carregar as conversas: ' + e.message;
@@ -183,10 +183,10 @@
 
   async function carregarMensagens(todas) {
     if (!S.atual) { return; }
-    var id = S.atual.id;
+    var id = S.atual.codigo;
     try {
       var novas = await Api.get('/api/smartchat/conversas/' + id + '/mensagens?depoisDe=' + (todas ? 0 : S.ultimoId));
-      if (!S.atual || S.atual.id !== id) { return; }
+      if (!S.atual || S.atual.codigo !== id) { return; }
       S.mensagens = todas ? novas : S.mensagens.concat(novas);
       if (S.mensagens.length) { S.ultimoId = S.mensagens[S.mensagens.length - 1].id; }
       renderMensagens(todas);
@@ -199,15 +199,15 @@
   async function marcarLidas() {
     if (!S.atual) { return; }
     try {
-      await Api.post('/api/smartchat/conversas/' + S.atual.id + '/lidas', {});
-      var c = S.conversas.filter(function (x) { return x.id === S.atual.id; })[0];
+      await Api.post('/api/smartchat/conversas/' + S.atual.codigo + '/lidas', {});
+      var c = S.conversas.filter(function (x) { return x.codigo === S.atual.codigo; })[0];
       if (c && c.naoLidas) { c.naoLidas = 0; renderLista(); }
       if (global.Navegacao) { Navegacao.atualizarContador(); }
     } catch (e) { /* silencioso: tenta de novo na próxima atualização */ }
   }
 
   async function abrirConversa(id) {
-    var c = S.conversas.filter(function (x) { return x.id === id; })[0];
+    var c = S.conversas.filter(function (x) { return x.codigo === id; })[0];
     if (!c) {
       try { c = await Api.get('/api/smartchat/conversas/' + id); } catch (e) { UI.toast(e.message, 'erro'); return; }
     }
@@ -231,7 +231,7 @@
     var btn = $('btnEnviar');
     btn.disabled = true;
     try {
-      var r = await Api.post('/api/smartchat/conversas/' + S.atual.id + '/mensagens', { texto: texto });
+      var r = await Api.post('/api/smartchat/conversas/' + S.atual.codigo + '/mensagens', { texto: texto });
       campo.value = '';
       campo.style.height = 'auto';
       atualizarContador();
@@ -288,7 +288,7 @@
     S.perfilAberto = true;
     mostrarVista('perfil');
     try {
-      var p = await Api.get('/api/smartchat/conversas/' + S.atual.id + '/perfil');
+      var p = await Api.get('/api/smartchat/conversas/' + S.atual.codigo + '/perfil');
       corpo.innerHTML =
         '<div class="flex flex-col items-center text-center">' +
           '<span class="w-16 h-16 rounded-full bg-blue-100 text-blue-700 font-bold text-xl flex items-center justify-center overflow-hidden">' + avatarConteudo(p.interlocutor) + '</span>' +
@@ -330,7 +330,7 @@
             btn.disabled = true;
             try {
               var ids = Array.prototype.slice.call(el.querySelectorAll('.dn-msg:checked')).map(function (c) { return Number(c.value); });
-              var r = await Api.post('/api/smartchat/conversas/' + S.atual.id + '/denuncias', { motivo: motivo, descricao: el.querySelector('#dn-desc').value.trim() || null, mensagensIds: ids });
+              var r = await Api.post('/api/smartchat/conversas/' + S.atual.codigo + '/denuncias', { motivo: motivo, descricao: el.querySelector('#dn-desc').value.trim() || null, mensagensIds: ids });
               fechar();
               UI.toast(r.mensagem);
             } catch (e) { erro.innerText = e.message; erro.classList.remove('hidden'); btn.disabled = false; }
@@ -349,7 +349,7 @@
     });
     if (!ok) { return; }
     try {
-      var r = await Api.post('/api/smartchat/conversas/' + S.atual.id + '/bloqueio', {});
+      var r = await Api.post('/api/smartchat/conversas/' + S.atual.codigo + '/bloqueio', {});
       UI.toast(r.mensagem);
     } catch (e) { UI.toast(e.message, 'erro'); }
   }
@@ -360,14 +360,14 @@
     var d = {};
     try { d = JSON.parse(e.data); } catch (x) { /* evento sem dados */ }
     carregarLista();
-    if (S.atual && d.conversaId === S.atual.id) { carregarMensagens(false); }
+    if (S.atual && d.conversa === S.atual.codigo) { carregarMensagens(false); }
     if (global.Navegacao) { Navegacao.atualizarContador(); }
   }
 
   function aoLida(e) {
     var d = {};
     try { d = JSON.parse(e.data); } catch (x) { /* ignora */ }
-    if (S.atual && d.conversaId === S.atual.id) { carregarMensagens(true); }
+    if (S.atual && d.conversa === S.atual.codigo) { carregarMensagens(true); }
   }
 
   function iniciarPolling() {
@@ -405,15 +405,15 @@
       if (p.get('imovel')) {
         var c1 = await Api.post('/api/smartchat/conversas/por-imovel/' + Number(p.get('imovel')), {});
         await carregarLista();
-        return abrirConversa(c1.id);
+        return abrirConversa(c1.codigo);
       }
       if (p.get('reserva')) {
         var c2 = await Api.post('/api/smartchat/conversas/por-reserva/' + Number(p.get('reserva')), {});
         await carregarLista();
-        return abrirConversa(c2.id);
+        return abrirConversa(c2.codigo);
       }
     } catch (e) { UI.toast(e.message, 'erro'); }
-    if (p.get('conversa')) { return abrirConversa(Number(p.get('conversa'))); }
+    if (p.get('conversa')) { return abrirConversa(p.get('conversa')); }
     mostrarVista('lista');
   }
 
@@ -424,7 +424,7 @@
     }
     $('lista').addEventListener('click', function (e) {
       var b = e.target.closest('[data-conversa]');
-      if (b) { abrirConversa(Number(b.dataset.conversa)); }
+      if (b) { abrirConversa(b.dataset.conversa); }
     });
     $('selImovel').addEventListener('change', function () { S.filtro = this.value; carregarLista(); });
     $('btnVoltar').addEventListener('click', function () { S.atual = null; $('conversa').classList.add('hidden'); $('semConversa').classList.remove('hidden'); mostrarVista('lista'); renderLista(); });

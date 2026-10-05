@@ -33,8 +33,9 @@ public final class SmartChatDtos {
             int numeroHospedes) {
     }
 
+    /** {@code codigo} e o UUID publico da conversa: o id sequencial nao sai da API (nem o de usuarios). */
     public record Conversa(
-            Long id,
+            java.util.UUID codigo,
             ImovelResumo imovel,
             Interlocutor interlocutor,
             String ultimaMensagem,
