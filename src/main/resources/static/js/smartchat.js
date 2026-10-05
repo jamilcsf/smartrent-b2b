@@ -12,6 +12,7 @@
   var ABRE = '', FECHA = '';
   var ROTULO_CAT = { T: 'Telefone ocultado', E: 'E-mail ocultado', L: 'Link externo ocultado', S: 'Conteúdo impróprio ocultado', O: 'Conteúdo ofensivo ocultado' };
   var AVISO_FILTRO = 'Alguns trechos foram ocultados por conterem telefone, link externo ou conteúdo impróprio. Use o SmartChat para tratar tudo sobre a reserva.';
+  var AVISO_FRAUDE = 'Esta mensagem menciona pagamento ou contato fora da plataforma. Pagamentos feitos por fora não têm proteção.';
   var STATUS_RESERVA = { PENDENTE: 'Pendente', CONFIRMADA: 'Confirmada', CONCLUIDA: 'Concluída', CANCELADA_COM_REEMBOLSO: 'Cancelada', CANCELADA_SEM_REEMBOLSO: 'Cancelada', CANCELADA_PELO_GESTOR: 'Cancelada' };
   var MOTIVOS = [
     ['ASSEDIO_OFENSAS', 'Assédio ou ofensas'], ['SPAM', 'Spam'], ['TENTATIVA_DE_GOLPE', 'Tentativa de golpe'],
@@ -167,6 +168,7 @@
         '<span class="block text-[10px] mt-1 text-right ' + (minha ? 'text-blue-100' : 'text-slate-400') + '">' + hora(m.criadaEm) +
           (minha ? ' <span aria-label="' + (m.lida ? 'Lida' : 'Enviada') + '">' + (m.lida ? '✓✓' : '✓') + '</span>' : '') + '</span></div>' +
       (minha && m.ocorrencias > 0 ? '<p class="text-[10px] italic text-slate-500 mt-1 text-right">' + esc(AVISO_FILTRO) + '</p>' : '') +
+      (!minha && m.suspeitaFraude ? '<p role="note" class="mt-1 text-[11px] font-semibold text-red-800 bg-red-50 border border-red-200 rounded-lg px-2.5 py-1.5">' + esc(AVISO_FRAUDE) + '</p>' : '') +
       '</div></div>';
   }
 

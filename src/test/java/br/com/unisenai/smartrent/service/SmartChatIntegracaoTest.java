@@ -569,4 +569,22 @@ class SmartChatIntegracaoTest {
         em.clear();
         assertEquals("ele pediu o meu telefone", denuncias.findAll().get(0).getDescricao());
     }
+
+    @Test
+    @DisplayName("Fraude - so o destinatario ve o alerta; o texto nao e alterado e o autor nao e avisado")
+    void alertaDeFraudeSoParaODestinatario() {
+        Conversa c = chat.abrirPorImovel(cliente, imovel.getId());
+        EnvioResposta r = chat.enviar(cliente, c.id(), "Podemos fazer o pagamento por fora? Eu faço um pix direto");
+        assertEquals("Podemos fazer o pagamento por fora? Eu faço um pix direto", r.mensagem().texto());
+        assertEquals(0, r.mensagem().ocorrencias());
+        assertNull(r.aviso(), "nao e bloqueio nem mascaramento");
+        assertFalse(r.mensagem().suspeitaFraude(), "o autor nao ve o alerta");
+
+        List<Mensagem> doGestor = chat.listarMensagens(gestor, c.id(), 0L);
+        assertTrue(doGestor.get(0).suspeitaFraude(), "o destinatario ve");
+        assertFalse(chat.listarMensagens(cliente, c.id(), 0L).get(0).suspeitaFraude());
+
+        chat.enviar(cliente, c.id(), "Qual o horário do check-in?");
+        assertFalse(chat.listarMensagens(gestor, c.id(), 0L).get(1).suspeitaFraude());
+    }
 }

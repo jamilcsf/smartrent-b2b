@@ -457,7 +457,11 @@ public class SmartChatService {
         boolean sistema = m.getTipo() == TipoMensagem.SISTEMA;
         return new Mensagem(m.getId(), m.getTipo().name(), !sistema && m.getAutor().getId().equals(usuario.getId()),
                 sistema ? "SmartRent" : m.getAutor().getNome(), m.getTextoFiltrado(), m.getOcorrencias(), m.getCriadaEm(),
-                m.getLidaEm() != null);
+                m.getLidaEm() != null, !sistema && !m.getAutor().getId().equals(usuario.getId()) && sinalizada(m));
+    }
+
+    private static boolean sinalizada(SmartChatMensagem m) {
+        return m.getCategorias() != null && m.getCategorias().contains(MessageFilterService.Categoria.SUSPEITA_FRAUDE.name());
     }
 
     private static String abreviar(String t, int max) {

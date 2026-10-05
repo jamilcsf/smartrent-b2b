@@ -43,7 +43,8 @@ public final class SmartChatDtos {
 
     /**
      * Mensagem entregue ao navegador. {@code texto} e o texto JA FILTRADO (com os
-     * marcadores de borrao); nao existe campo para o original.
+     * marcadores de borrao); nao existe campo para o original. {@code suspeitaFraude} so e verdadeiro para o
+     * DESTINATARIO (o autor nunca ve o alerta): a mensagem cita pagamento ou contato fora da plataforma.
      */
     public record Mensagem(
             Long id,
@@ -53,7 +54,8 @@ public final class SmartChatDtos {
             String texto,
             int ocorrencias,
             Instant criadaEm,
-            boolean lida) {
+            boolean lida,
+            boolean suspeitaFraude) {
     }
 
     public record EnvioPedido(String texto) {
