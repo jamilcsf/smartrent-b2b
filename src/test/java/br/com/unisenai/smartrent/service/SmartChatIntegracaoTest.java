@@ -55,7 +55,7 @@ import static org.junit.jupiter.api.Assertions.*;
 })
 @Import({SmartChatService.class, MessageFilterService.class, ChatEventos.class, LimitadorDeTaxa.class,
         NotificacaoService.class, NotificadorEmailLog.class, TextosPoliticas.class, ChatReconciliador.class,
-        SmartChatIntegracaoTest.Config.class})
+        AnaliseComportamentoChat.class, SmartChatIntegracaoTest.Config.class})
 class SmartChatIntegracaoTest {
 
     @TestConfiguration
@@ -68,6 +68,16 @@ class SmartChatIntegracaoTest {
         @Bean
         ChatProperties chatProps() {
             return ChatProperties.padrao();
+        }
+
+        @Bean
+        br.com.unisenai.smartrent.config.ChatSegurancaProperties chatSegurancaProps() {
+            return br.com.unisenai.smartrent.config.ChatSegurancaProperties.padrao();
+        }
+
+        @Bean
+        br.com.unisenai.smartrent.security.HmacTexto hmacTexto() {
+            return new br.com.unisenai.smartrent.security.HmacTexto(new byte[32]);
         }
 
         @Bean
@@ -586,5 +596,125 @@ class SmartChatIntegracaoTest {
 
         chat.enviar(cliente, c.id(), "Qual o horário do check-in?");
         assertFalse(chat.listarMensagens(gestor, c.id(), 0L).get(1).suspeitaFraude());
+    }
+
+    // ------------------------------------------------- analise de comportamento
+
+    @Autowired private br.com.unisenai.smartrent.repository.AlertaInternoRepository alertasInternos;
+    @Autowired private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
+
+    private void contaAntiga(Usuario u) {
+        em.flush();
+        jdbcTemplate.update("update usuarios set data_criacao = ? where id = ?", java.sql.Timestamp.valueOf(LocalDateTime.of(2025, 1, 1, 0, 0)), u.getId());
+        u.setDataCriacao(LocalDateTime.of(2025, 1, 1, 0, 0)); // a entidade gerenciada segue o banco (coluna nao atualizavel pelo JPA)
+    }
+
+    /** Uma conversa por imovel, para o mesmo cliente falar com varios gestores. */
+    private List<Long> conversasDoCliente(Usuario autor, int quantas) {
+        java.util.ArrayList<Long> ids = new java.util.ArrayList<>();
+        for (int i = 0; i < quantas; i++) {
+            Imovel outro = novoImovel(gestor, StatusAnuncio.PUBLICADO);
+            em.flush();
+            ids.add(chat.abrirPorImovel(autor, outro.getId()).id());
+        }
+        return ids;
+    }
+
+    private long alertas(br.com.unisenai.smartrent.model.enums.TipoAlertaInterno tipo) {
+        return alertasInternos.findAll().stream().filter(a -> a.getTipo() == tipo).count();
+    }
+
+    @Test
+    @DisplayName("Envio em massa - conta antiga: abaixo de N nao dispara, ao atingir N dispara um unico alerta")
+    void envioEmMassaContaAntiga() {
+        contaAntiga(cliente);
+        List<Long> ids = conversasDoCliente(cliente, 6);
+        for (int i = 0; i < 4; i++) {
+            chat.enviar(cliente, ids.get(i), "Olá! Tenho um imóvel incrível para você, me chame para saber mais.");
+        }
+        assertEquals(0, alertas(br.com.unisenai.smartrent.model.enums.TipoAlertaInterno.ENVIO_EM_MASSA), "4 < 5");
+        chat.enviar(cliente, ids.get(4), "Olá! Tenho um imóvel incrível para você, me chame para saber mais.");
+        assertEquals(1, alertas(br.com.unisenai.smartrent.model.enums.TipoAlertaInterno.ENVIO_EM_MASSA));
+        relogio.avancar(Duration.ofSeconds(61)); // o limite restrito (3/min) ja esta valendo: espera a janela de 1 min
+        chat.enviar(cliente, ids.get(5), "olá tenho um imovel incrivel para voce me chame para saber mais");
+        assertEquals(1, alertas(br.com.unisenai.smartrent.model.enums.TipoAlertaInterno.ENVIO_EM_MASSA), "nao duplica na janela");
+
+        br.com.unisenai.smartrent.model.AlertaInterno a = alertasInternos.findAll().get(0);
+        assertEquals(cliente.getId(), a.getUsuario().getId());
+        assertEquals(5, a.getContagem());
+        assertEquals(br.com.unisenai.smartrent.model.enums.StatusAlertaInterno.ABERTO, a.getStatus());
+        assertTrue(a.getJanelaInicio().isBefore(a.getJanelaFim()));
+    }
+
+    @Test
+    @DisplayName("Envio em massa - conta nova pesa mais: o limiar e menor")
+    void envioEmMassaContaNova() {
+        List<Long> ids = conversasDoCliente(cliente, 3); // conta criada agora: limiar 3
+        chat.enviar(cliente, ids.get(0), "Fale comigo fora daqui, tenho uma oferta imperdível.");
+        chat.enviar(cliente, ids.get(1), "Fale comigo fora daqui, tenho uma oferta imperdível.");
+        assertEquals(0, alertas(br.com.unisenai.smartrent.model.enums.TipoAlertaInterno.ENVIO_EM_MASSA));
+        chat.enviar(cliente, ids.get(2), "Fale comigo fora daqui, tenho uma oferta imperdível.");
+        assertEquals(1, alertas(br.com.unisenai.smartrent.model.enums.TipoAlertaInterno.ENVIO_EM_MASSA));
+    }
+
+    @Test
+    @DisplayName("Envio em massa - textos diferentes nao disparam; texto repetido na MESMA conversa tambem nao")
+    void textosDiferentesNaoDisparam() {
+        contaAntiga(cliente);
+        List<Long> ids = conversasDoCliente(cliente, 6);
+        for (int i = 0; i < 6; i++) {
+            chat.enviar(cliente, ids.get(i), "Mensagem numero " + i + " sobre a reserva do apartamento.");
+        }
+        assertEquals(0, alertas(br.com.unisenai.smartrent.model.enums.TipoAlertaInterno.ENVIO_EM_MASSA));
+
+        for (int i = 0; i < 6; i++) {
+            chat.enviar(cliente, ids.get(0), "Chegarei por volta das quinze horas, tudo certo?");
+        }
+        assertEquals(0, alertas(br.com.unisenai.smartrent.model.enums.TipoAlertaInterno.ENVIO_EM_MASSA), "conversas distintas e que contam");
+    }
+
+    @Test
+    @DisplayName("Envio em massa - so o HMAC do texto normalizado e guardado, nunca o texto; textos curtos nao entram")
+    void guardaSoHmac() {
+        Conversa c = chat.abrirPorImovel(cliente, imovel.getId());
+        EnvioResposta r = chat.enviar(cliente, c.id(), "Olá, quero saber sobre o apartamento!");
+        chat.enviar(cliente, c.id(), "ok");
+        em.flush();
+        List<String> hmacs = jdbcTemplate.queryForList("select texto_hmac from smartchat_mensagens order by id", String.class);
+        assertEquals(64, hmacs.get(0).length());
+        assertTrue(hmacs.get(0).matches("[0-9a-f]{64}"));
+        assertFalse(hmacs.get(0).contains("apartamento"));
+        assertNull(hmacs.get(1), "texto curto demais para comparar");
+        assertNotNull(r);
+    }
+
+    @Test
+    @DisplayName("Envio em massa - depois do alerta o limite de envio fica restrito; a conta nao e suspensa")
+    void limiteRestritoSemSuspender() {
+        List<Long> ids = conversasDoCliente(cliente, 3);
+        for (Long id : ids) {
+            chat.enviar(cliente, id, "Fale comigo fora daqui, tenho uma oferta imperdível.");
+        }
+        assertEquals(1, alertas(br.com.unisenai.smartrent.model.enums.TipoAlertaInterno.ENVIO_EM_MASSA));
+        // limite restrito = 3 por minuto: ja foram 3 na janela
+        assertThrows(LimiteExcedidoException.class, () -> chat.enviar(cliente, ids.get(0), "Mais uma mensagem qualquer aqui."));
+        assertTrue(em.find(Usuario.class, cliente.getId()).isAtivo(), "nao suspende a conta");
+        // passado o tempo do limite restrito (60 min) volta ao normal
+        relogio.avancar(Duration.ofMinutes(61));
+        assertDoesNotThrow(() -> chat.enviar(cliente, ids.get(0), "Agora posso escrever de novo normalmente."));
+    }
+
+    @Test
+    @DisplayName("Fraude - gera um alerta interno por usuario na janela, sem conteudo, e a mensagem segue normal")
+    void alertaInternoDeFraude() {
+        Conversa c = chat.abrirPorImovel(cliente, imovel.getId());
+        chat.enviar(cliente, c.id(), "Podemos pagar por fora? Faço um pix direto.");
+        chat.enviar(cliente, c.id(), "Me passa a chave pix então.");
+        assertEquals(1, alertas(br.com.unisenai.smartrent.model.enums.TipoAlertaInterno.SUSPEITA_FRAUDE));
+        assertEquals(1, alertasInternos.findAll().get(0).getContagem());
+        assertEquals(0, alertas(br.com.unisenai.smartrent.model.enums.TipoAlertaInterno.ENVIO_EM_MASSA));
+        relogio.avancar(Duration.ofMinutes(61));
+        chat.enviar(cliente, c.id(), "Aceita deposito antecipado?");
+        assertEquals(2, alertas(br.com.unisenai.smartrent.model.enums.TipoAlertaInterno.SUSPEITA_FRAUDE), "novo alerta so depois da janela");
     }
 }

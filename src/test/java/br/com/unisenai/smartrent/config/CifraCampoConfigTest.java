@@ -57,6 +57,17 @@ class CifraCampoConfigTest {
     }
 
     @Test
+    @DisplayName("HMAC: sem chave fora de dev/test a inicializacao falha; em dev/test usa a chave publica de desenvolvimento")
+    void chaveDoHmac() {
+        CifraCampoConfig config = new CifraCampoConfig();
+        IllegalStateException e = assertThrows(IllegalStateException.class,
+                () -> config.hmacTexto(ChatSegurancaProperties.padrao(), ambiente()));
+        assertTrue(e.getMessage().contains("SMARTCHAT_HMAC_KEY"));
+        assertNotNull(config.hmacTexto(ChatSegurancaProperties.padrao(), ambiente("dev")));
+        assertNotNull(config.hmacTexto(new ChatSegurancaProperties(CHAVE_OK, 5, 3, 10, 7, 3, 60, 60), ambiente()));
+    }
+
+    @Test
     @DisplayName("o toString das propriedades nao revela a chave")
     void toStringSemChave() {
         assertFalse(props(CHAVE_OK).toString().contains(CHAVE_OK));

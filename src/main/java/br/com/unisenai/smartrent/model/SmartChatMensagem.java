@@ -46,6 +46,10 @@ public class SmartChatMensagem {
     @Column(name = "categorias", length = 200)
     private String categorias;
 
+    /** HMAC-SHA-256 do texto normalizado (deteccao de envio em massa). Nunca o texto. Nulo nas mensagens antigas e nas de sistema. */
+    @Column(name = "texto_hmac", length = 64)
+    private String textoHmac;
+
     @Column(name = "ocorrencias", nullable = false)
     private int ocorrencias;
 
@@ -71,6 +75,8 @@ public class SmartChatMensagem {
     public void setTextoOriginal(String textoOriginal) { this.textoOriginal = textoOriginal; }
     public String getCategorias() { return categorias; }
     public void setCategorias(String categorias) { this.categorias = categorias; }
+    public String getTextoHmac() { return textoHmac; }
+    public void setTextoHmac(String textoHmac) { this.textoHmac = textoHmac; }
     public int getOcorrencias() { return ocorrencias; }
     public void setOcorrencias(int ocorrencias) { this.ocorrencias = ocorrencias; }
     public String getChaveIdempotencia() { return chaveIdempotencia; }

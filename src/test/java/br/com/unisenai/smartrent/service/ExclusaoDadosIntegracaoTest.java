@@ -333,6 +333,8 @@ class ExclusaoDadosIntegracaoTest {
         assertTrue(sinais.contains("reservas_vigentes_como_cliente=1"), sinais);
         assertFalse(sinais.contains(ana.getEmail()));
 
+        assertTrue(sinais.contains("alertas_comportamento_abertos=0"), sinais);
+
         service.cancelar(ana, "2.2.2.2");
         service.solicitar(ana, null, SENHA, null, "1.1.1.1"); // IP ja conhecido
         assertTrue(aberta(ana).getSinaisRisco().contains("ip_novo=NAO"));

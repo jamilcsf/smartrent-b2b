@@ -81,6 +81,7 @@ public class SmartChatService {
     private final NotificadorEmail email;
     private final TextosPoliticas textos;
     private final LimitadorDeTaxa limitador;
+    private final AnaliseComportamentoChat analise;
     private final ChatProperties props;
     private final Clock clock;
 
@@ -92,7 +93,7 @@ public class SmartChatService {
                             DenunciaChatRepository denuncias, BloqueioUsuarioRepository bloqueios,
                             MessageFilterService filtro, ChatEventos eventos, NotificacaoService notificacoes,
                             NotificadorEmail email, TextosPoliticas textos, LimitadorDeTaxa limitador,
-                            ChatProperties props, Clock clock) {
+                            AnaliseComportamentoChat analise, ChatProperties props, Clock clock) {
         this.conversas = conversas;
         this.mensagens = mensagens;
         this.imoveis = imoveis;
@@ -106,6 +107,7 @@ public class SmartChatService {
         this.email = email;
         this.textos = textos;
         this.limitador = limitador;
+        this.analise = analise;
         this.props = props;
         this.clock = clock;
     }
@@ -293,7 +295,10 @@ public class SmartChatService {
         if (texto.length() > props.maxCaracteres()) {
             throw new IllegalArgumentException("A mensagem pode ter no máximo " + props.maxCaracteres() + " caracteres.");
         }
-        if (!limitador.permitir("chat:" + usuario.getId(), props.mensagensPorMinuto(), Duration.ofMinutes(1))) {
+        // Depois de um alerta de envio em massa o limite fica mais restrito por um tempo (a conta nao e suspensa).
+        int limite = analise.limiteRestrito(usuario.getId())
+                ? Math.min(props.mensagensPorMinuto(), analise.limiteRestritoPorMinuto()) : props.mensagensPorMinuto();
+        if (!limitador.permitir("chat:" + usuario.getId(), limite, Duration.ofMinutes(1))) {
             throw new LimiteExcedidoException("Você está enviando mensagens rápido demais. Aguarde um instante.");
         }
         exigirSemBloqueio(c);
@@ -309,9 +314,12 @@ public class SmartChatService {
         m.setTextoFiltrado(resultado.texto());
         m.setTextoOriginal(limpo.length() > 2000 ? limpo.substring(0, 2000) : limpo); // restrito ao backend
         m.setOcorrencias(resultado.ocorrencias());
+        String resumo = analise.resumoDe(limpo);
+        m.setTextoHmac(resumo);
         m.setCategorias(resultado.categorias().stream().map(Enum::name).collect(Collectors.joining(",")));
         m.setCriadaEm(agora);
         mensagens.save(m);
+        analise.aposEnvio(usuario, resumo, resultado.suspeitaFraude());
 
         c.setUltimaMensagemEm(agora);
         conversas.save(c);
