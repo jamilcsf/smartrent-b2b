@@ -112,6 +112,7 @@ class MidiaServiceTest {
         if (tipo.imagem()) {
             lenient().when(processador.inspecionarImagem(any(), any(), anyBoolean()))
                     .thenReturn(new MidiaProcessador.Inspecao("image/jpeg", "jpg", 400, 200, null));
+            lenient().when(processador.sanearImagem(any(), any())).thenAnswer(i -> i.getArgument(1));
         } else {
             lenient().when(processador.inspecionarVideo(any(), any(), anyInt()))
                     .thenReturn(new MidiaProcessador.Inspecao("video/mp4", "mp4", null, null, 30));

@@ -14,6 +14,7 @@ import br.com.unisenai.smartrent.service.FotoPerfilService;
 import br.com.unisenai.smartrent.service.PerfilService;
 import br.com.unisenai.smartrent.service.SenhaService;
 import br.com.unisenai.smartrent.service.TrocaEmailService;
+import br.com.unisenai.smartrent.service.VerificacaoEmailService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.http.MediaType;
@@ -34,10 +35,13 @@ public class PerfilController {
     private final FotoPerfilService fotoService;
     private final SenhaService senhaService;
     private final TrocaEmailService trocaEmailService;
+    private final VerificacaoEmailService verificacaoEmail;
     private final ExclusaoDadosService exclusaoService;
 
     public PerfilController(PerfilService perfilService, FotoPerfilService fotoService, SenhaService senhaService,
-                            TrocaEmailService trocaEmailService, ExclusaoDadosService exclusaoService) {
+                            TrocaEmailService trocaEmailService, ExclusaoDadosService exclusaoService,
+                            VerificacaoEmailService verificacaoEmail) {
+        this.verificacaoEmail = verificacaoEmail;
         this.exclusaoService = exclusaoService;
         this.perfilService = perfilService;
         this.fotoService = fotoService;
@@ -93,6 +97,19 @@ public class PerfilController {
     public MensagemResponse confirmarTrocaEmail(@RequestBody ConfirmarEmailRequest req, HttpServletRequest http) {
         trocaEmailService.confirmar(req.token(), http.getRemoteAddr());
         return new MensagemResponse("E-mail alterado com sucesso. Entre novamente com o novo endereço.");
+    }
+
+    /** Reenvia o link de verificacao do e-mail da conta (com limite de taxa). */
+    @PostMapping("/email/verificacao/reenviar")
+    public MensagemResponse reenviarVerificacao(@AuthenticationPrincipal Usuario usuario, HttpServletRequest http) {
+        return new MensagemResponse(verificacaoEmail.reenviar(usuario, http.getRemoteAddr()));
+    }
+
+    /** Confirma o link de verificacao. Publico: o token de uso unico e a prova (ver SecurityConfig). */
+    @PostMapping("/email/verificar")
+    public MensagemResponse verificarEmail(@RequestBody ConfirmarEmailRequest req, HttpServletRequest http) {
+        verificacaoEmail.confirmar(req.token(), http.getRemoteAddr());
+        return new MensagemResponse("E-mail verificado. Agora você pode enviar mensagens no SmartChat.");
     }
 
     // ------------------------------------------------------------ exclusao de dados

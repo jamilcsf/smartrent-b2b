@@ -46,7 +46,9 @@ public class MessageFilterService implements ContentModerationService {
         EMAIL('E', "E-mail ocultado"),
         LINK('L', "Link externo ocultado"),
         SEXUAL('S', "Conteúdo impróprio ocultado"),
-        OFENSA('O', "Conteúdo ofensivo ocultado");
+        OFENSA('O', "Conteúdo ofensivo ocultado"),
+        /** Sinal, nunca mascara: pagamento ou contato fora da plataforma (o destinatario recebe um alerta). */
+        SUSPEITA_FRAUDE('F', "Menção a pagamento ou contato fora da plataforma");
 
         public final char codigo;
         public final String rotulo;
@@ -63,8 +65,13 @@ public class MessageFilterService implements ContentModerationService {
 
     /** Resultado: texto ja com marcadores (unico que sai do servidor), categorias e numero de trechos. */
     public record Resultado(String texto, Set<Categoria> categorias, int ocorrencias) {
+        /** Houve trecho mascarado. Suspeita de fraude NAO altera o texto: nao conta aqui. */
         public boolean alterado() {
             return ocorrencias > 0;
+        }
+
+        public boolean suspeitaFraude() {
+            return categorias.contains(Categoria.SUSPEITA_FRAUDE);
         }
     }
 
@@ -113,12 +120,14 @@ public class MessageFilterService implements ContentModerationService {
     private final ChatProperties props;
     private final Pattern ofensas;
     private final Pattern sexuais;
+    private final Pattern fraude;
 
     public MessageFilterService(ChatProperties props) {
         this.props = props;
         Map<Categoria, List<String>> termos = carregarTermos(props);
         this.ofensas = compilarTermos(termos.get(Categoria.OFENSA));
         this.sexuais = compilarTermos(termos.get(Categoria.SEXUAL));
+        this.fraude = compilarTermos(termos.get(Categoria.SUSPEITA_FRAUDE));
     }
 
     // ------------------------------------------------------------- API
@@ -139,7 +148,20 @@ public class MessageFilterService implements ContentModerationService {
         detectarEmails(texto, achados);
         detectarLinks(texto, achados);
         detectarTermos(texto, achados);
-        return montar(texto, achados);
+        Resultado r = montar(texto, achados);
+        if (mencionaPagamentoOuContatoPorFora(texto)) {
+            // So registra a categoria: o texto segue como foi digitado e as ocorrencias nao mudam.
+            Set<Categoria> categorias = EnumSet.noneOf(Categoria.class);
+            categorias.addAll(r.categorias());
+            categorias.add(Categoria.SUSPEITA_FRAUDE);
+            return new Resultado(r.texto(), categorias, r.ocorrencias());
+        }
+        return r;
+    }
+
+    /** Termos de golpe/pagamento por fora (lista configuravel), com a mesma tolerancia dos termos ofensivos. */
+    private boolean mencionaPagamentoOuContatoPorFora(String texto) {
+        return fraude != null && fraude.matcher(normalizar(texto).texto()).find();
     }
 
     /** Remove do que o usuario digitou os caracteres reservados do marcador (ninguem forja um borrao ou o desfaz). */
@@ -367,26 +389,45 @@ public class MessageFilterService implements ContentModerationService {
         Map<Categoria, List<String>> mapa = new LinkedHashMap<>();
         mapa.put(Categoria.OFENSA, new ArrayList<>());
         mapa.put(Categoria.SEXUAL, new ArrayList<>());
+        mapa.put(Categoria.SUSPEITA_FRAUDE, new ArrayList<>());
         try (InputStream in = abrirArquivoDeTermos(props)) {
-            if (in == null) {
-                return mapa;
-            }
-            for (String linha : new String(in.readAllBytes(), StandardCharsets.UTF_8).split("\\R")) {
-                String l = linha.trim();
-                if (l.isEmpty() || l.startsWith("#") || !l.contains("|")) {
-                    continue;
-                }
-                String[] p = l.split("\\|", 2);
-                try {
-                    mapa.get(Categoria.valueOf(p[0].trim().toUpperCase(Locale.ROOT))).add(p[1].trim());
-                } catch (IllegalArgumentException | NullPointerException e) {
-                    // categoria desconhecida: linha ignorada
-                }
-            }
+            lerTermos(in, mapa);
         } catch (IOException e) {
             throw new IllegalStateException("Nao foi possivel ler a lista de termos do SmartChat.", e);
         }
+        boolean arquivoProprio = props.termosArquivo() != null && !props.termosArquivo().isBlank();
+        if (arquivoProprio && mapa.get(Categoria.SUSPEITA_FRAUDE).isEmpty()) {
+            // Arquivo proprio sem linhas SUSPEITA_FRAUDE (anterior a esta categoria): mantem a lista padrao de fraude.
+            try (InputStream padrao = MessageFilterService.class.getResourceAsStream("/smartchat-termos.txt")) {
+                Map<Categoria, List<String>> defaults = new LinkedHashMap<>();
+                defaults.put(Categoria.SUSPEITA_FRAUDE, mapa.get(Categoria.SUSPEITA_FRAUDE));
+                lerTermos(padrao, defaults);
+            } catch (IOException e) {
+                throw new IllegalStateException("Nao foi possivel ler a lista padrao de termos do SmartChat.", e);
+            }
+        }
         return mapa;
+    }
+
+    private static void lerTermos(InputStream in, Map<Categoria, List<String>> mapa) throws IOException {
+        if (in == null) {
+            return;
+        }
+        for (String linha : new String(in.readAllBytes(), StandardCharsets.UTF_8).split("\\R")) {
+            String l = linha.trim();
+            if (l.isEmpty() || l.startsWith("#") || !l.contains("|")) {
+                continue;
+            }
+            String[] p = l.split("\\|", 2);
+            try {
+                List<String> lista = mapa.get(Categoria.valueOf(p[0].trim().toUpperCase(Locale.ROOT)));
+                if (lista != null) {
+                    lista.add(p[1].trim());
+                }
+            } catch (IllegalArgumentException e) {
+                // categoria desconhecida: linha ignorada
+            }
+        }
     }
 
     private static InputStream abrirArquivoDeTermos(ChatProperties props) throws IOException {

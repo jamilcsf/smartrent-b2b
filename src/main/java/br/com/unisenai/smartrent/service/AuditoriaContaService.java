@@ -24,6 +24,8 @@ public class AuditoriaContaService {
     public static final String SENHA_TENTATIVA_RECUSADA = "SENHA_TENTATIVA_RECUSADA";
     public static final String EMAIL_TROCA_SOLICITADA = "EMAIL_TROCA_SOLICITADA";
     public static final String EMAIL_TROCA_CONFIRMADA = "EMAIL_TROCA_CONFIRMADA";
+    public static final String EMAIL_VERIFICACAO_ENVIADA = "EMAIL_VERIFICACAO_ENVIADA";
+    public static final String EMAIL_VERIFICADO = "EMAIL_VERIFICADO";
     public static final String EXCLUSAO_SOLICITADA = "EXCLUSAO_SOLICITADA";
     public static final String EXCLUSAO_CANCELADA = "EXCLUSAO_CANCELADA";
     public static final String EXCLUSAO_DECIDIDA = "EXCLUSAO_DECIDIDA";

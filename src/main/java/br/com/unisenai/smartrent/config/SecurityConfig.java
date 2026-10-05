@@ -59,7 +59,7 @@ public class SecurityConfig {
                         // o resto do perfil e sempre do proprio usuario autenticado.
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/perfil/foto/*").permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/perfil/exclusao-dados/cancelar").permitAll()
-                        .requestMatchers("/api/perfil/email/confirmar").permitAll()
+                        .requestMatchers("/api/perfil/email/confirmar", "/api/perfil/email/verificar").permitAll()
                         .requestMatchers("/api/perfil/**").authenticated()
                         .anyRequest().permitAll())
                 // Sem isto o Spring Security responderia 401 com WWW-Authenticate

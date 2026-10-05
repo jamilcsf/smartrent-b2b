@@ -33,6 +33,7 @@ public class MidiaProcessador {
     private static final long MAX_PIXELS = 60_000_000L;
     private static final double TOLERANCIA_360 = 0.02;
     private static final int LARGURA_MINIATURA = 480;
+    private static final float QUALIDADE_JPEG = 0.92f;
     private static final Set<String> MIMES_IMAGEM = Set.of("image/jpeg", "image/png");
     private static final Set<String> MIMES_VIDEO = Set.of("video/mp4", "video/quicktime");
 
@@ -64,6 +65,9 @@ public class MidiaProcessador {
             if ((long) dim[0] * dim[1] > MAX_PIXELS) {
                 throw new ValidacaoAnuncioException("A resolução da imagem é alta demais (máximo 60 megapixels).");
             }
+            if (real.equals("image/jpeg") && ImagemSegura.trocaEixos(ImagemSegura.orientacaoExif(Files.readAllBytes(arquivo)))) {
+                dim = new int[]{dim[1], dim[0]}; // a regra 2:1 vale para a imagem como sera exibida (orientacao aplicada)
+            }
             if (panoramica) {
                 if (!proporcao360(dim[0], dim[1])) {
                     throw new ValidacaoAnuncioException(
@@ -74,6 +78,39 @@ public class MidiaProcessador {
             return new Inspecao(real, real.equals("image/png") ? "png" : "jpg", dim[0], dim[1], null);
         } catch (IOException e) {
             throw new ValidacaoAnuncioException("Não foi possível ler a imagem enviada.");
+        }
+    }
+
+    /**
+     * Recodifica a imagem JA VALIDADA, no proprio arquivo, sem nenhum metadado (EXIF, GPS, XMP, miniatura embutida,
+     * comentarios) e com a orientacao EXIF aplicada aos pixels. JPEG continua JPEG (qualidade 0,92) e PNG continua PNG
+     * (com transparencia). Devolve a inspecao com as dimensoes finais.
+     */
+    public Inspecao sanearImagem(Path arquivo, Inspecao inspecao) {
+        try {
+            byte[] original = Files.readAllBytes(arquivo);
+            String formato = ImagemSegura.formatoPelosBytes(original);
+            if (formato == null) {
+                throw new ValidacaoAnuncioException("Formato de imagem não aceito. Envie JPEG ou PNG.");
+            }
+            BufferedImage imagem = ImageIO.read(new java.io.ByteArrayInputStream(original));
+            if (imagem == null) {
+                throw new ValidacaoAnuncioException("Não foi possível ler a imagem enviada.");
+            }
+            byte[] limpo;
+            if (formato.equals("jpeg")) {
+                imagem = ImagemSegura.orientar(imagem, ImagemSegura.orientacaoExif(original));
+                limpo = ImagemSegura.codificarJpeg(imagem, QUALIDADE_JPEG);
+            } else {
+                limpo = ImagemSegura.codificarPng(imagem);
+            }
+            Files.write(arquivo, limpo);
+            return new Inspecao(inspecao.mime(), inspecao.extensao(), imagem.getWidth(), imagem.getHeight(), null);
+        } catch (IOException | RuntimeException e) {
+            if (e instanceof ValidacaoAnuncioException v) {
+                throw v;
+            }
+            throw new ValidacaoAnuncioException("Não foi possível processar a imagem enviada.");
         }
     }
 

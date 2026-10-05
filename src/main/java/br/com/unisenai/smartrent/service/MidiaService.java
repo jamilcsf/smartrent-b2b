@@ -105,6 +105,10 @@ public class MidiaService {
                     ? processador.inspecionarImagem(temporario, arquivo.getContentType(), tipo == TipoMidia.FOTO_360)
                     : processador.inspecionarVideo(temporario, arquivo.getContentType(), MAX_DURACAO_VIDEO_SEGUNDOS);
 
+            if (tipo.imagem()) { // GPS e demais metadados do celular nao podem ficar publicados
+                insp = processador.sanearImagem(temporario, insp);
+            }
+
             String chave = UUID.randomUUID().toString();
             // Video vive em pasta propria (original, MP4, poster, HLS); imagem e um arquivo so.
             nomeArquivo = tipo == TipoMidia.VIDEO
@@ -129,6 +133,7 @@ public class MidiaService {
             m.setMiniatura(nomeMiniatura);
             m.setMime(insp.mime());
             m.setTamanhoBytes(Files.size(temporario));
+            m.setMetadadosRemovidos(tipo.imagem());
             m.setLargura(insp.largura());
             m.setAltura(insp.altura());
             m.setDuracaoSegundos(insp.duracaoSegundos());

@@ -21,6 +21,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -32,6 +33,9 @@ class AuthServiceTest {
     @Mock
     private JwtService jwtService;
 
+    @Mock
+    private VerificacaoEmailService verificacao;
+
     private PasswordEncoder passwordEncoder;
     private AuthService authService;
 
@@ -39,7 +43,12 @@ class AuthServiceTest {
     void preparar() {
         // Encoder real: o teste precisa provar que a senha vira hash de fato.
         passwordEncoder = new BCryptPasswordEncoder();
-        authService = new AuthService(usuarioRepository, passwordEncoder, jwtService);
+        authService = new AuthService(usuarioRepository, passwordEncoder, jwtService, verificacao);
+        // O servico real grava a data; o mock imita isso para os testes enxergarem o efeito.
+        lenient().doAnswer(i -> {
+            ((Usuario) i.getArgument(0)).setEmailVerificadoEm(java.time.Instant.now());
+            return null;
+        }).when(verificacao).marcarVerificado(any(Usuario.class));
     }
 
     private Usuario usuarioComSenha(String senha) {
@@ -71,6 +80,38 @@ class AuthServiceTest {
         assertTrue(passwordEncoder.matches("senhaSegura123", salvo.getSenhaHash()));
         assertEquals(PapelUsuario.CLIENTE, salvo.getPapel(), "sem perfil, o cadastro e de menor privilegio");
         assertTrue(salvo.isAtivo());
+    }
+
+    @Test
+    @DisplayName("Verificacao - Cadastro por senha pede o link de verificacao e a conta nasce sem e-mail verificado")
+    void cadastroPedeLinkDeVerificacao() {
+        when(usuarioRepository.findByEmail(any())).thenReturn(Optional.empty());
+        when(usuarioRepository.save(any(Usuario.class))).thenAnswer(i -> i.getArgument(0));
+        when(jwtService.gerarToken(any())).thenReturn("token-ficticio");
+
+        authService.cadastrar(new CadastroRequest("Ana", "ana@smartrent.dev", "senhaSegura123", "senhaSegura123", null));
+
+        ArgumentCaptor<Usuario> capturado = ArgumentCaptor.forClass(Usuario.class);
+        verify(usuarioRepository).save(capturado.capture());
+        assertFalse(capturado.getValue().isEmailVerificado());
+        verify(verificacao).enviarLink(eq(capturado.getValue()), any());
+    }
+
+    @Test
+    @DisplayName("Verificacao - Login pelo Google (e-mail ja verificado la) marca a conta como verificada, nova ou existente")
+    void googleMarcaComoVerificado() {
+        Usuario existente = usuarioComSenha("qualquer");
+        when(usuarioRepository.findByEmail("ana@smartrent.dev")).thenReturn(Optional.of(existente));
+        when(jwtService.gerarToken(any())).thenReturn("token-ficticio");
+        authService.entrarComGoogle("ana@smartrent.dev", "Ana");
+        verify(verificacao).marcarVerificado(existente);
+
+        when(usuarioRepository.findByEmail("nova@smartrent.dev")).thenReturn(Optional.empty());
+        when(usuarioRepository.save(any(Usuario.class))).thenAnswer(i -> i.getArgument(0));
+        authService.entrarComGoogle("nova@smartrent.dev", "Nova");
+        ArgumentCaptor<Usuario> novo = ArgumentCaptor.forClass(Usuario.class);
+        verify(verificacao, times(2)).marcarVerificado(novo.capture());
+        assertEquals("nova@smartrent.dev", novo.getAllValues().get(1).getEmail());
     }
 
     @Test
@@ -184,20 +225,23 @@ class AuthServiceTest {
         assertEquals("Nova Pessoa", salvo.getNome());
         assertEquals(PapelUsuario.CLIENTE, salvo.getPapel());
         assertTrue(salvo.getSenhaHash().startsWith("$2"), "deve ser um hash BCrypt");
+        assertTrue(salvo.isEmailVerificado(), "o Google so entrega e-mail ja verificado");
     }
 
     @Test
     @DisplayName("CT37 - Google: e-mail já cadastrado entra na conta existente, sem duplicar")
     void googleDeveEntrarEmContaExistente() {
-        when(usuarioRepository.findByEmail("ana@smartrent.dev"))
-                .thenReturn(Optional.of(usuarioComSenha("qualquer")));
+        Usuario existente = usuarioComSenha("qualquer");
+        when(usuarioRepository.findByEmail("ana@smartrent.dev")).thenReturn(Optional.of(existente));
         when(jwtService.gerarToken(any())).thenReturn("token-g");
 
         AuthResponse r = authService.entrarComGoogle("ana@smartrent.dev", "Outro Nome");
 
         assertEquals("token-g", r.token());
         assertEquals("Ana Beatriz Rocha", r.usuario().nome());
-        verify(usuarioRepository, never()).save(any());
+        // so o proprio usuario e regravado (e-mail passa a verificado); nenhuma conta nova
+        verify(usuarioRepository, times(1)).save(existente);
+        assertTrue(existente.isEmailVerificado());
     }
 
     @Test

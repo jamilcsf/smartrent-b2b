@@ -305,6 +305,89 @@ sequenceDiagram
     A->>R: restricoes terminam (auditado)
 ```
 
+## 3.6 SmartChat: cifragem em repouso (migration V15)
+
+Decisões, modelo de ameaça e pendências: [ADR-006](adr/ADR-006-cifragem-em-repouso-do-smartchat.md). É cifragem **na aplicação**,
+em repouso; o servidor continua lendo o texto, porque o filtro de conteúdo e as denúncias (ADR-004, decisões 8 e 9) dependem disso.
+
+| Item | Valor |
+|---|---|
+| Algoritmo | `AES/GCM/NoPadding` (JDK), chave de 256 bits, IV aleatório de 12 bytes por valor, tag de 128 bits |
+| Formato gravado | `v1:` + Base64(IV ‖ ciphertext+tag); o prefixo é a versão da chave. Valor sem prefixo é texto puro legado e é devolvido como está |
+| Campos | `smartchat_mensagens.texto_filtrado`, `smartchat_mensagens.texto_original`, `smartchat_denuncias.descricao` e `notificacoes.mensagem` (prévia; todas `TEXT` na V15) |
+| Aplicação | `TextoCifradoConverter` (`AttributeConverter`) sobre os atributos; `SmartChatService` e DTOs não mudam |
+| Chave | `smartrent.chat.crypto-key` ← `SMARTCHAT_CRYPTO_KEY` (Base64 de 32 bytes); sem ela, fora de `dev`/`test`, a aplicação não inicia |
+| Migração | `MigracaoCifraChat`: lotes por id via JDBC, só valores sem prefixo, idempotente, registra só contagens |
+
+```mermaid
+sequenceDiagram
+    participant S as SmartChatService
+    participant J as JPA + TextoCifradoConverter
+    participant C as CifraCampo
+    participant B as PostgreSQL (Supabase)
+    S->>J: save(mensagem) com texto filtrado e original
+    J->>C: cifrar(texto)
+    C-->>J: "v1:" + Base64(IV, ciphertext+tag)
+    J->>B: grava somente texto cifrado
+    B-->>J: leitura devolve "v1:..."
+    J->>C: decifrar(valor)
+    C-->>S: texto (legado sem prefixo passa; tag invalida lanca excecao)
+```
+
+Nenhuma query filtra ou ordena por essas colunas, e essa é uma regra de projeto. Perder a chave torna as mensagens irrecuperáveis.
+Em produção, `DATABASE_URL` deve usar `sslmode=require`. Pendentes: retenção de `texto_original`, mensagens na exclusão de conta,
+cofre e rotação da chave.
+
+## 3.7 SmartChat e uploads: reforço de segurança (migrations V16 a V19)
+
+Decisões, auditoria das rotas e itens de V2: [ADR-007](adr/ADR-007-reforco-de-seguranca-do-smartchat-e-dos-uploads.md).
+
+**Endpoints alterados ou novos**
+
+| Endpoint | Mudança |
+|---|---|
+| `GET /api/smartchat/conversas/{codigo}` e todas as rotas `/conversas/{codigo}/...` (`mensagens`, `lidas`, `perfil`, `denuncias`, `bloqueio`) | `codigo` é o UUID público; id numérico, UUID inexistente e conversa de terceiros dão o mesmo 404 |
+| `POST /api/smartchat/conversas/{codigo}/mensagens` | 403 se o e-mail não está verificado; resposta traz `suspeitaFraude` (só para o destinatário) |
+| `POST /api/smartchat/conversas/por-imovel/{id}` · `por-reserva/{id}` | conversa **nova** exige e-mail verificado (a existente abre) |
+| `GET /api/smartchat/conversas` e `/{codigo}` | `Conversa.codigo` (UUID) no lugar de `id`; `interlocutor.verificado` (selo "E-mail verificado") |
+| evento SSE `mensagem` / `lida` | `{conversa: <uuid>}`; sem `conversaId` nem `mensagemId` |
+| `POST /api/perfil/email/verificacao/reenviar` (autenticado) · `POST /api/perfil/email/verificar` (público) | reenvio com limite e confirmação do link de uso único |
+| `GET /api/auth/me`, login e cadastro | `usuario.emailVerificado` |
+| `POST /api/gestor/imoveis/{id}/midias` | a imagem é recodificada sem EXIF/GPS antes de gravar |
+
+**Novas propriedades** (`smartrent.chat.*`, `smartrent.perfil.*`, `smartrent.midia.*`; variáveis no `README.md`)
+
+| Propriedade | Padrão | Efeito |
+|---|---|---|
+| `smartrent.chat.hmac-key` | — (obrigatória fora de `dev`/`test`) | chave do HMAC-SHA-256 do texto normalizado (`SMARTCHAT_HMAC_KEY`) |
+| `smartrent.chat.envio-massa-conversas` / `-conta-nova` | 5 / 3 | N: conversas distintas com o mesmo texto que disparam o alerta |
+| `smartrent.chat.envio-massa-minutos` | 10 | M: janela da contagem |
+| `smartrent.chat.conta-nova-dias` | 7 | X: até quantos dias a conta é "nova" |
+| `smartrent.chat.limite-restrito-por-minuto` / `-minutos` | 3 / 60 | limite de envio após o alerta e por quanto tempo |
+| `smartrent.chat.alerta-janela-minutos` | 60 | não repete o mesmo alerta do mesmo usuário na janela |
+| `smartrent.perfil.email-verificacao-horas` | 24 | validade do link de verificação |
+| `smartrent.midia.sanear-ao-iniciar` | true | reprocessa, uma vez, as fotos de anúncio antigas |
+
+**Tabelas e colunas novas:** `imovel_midias.metadados_removidos`; `smartchat_mensagens.texto_hmac` (HMAC, nunca o texto) e `alertas_internos`
+(usuário, tipo, contagem, janela, status; sem conteúdo); `usuarios.email_verificado_em` e `verificacao_email` (só o SHA-256 do token);
+`smartchat_conversas.codigo_publico` (UUID, único).
+
+```mermaid
+sequenceDiagram
+    participant U as Usuário
+    participant S as SmartChatService
+    participant F as MessageFilterService
+    participant A as AnaliseComportamentoChat
+    participant B as Banco
+    U->>S: POST /conversas/{uuid}/mensagens
+    S->>S: conversa pelo UUID; não participante = 404; e-mail não verificado = 403
+    S->>F: filtrar (mascara contato; marca SUSPEITA_FRAUDE sem mascarar)
+    S->>B: grava texto cifrado + categorias + texto_hmac
+    S->>A: aposEnvio (mesmo HMAC em N conversas em M min? fraude?)
+    A->>B: alerta interno (1 por usuário e tipo na janela) e, em massa, limite restrito
+    S-->>U: mensagem (suspeitaFraude=false para o autor)
+```
+
 ---
 
 # CAPÍTULO 4 — IMPLEMENTAÇÃO TÉCNICA E CÓDIGO-FONTE

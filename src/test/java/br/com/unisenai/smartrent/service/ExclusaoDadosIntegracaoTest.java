@@ -88,6 +88,11 @@ class ExclusaoDadosIntegracaoTest {
         }
 
         @Bean
+        br.com.unisenai.smartrent.security.CifraCampo cifraCampo() {
+            return new br.com.unisenai.smartrent.security.CifraCampo(new byte[32]);
+        }
+
+        @Bean
         PerfilProperties perfilProperties() {
             return PerfilProperties.padrao();
         }
@@ -327,6 +332,8 @@ class ExclusaoDadosIntegracaoTest {
         assertTrue(sinais.contains("ip_novo=SIM"), sinais);
         assertTrue(sinais.contains("reservas_vigentes_como_cliente=1"), sinais);
         assertFalse(sinais.contains(ana.getEmail()));
+
+        assertTrue(sinais.contains("alertas_comportamento_abertos=0"), sinais);
 
         service.cancelar(ana, "2.2.2.2");
         service.solicitar(ana, null, SENHA, null, "1.1.1.1"); // IP ja conhecido

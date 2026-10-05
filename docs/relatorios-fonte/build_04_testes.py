@@ -145,6 +145,15 @@ casos = [
                     "e confirmação de edição barradas, e-mail travado (inclusive link anterior); "
                     "senha, chat, reembolsos, descarte e bloqueio liberados; chave desligada; "
                     "checagem central", "RF39", "Serviço, banco e unitário", "Crítica", "Implementado"),
+    ("CT560–CT599", "Reforço do SmartChat e dos uploads: faixa fixa de aviso; foto JPEG com EXIF/GPS/XMP sai sem metadados e "
+                    "com a orientação aplicada, PNG aceito, arquivo .jpg falso rejeitado, regra 2:1 do 360; job de saneamento idempotente; "
+                    "termos de fraude com variações e frases legítimas que não disparam; envio em massa (limiar, conta nova, textos "
+                    "diferentes, só o HMAC guardado, limite restrito); e-mail verificado (link de uso único, expirado, reenvio com limite, "
+                    "sem verificação só lê); UUID (mesmo 404, nenhum id numérico, evento SSE e link só com UUID)", "RF40–RF45", "Unitário, serviço e banco (H2)", "Crítica", "Implementado"),
+    ("CT540–CT556", "Cifra em repouso do SmartChat: ida e volta com acento e emoji, IV diferente a cada "
+                    "cifragem, adulteração e chave errada lançam exceção, legado sem prefixo intacto, null "
+                    "preservado, falha na inicialização sem chave fora de dev/test, banco guarda só texto "
+                    "cifrado, migração idempotente (inclusive notificações e legado com prefixo vN:)", "RNF12", "Unitário, banco (H2)", "Crítica", "Implementado"),
 ]
 cdata = [[Paragraph("ID", styles["CellHeader"]), Paragraph("Caso de teste", styles["CellHeader"]),
           Paragraph("RF", styles["CellHeaderCenter"]), Paragraph("Nível", styles["CellHeader"]),
@@ -162,7 +171,7 @@ story.extend(quadro(styles, "Matriz de casos de teste", quadro_table(
     header_align_center=[2, 4, 5])))
 
 story.append(Paragraph(
-    "A suíte automatizada executa hoje 446 testes a cada integração; as faixas de "
+    "A suíte automatizada executa hoje 544 testes a cada integração; as faixas de "
     "identificadores acrescentadas ao quadro (CT50 em diante) agrupam os casos do fluxo de "
     "anúncios, do calendário, do cancelamento, do SmartChat, dos vídeos, do fuso horário e do perfil do usuário. Nenhum deles depende de rede ou de um PostgreSQL externo: as consultas são "
     "exercitadas em banco H2 em memória e as chamadas externas são simuladas, de modo que a "

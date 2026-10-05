@@ -12,6 +12,8 @@ import java.util.Optional;
 @Repository
 public interface SmartChatConversaRepository extends JpaRepository<SmartChatConversa, Long> {
 
+    Optional<SmartChatConversa> findByCodigoPublico(java.util.UUID codigoPublico);
+
     Optional<SmartChatConversa> findByClienteIdAndGestorIdAndImovelId(Long clienteId, Long gestorId, Long imovelId);
 
     /** Conversas em que o usuario e cliente ou gestor, da mais recente para a mais antiga; filtro opcional por imovel. */

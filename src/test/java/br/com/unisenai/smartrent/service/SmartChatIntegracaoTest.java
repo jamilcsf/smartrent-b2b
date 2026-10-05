@@ -55,7 +55,7 @@ import static org.junit.jupiter.api.Assertions.*;
 })
 @Import({SmartChatService.class, MessageFilterService.class, ChatEventos.class, LimitadorDeTaxa.class,
         NotificacaoService.class, NotificadorEmailLog.class, TextosPoliticas.class, ChatReconciliador.class,
-        SmartChatIntegracaoTest.Config.class})
+        AnaliseComportamentoChat.class, SmartChatIntegracaoTest.Config.class})
 class SmartChatIntegracaoTest {
 
     @TestConfiguration
@@ -69,6 +69,21 @@ class SmartChatIntegracaoTest {
         ChatProperties chatProps() {
             return ChatProperties.padrao();
         }
+
+        @Bean
+        br.com.unisenai.smartrent.config.ChatSegurancaProperties chatSegurancaProps() {
+            return br.com.unisenai.smartrent.config.ChatSegurancaProperties.padrao();
+        }
+
+        @Bean
+        br.com.unisenai.smartrent.security.HmacTexto hmacTexto() {
+            return new br.com.unisenai.smartrent.security.HmacTexto(new byte[32]);
+        }
+
+        @Bean
+        br.com.unisenai.smartrent.security.CifraCampo cifraCampo() {
+            return new br.com.unisenai.smartrent.security.CifraCampo(new byte[32]);
+        }
     }
 
     @Autowired private TestEntityManager em;
@@ -79,6 +94,7 @@ class SmartChatIntegracaoTest {
     @Autowired private SmartChatMensagemRepository mensagens;
     @Autowired private DenunciaChatRepository denuncias;
     @Autowired private BloqueioUsuarioRepository bloqueios;
+    @Autowired private org.springframework.jdbc.core.JdbcTemplate jdbc;
 
     private Usuario gestor;
     private Usuario outroGestor;
@@ -93,6 +109,7 @@ class SmartChatIntegracaoTest {
         u.setSenhaHash("x".repeat(60));
         u.setPapel(papel);
         u.setAtivo(true);
+        u.setEmailVerificadoEm(relogio.instant()); // a regra de e-mail verificado tem testes proprios
         return em.persist(u);
     }
 
@@ -159,7 +176,7 @@ class SmartChatIntegracaoTest {
         assertEquals("IMV-%06d".formatted(imovel.getId()), c.imovel().codigo());
 
         Conversa de_novo = chat.abrirPorImovel(cliente, imovel.getId());
-        assertEquals(c.id(), de_novo.id());
+        assertEquals(c.codigo(), de_novo.codigo());
         assertEquals(1, conversas.count());
     }
 
@@ -168,7 +185,7 @@ class SmartChatIntegracaoTest {
     void conversasPorCliente() {
         Conversa a = chat.abrirPorImovel(cliente, imovel.getId());
         Conversa b = chat.abrirPorImovel(outroCliente, imovel.getId());
-        assertNotEquals(a.id(), b.id());
+        assertNotEquals(a.codigo(), b.codigo());
         assertThrows(AcessoNegadoException.class, () -> chat.abrirPorImovel(gestor, imovel.getId()));
         assertThrows(AcessoNegadoException.class, () -> chat.abrirPorImovel(null, imovel.getId()));
     }
@@ -182,7 +199,7 @@ class SmartChatIntegracaoTest {
         Reserva r = reserva(cliente, fora, StatusReserva.CONFIRMADA, 0);
         Conversa c = chat.abrirPorReserva(cliente, r.getId());
         assertFalse(c.anuncioPublicado());
-        assertEquals(c.id(), chat.abrirPorReserva(gestor, r.getId()).id(), "gestor e cliente chegam na mesma conversa");
+        assertEquals(c.codigo(), chat.abrirPorReserva(gestor, r.getId()).codigo(), "gestor e cliente chegam na mesma conversa");
     }
 
     @Test
@@ -244,7 +261,7 @@ class SmartChatIntegracaoTest {
         chat.garantirConversaDaReserva(r2.getId());
 
         assertEquals(1, conversas.count());
-        assertEquals(existente.id(), conversas.findAll().get(0).getId());
+        assertEquals(existente.codigo(), conversas.findAll().get(0).getCodigoPublico());
         assertEquals(2, mensagens.count());
     }
 
@@ -263,7 +280,7 @@ class SmartChatIntegracaoTest {
     void cancelamentoNoChat() {
         Reserva r = reserva(cliente, imovel, StatusReserva.CONFIRMADA, 0);
         chat.garantirConversaDaReserva(r.getId());
-        chat.enviar(cliente, conversas.findAll().get(0).getId(), "Chegamos às 14h");
+        chat.enviar(cliente, conversas.findAll().get(0).getCodigoPublico(), "Chegamos às 14h");
 
         r.setStatus(StatusReserva.CANCELADA_COM_REEMBOLSO);
         r.setCanceladaPor("CLIENTE");
@@ -304,7 +321,7 @@ class SmartChatIntegracaoTest {
         Conversa c = chat.abrirPorImovel(cliente, imovel.getId());
         String original = "me liga 48 99999-0000, veja www.golpe.com seu idiota";
 
-        EnvioResposta r = chat.enviar(cliente, c.id(), original);
+        EnvioResposta r = chat.enviar(cliente, c.codigo(), original);
 
         assertNotNull(r.aviso());
         assertTrue(r.aviso().startsWith("Alguns trechos foram ocultados"));
@@ -314,7 +331,7 @@ class SmartChatIntegracaoTest {
         assertFalse(r.mensagem().texto().contains("idiota"));
 
         // O destinatario le o mesmo texto filtrado
-        List<Mensagem> doGestor = chat.listarMensagens(gestor, c.id(), 0L);
+        List<Mensagem> doGestor = chat.listarMensagens(gestor, c.codigo(), 0L);
         assertEquals(1, doGestor.size());
         assertEquals(r.mensagem().texto(), doGestor.get(0).texto());
         assertFalse(doGestor.get(0).minha());
@@ -330,7 +347,7 @@ class SmartChatIntegracaoTest {
     void mensagemLimpa() {
         Conversa c = chat.abrirPorImovel(cliente, imovel.getId());
         String texto = "Chegamos dia 10/12/2026 às 14:00, somos 4 pessoas, R$ 980,00 certo? Reserva IMV-000001";
-        EnvioResposta r = chat.enviar(cliente, c.id(), texto);
+        EnvioResposta r = chat.enviar(cliente, c.codigo(), texto);
         assertNull(r.aviso());
         assertEquals(texto, r.mensagem().texto());
     }
@@ -352,7 +369,7 @@ class SmartChatIntegracaoTest {
     @DisplayName("CT523 - Pre-visualizacao da lista e notificacao usam o texto filtrado")
     void previaENotificacaoFiltradas() {
         Conversa c = chat.abrirPorImovel(cliente, imovel.getId());
-        chat.enviar(cliente, c.id(), "meu zap é 48 99999-0000");
+        chat.enviar(cliente, c.codigo(), "meu zap é 48 99999-0000");
 
         Conversa naLista = chat.listar(gestor, null).get(0);
         assertFalse(naLista.ultimaMensagem().contains("9999"));
@@ -367,13 +384,13 @@ class SmartChatIntegracaoTest {
     @DisplayName("CT524 - Notificacoes de mensagem sao agrupadas: uma por conversa a cada 10 minutos")
     void notificacaoAgrupada() {
         Conversa c = chat.abrirPorImovel(cliente, imovel.getId());
-        chat.enviar(cliente, c.id(), "Oi");
-        chat.enviar(cliente, c.id(), "Tudo bem?");
-        chat.enviar(cliente, c.id(), "Alguém aí?");
+        chat.enviar(cliente, c.codigo(), "Oi");
+        chat.enviar(cliente, c.codigo(), "Tudo bem?");
+        chat.enviar(cliente, c.codigo(), "Alguém aí?");
         assertEquals(1, avisosDoGestor());
 
         relogio.avancar(Duration.ofMinutes(11));
-        chat.enviar(cliente, c.id(), "Voltei");
+        chat.enviar(cliente, c.codigo(), "Voltei");
         assertEquals(2, avisosDoGestor());
     }
 
@@ -386,8 +403,8 @@ class SmartChatIntegracaoTest {
     @DisplayName("CT525 - Contador de nao lidas por conversa e total; marcar como lida zera; mensagem propria e de sistema nao contam")
     void naoLidas() {
         Conversa c = chat.abrirPorImovel(cliente, imovel.getId());
-        chat.enviar(cliente, c.id(), "Oi");
-        chat.enviar(cliente, c.id(), "Tudo certo?");
+        chat.enviar(cliente, c.codigo(), "Oi");
+        chat.enviar(cliente, c.codigo(), "Tudo certo?");
         Reserva r = reserva(cliente, imovel, StatusReserva.CONFIRMADA, 0);
         chat.garantirConversaDaReserva(r.getId()); // sistema: nao conta
 
@@ -395,9 +412,9 @@ class SmartChatIntegracaoTest {
         assertEquals(2, chat.listar(gestor, null).get(0).naoLidas());
         assertEquals(0, chat.naoLidas(cliente), "a propria mensagem nao conta");
 
-        chat.marcarLidas(gestor, c.id());
+        chat.marcarLidas(gestor, c.codigo());
         assertEquals(0, chat.naoLidas(gestor));
-        assertTrue(chat.listarMensagens(cliente, c.id(), 0L).stream().filter(m -> m.minha()).allMatch(Mensagem::lida));
+        assertTrue(chat.listarMensagens(cliente, c.codigo(), 0L).stream().filter(m -> m.minha()).allMatch(Mensagem::lida));
     }
 
     @Test
@@ -409,30 +426,30 @@ class SmartChatIntegracaoTest {
         Conversa b = chat.abrirPorImovel(cliente, segundo.getId());
         Conversa deOutro = chat.abrirPorImovel(outroCliente, doOutro.getId());
         relogio.avancar(Duration.ofMinutes(1));
-        chat.enviar(cliente, a.id(), "primeira");
+        chat.enviar(cliente, a.codigo(), "primeira");
         relogio.avancar(Duration.ofMinutes(1));
-        chat.enviar(cliente, b.id(), "segunda");
+        chat.enviar(cliente, b.codigo(), "segunda");
 
         List<Conversa> doGestor = chat.listar(gestor, null);
-        assertEquals(List.of(b.id(), a.id()), doGestor.stream().map(Conversa::id).toList(), "mais recente primeiro");
+        assertEquals(List.of(b.codigo(), a.codigo()), doGestor.stream().map(Conversa::codigo).toList(), "mais recente primeiro");
         assertEquals(1, chat.listar(gestor, imovel.getId()).size());
-        assertTrue(doGestor.stream().noneMatch(x -> x.id().equals(deOutro.id())));
+        assertTrue(doGestor.stream().noneMatch(x -> x.codigo().equals(deOutro.codigo())));
         assertEquals(2, chat.listar(cliente, null).size());
         assertEquals(1, chat.listar(outroGestor, null).size());
     }
 
     @Test
-    @DisplayName("CT527 - Quem nao participa nao le, nao envia, nao marca como lida nem ve o perfil")
+    @DisplayName("CT527 - Quem nao participa nao le, nao envia, nao marca como lida nem ve o perfil: recebe o mesmo 404 de conversa inexistente")
     void isolamento() {
         Conversa c = chat.abrirPorImovel(cliente, imovel.getId());
         for (Usuario intruso : List.of(outroCliente, outroGestor)) {
-            assertThrows(AcessoNegadoException.class, () -> chat.buscar(intruso, c.id()));
-            assertThrows(AcessoNegadoException.class, () -> chat.listarMensagens(intruso, c.id(), 0L));
-            assertThrows(AcessoNegadoException.class, () -> chat.enviar(intruso, c.id(), "oi"));
-            assertThrows(AcessoNegadoException.class, () -> chat.marcarLidas(intruso, c.id()));
-            assertThrows(AcessoNegadoException.class, () -> chat.perfil(intruso, c.id()));
-            assertThrows(AcessoNegadoException.class, () -> chat.denunciar(intruso, c.id(), new DenunciaPedido("SPAM", null, null)));
-            assertThrows(AcessoNegadoException.class, () -> chat.bloquear(intruso, c.id()));
+            assertThrows(br.com.unisenai.smartrent.service.erro.RecursoNaoEncontradoException.class, () -> chat.buscar(intruso, c.codigo()));
+            assertThrows(br.com.unisenai.smartrent.service.erro.RecursoNaoEncontradoException.class, () -> chat.listarMensagens(intruso, c.codigo(), 0L));
+            assertThrows(br.com.unisenai.smartrent.service.erro.RecursoNaoEncontradoException.class, () -> chat.enviar(intruso, c.codigo(), "oi"));
+            assertThrows(br.com.unisenai.smartrent.service.erro.RecursoNaoEncontradoException.class, () -> chat.marcarLidas(intruso, c.codigo()));
+            assertThrows(br.com.unisenai.smartrent.service.erro.RecursoNaoEncontradoException.class, () -> chat.perfil(intruso, c.codigo()));
+            assertThrows(br.com.unisenai.smartrent.service.erro.RecursoNaoEncontradoException.class, () -> chat.denunciar(intruso, c.codigo(), new DenunciaPedido("SPAM", null, null)));
+            assertThrows(br.com.unisenai.smartrent.service.erro.RecursoNaoEncontradoException.class, () -> chat.bloquear(intruso, c.codigo()));
         }
     }
 
@@ -440,15 +457,15 @@ class SmartChatIntegracaoTest {
     @DisplayName("CT528 - Mensagem vazia, longa demais e excesso de envios (rate limit) sao recusados")
     void validacoesELimite() {
         Conversa c = chat.abrirPorImovel(cliente, imovel.getId());
-        assertThrows(IllegalArgumentException.class, () -> chat.enviar(cliente, c.id(), "   "));
-        assertThrows(IllegalArgumentException.class, () -> chat.enviar(cliente, c.id(), "x".repeat(1001)));
+        assertThrows(IllegalArgumentException.class, () -> chat.enviar(cliente, c.codigo(), "   "));
+        assertThrows(IllegalArgumentException.class, () -> chat.enviar(cliente, c.codigo(), "x".repeat(1001)));
 
         for (int i = 0; i < 20; i++) {
-            chat.enviar(cliente, c.id(), "mensagem " + i);
+            chat.enviar(cliente, c.codigo(), "mensagem " + i);
         }
-        assertThrows(LimiteExcedidoException.class, () -> chat.enviar(cliente, c.id(), "mais uma"));
+        assertThrows(LimiteExcedidoException.class, () -> chat.enviar(cliente, c.codigo(), "mais uma"));
         relogio.avancar(Duration.ofMinutes(2));
-        assertDoesNotThrow(() -> chat.enviar(cliente, c.id(), "agora pode"));
+        assertDoesNotThrow(() -> chat.enviar(cliente, c.codigo(), "agora pode"));
     }
 
     @Test
@@ -457,7 +474,7 @@ class SmartChatIntegracaoTest {
         Conversa c = chat.abrirPorImovel(cliente, imovel.getId());
         cliente.setSmartchatLiberado(false); // simula conversa criada por outro caminho
         em.persist(cliente);
-        chat.enviar(cliente, c.id(), "Oi!");
+        chat.enviar(cliente, c.codigo(), "Oi!");
         assertTrue(cliente.isSmartchatLiberado());
         assertFalse(gestor.isSmartchatLiberado());
     }
@@ -468,10 +485,10 @@ class SmartChatIntegracaoTest {
     @DisplayName("CT530 - Denuncia persiste com os dados corretos e PENDENTE; nao aparece para o denunciado")
     void denunciaPersiste() {
         Conversa c = chat.abrirPorImovel(cliente, imovel.getId());
-        chat.enviar(cliente, c.id(), "Oi");
+        chat.enviar(cliente, c.codigo(), "Oi");
         long idMsg = mensagens.findAll().get(0).getId();
 
-        var conf = chat.denunciar(gestor, c.id(), new DenunciaPedido("TENTATIVA_DE_GOLPE", "pediu pix fora", List.of(idMsg, 99999L)));
+        var conf = chat.denunciar(gestor, c.codigo(), new DenunciaPedido("TENTATIVA_DE_GOLPE", "pediu pix fora", List.of(idMsg, 99999L)));
 
         assertEquals("Denúncia registrada.", conf.mensagem());
         var d = denuncias.findAll().get(0);
@@ -481,23 +498,23 @@ class SmartChatIntegracaoTest {
         assertEquals("TENTATIVA_DE_GOLPE", d.getMotivo());
         assertEquals("pediu pix fora", d.getDescricao());
         assertEquals(String.valueOf(idMsg), d.getMensagensAnexadas(), "so mensagens da propria conversa sao anexadas");
-        assertEquals(c.id(), d.getConversa().getId());
+        assertEquals(c.codigo(), d.getConversa().getCodigoPublico());
         // o denunciado continua usando o chat normalmente e nada vaza para ele
-        assertEquals(1, chat.listarMensagens(cliente, c.id(), 0L).size());
+        assertEquals(1, chat.listarMensagens(cliente, c.codigo(), 0L).size());
     }
 
     @Test
     @DisplayName("CT531 - Denuncia exige motivo valido; duplicata identica em curto intervalo e barrada")
     void denunciaValidacoes() {
         Conversa c = chat.abrirPorImovel(cliente, imovel.getId());
-        assertThrows(IllegalArgumentException.class, () -> chat.denunciar(gestor, c.id(), new DenunciaPedido("INVENTADO", null, null)));
-        assertThrows(IllegalArgumentException.class, () -> chat.denunciar(gestor, c.id(), new DenunciaPedido(null, null, null)));
+        assertThrows(IllegalArgumentException.class, () -> chat.denunciar(gestor, c.codigo(), new DenunciaPedido("INVENTADO", null, null)));
+        assertThrows(IllegalArgumentException.class, () -> chat.denunciar(gestor, c.codigo(), new DenunciaPedido(null, null, null)));
 
-        chat.denunciar(gestor, c.id(), new DenunciaPedido("SPAM", null, null));
-        assertThrows(LimiteExcedidoException.class, () -> chat.denunciar(gestor, c.id(), new DenunciaPedido("SPAM", null, null)));
-        assertDoesNotThrow(() -> chat.denunciar(gestor, c.id(), new DenunciaPedido("OUTRO", null, null)), "outro motivo e outra denuncia");
+        chat.denunciar(gestor, c.codigo(), new DenunciaPedido("SPAM", null, null));
+        assertThrows(LimiteExcedidoException.class, () -> chat.denunciar(gestor, c.codigo(), new DenunciaPedido("SPAM", null, null)));
+        assertDoesNotThrow(() -> chat.denunciar(gestor, c.codigo(), new DenunciaPedido("OUTRO", null, null)), "outro motivo e outra denuncia");
         relogio.avancar(Duration.ofMinutes(6));
-        assertDoesNotThrow(() -> chat.denunciar(gestor, c.id(), new DenunciaPedido("SPAM", null, null)));
+        assertDoesNotThrow(() -> chat.denunciar(gestor, c.codigo(), new DenunciaPedido("SPAM", null, null)));
     }
 
     @Test
@@ -505,7 +522,7 @@ class SmartChatIntegracaoTest {
     void bloqueioSemEfeito() {
         Conversa c = chat.abrirPorImovel(cliente, imovel.getId());
 
-        var conf = chat.bloquear(cliente, c.id());
+        var conf = chat.bloquear(cliente, c.codigo());
 
         assertEquals("Sua solicitação de bloqueio foi registrada.", conf.mensagem());
         assertFalse(conf.mensagem().toLowerCase().contains("bloqueado"));
@@ -516,8 +533,8 @@ class SmartChatIntegracaoTest {
         assertEquals("REGISTRADO", b.getStatus());
         assertFalse(ChatProperties.padrao().bloqueioAtivo(), "padrao SMARTCHAT_BLOCK_ENFORCEMENT=false");
         // a conversa segue funcionando
-        assertDoesNotThrow(() -> chat.enviar(gestor, c.id(), "ainda posso responder"));
-        assertDoesNotThrow(() -> chat.enviar(cliente, c.id(), "e eu também"));
+        assertDoesNotThrow(() -> chat.enviar(gestor, c.codigo(), "ainda posso responder"));
+        assertDoesNotThrow(() -> chat.enviar(cliente, c.codigo(), "e eu também"));
     }
 
     @Test
@@ -525,7 +542,7 @@ class SmartChatIntegracaoTest {
     void perfilSemContato() {
         Reserva r = reserva(cliente, imovel, StatusReserva.CONFIRMADA, 0);
         chat.garantirConversaDaReserva(r.getId());
-        Long id = conversas.findAll().get(0).getId();
+        java.util.UUID id = conversas.findAll().get(0).getCodigoPublico();
 
         Perfil doGestor = chat.perfil(gestor, id);
         assertEquals("Maria Souza", doGestor.interlocutor().nome());
@@ -535,5 +552,329 @@ class SmartChatIntegracaoTest {
         assertEquals("Gestor", chat.perfil(cliente, id).interlocutor().papel());
         String json = doGestor.toString() + chat.perfil(cliente, id);
         assertFalse(json.contains("@"), json);
+    }
+
+    @Test
+    @DisplayName("Cifra em repouso - o banco guarda so texto cifrado e a leitura devolve o texto; sem mudar a API")
+    void textoFicaCifradoNoBanco() {
+        Conversa c = chat.abrirPorImovel(cliente, imovel.getId());
+        EnvioResposta r = chat.enviar(cliente, c.codigo(), "Olá! Posso levar meu cachorro? 🐶 Ligue 48 99999-0000");
+        em.flush();
+
+        String filtradoNoBanco = jdbc.queryForObject("select texto_filtrado from smartchat_mensagens where id = ?",
+                String.class, r.mensagem().id());
+        String originalNoBanco = jdbc.queryForObject("select texto_original from smartchat_mensagens where id = ?",
+                String.class, r.mensagem().id());
+        assertTrue(filtradoNoBanco.startsWith("v1:") && !filtradoNoBanco.contains("cachorro"));
+        assertTrue(originalNoBanco.startsWith("v1:") && !originalNoBanco.contains("99999"));
+
+        em.clear();
+        SmartChatMensagem lida = mensagens.findById(r.mensagem().id()).orElseThrow();
+        assertTrue(lida.getTextoFiltrado().contains("cachorro"));
+        assertEquals("Olá! Posso levar meu cachorro? 🐶 Ligue 48 99999-0000", lida.getTextoOriginal());
+        assertTrue(chat.listarMensagens(gestor, c.codigo(), 0L).stream().anyMatch(m -> m.texto().contains("cachorro")));
+
+        chat.denunciar(cliente, c.codigo(), new DenunciaPedido("ASSEDIO_OFENSAS", "ele pediu o meu telefone", List.of(r.mensagem().id())));
+        em.flush();
+        assertTrue(jdbc.queryForObject("select descricao from smartchat_denuncias", String.class).startsWith("v1:"));
+        em.clear();
+        assertEquals("ele pediu o meu telefone", denuncias.findAll().get(0).getDescricao());
+    }
+
+    @Test
+    @DisplayName("Fraude - so o destinatario ve o alerta; o texto nao e alterado e o autor nao e avisado")
+    void alertaDeFraudeSoParaODestinatario() {
+        Conversa c = chat.abrirPorImovel(cliente, imovel.getId());
+        EnvioResposta r = chat.enviar(cliente, c.codigo(), "Podemos fazer o pagamento por fora? Eu faço um pix direto");
+        assertEquals("Podemos fazer o pagamento por fora? Eu faço um pix direto", r.mensagem().texto());
+        assertEquals(0, r.mensagem().ocorrencias());
+        assertNull(r.aviso(), "nao e bloqueio nem mascaramento");
+        assertFalse(r.mensagem().suspeitaFraude(), "o autor nao ve o alerta");
+
+        List<Mensagem> doGestor = chat.listarMensagens(gestor, c.codigo(), 0L);
+        assertTrue(doGestor.get(0).suspeitaFraude(), "o destinatario ve");
+        assertFalse(chat.listarMensagens(cliente, c.codigo(), 0L).get(0).suspeitaFraude());
+
+        chat.enviar(cliente, c.codigo(), "Qual o horário do check-in?");
+        assertFalse(chat.listarMensagens(gestor, c.codigo(), 0L).get(1).suspeitaFraude());
+    }
+
+    // ------------------------------------------------- analise de comportamento
+
+    @Autowired private br.com.unisenai.smartrent.repository.AlertaInternoRepository alertasInternos;
+    @Autowired private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
+
+    private void contaAntiga(Usuario u) {
+        em.flush();
+        jdbcTemplate.update("update usuarios set data_criacao = ? where id = ?", java.sql.Timestamp.valueOf(LocalDateTime.of(2025, 1, 1, 0, 0)), u.getId());
+        u.setDataCriacao(LocalDateTime.of(2025, 1, 1, 0, 0)); // a entidade gerenciada segue o banco (coluna nao atualizavel pelo JPA)
+    }
+
+    /** Uma conversa por imovel, para o mesmo cliente falar com varios gestores. */
+    private List<java.util.UUID> conversasDoCliente(Usuario autor, int quantas) {
+        java.util.ArrayList<java.util.UUID> ids = new java.util.ArrayList<>();
+        for (int i = 0; i < quantas; i++) {
+            Imovel outro = novoImovel(gestor, StatusAnuncio.PUBLICADO);
+            em.flush();
+            ids.add(chat.abrirPorImovel(autor, outro.getId()).codigo());
+        }
+        return ids;
+    }
+
+    private long alertas(br.com.unisenai.smartrent.model.enums.TipoAlertaInterno tipo) {
+        return alertasInternos.findAll().stream().filter(a -> a.getTipo() == tipo).count();
+    }
+
+    @Test
+    @DisplayName("Envio em massa - conta antiga: abaixo de N nao dispara, ao atingir N dispara um unico alerta")
+    void envioEmMassaContaAntiga() {
+        contaAntiga(cliente);
+        List<java.util.UUID> ids = conversasDoCliente(cliente, 6);
+        for (int i = 0; i < 4; i++) {
+            chat.enviar(cliente, ids.get(i), "Olá! Tenho um imóvel incrível para você, me chame para saber mais.");
+        }
+        assertEquals(0, alertas(br.com.unisenai.smartrent.model.enums.TipoAlertaInterno.ENVIO_EM_MASSA), "4 < 5");
+        chat.enviar(cliente, ids.get(4), "Olá! Tenho um imóvel incrível para você, me chame para saber mais.");
+        assertEquals(1, alertas(br.com.unisenai.smartrent.model.enums.TipoAlertaInterno.ENVIO_EM_MASSA));
+        relogio.avancar(Duration.ofSeconds(61)); // o limite restrito (3/min) ja esta valendo: espera a janela de 1 min
+        chat.enviar(cliente, ids.get(5), "olá tenho um imovel incrivel para voce me chame para saber mais");
+        assertEquals(1, alertas(br.com.unisenai.smartrent.model.enums.TipoAlertaInterno.ENVIO_EM_MASSA), "nao duplica na janela");
+
+        br.com.unisenai.smartrent.model.AlertaInterno a = alertasInternos.findAll().get(0);
+        assertEquals(cliente.getId(), a.getUsuario().getId());
+        assertEquals(5, a.getContagem());
+        assertEquals(br.com.unisenai.smartrent.model.enums.StatusAlertaInterno.ABERTO, a.getStatus());
+        assertTrue(a.getJanelaInicio().isBefore(a.getJanelaFim()));
+    }
+
+    @Test
+    @DisplayName("Envio em massa - conta nova pesa mais: o limiar e menor")
+    void envioEmMassaContaNova() {
+        List<java.util.UUID> ids = conversasDoCliente(cliente, 3); // conta criada agora: limiar 3
+        chat.enviar(cliente, ids.get(0), "Fale comigo fora daqui, tenho uma oferta imperdível.");
+        chat.enviar(cliente, ids.get(1), "Fale comigo fora daqui, tenho uma oferta imperdível.");
+        assertEquals(0, alertas(br.com.unisenai.smartrent.model.enums.TipoAlertaInterno.ENVIO_EM_MASSA));
+        chat.enviar(cliente, ids.get(2), "Fale comigo fora daqui, tenho uma oferta imperdível.");
+        assertEquals(1, alertas(br.com.unisenai.smartrent.model.enums.TipoAlertaInterno.ENVIO_EM_MASSA));
+    }
+
+    @Test
+    @DisplayName("Envio em massa - textos diferentes nao disparam; texto repetido na MESMA conversa tambem nao")
+    void textosDiferentesNaoDisparam() {
+        contaAntiga(cliente);
+        List<java.util.UUID> ids = conversasDoCliente(cliente, 6);
+        for (int i = 0; i < 6; i++) {
+            chat.enviar(cliente, ids.get(i), "Mensagem numero " + i + " sobre a reserva do apartamento.");
+        }
+        assertEquals(0, alertas(br.com.unisenai.smartrent.model.enums.TipoAlertaInterno.ENVIO_EM_MASSA));
+
+        for (int i = 0; i < 6; i++) {
+            chat.enviar(cliente, ids.get(0), "Chegarei por volta das quinze horas, tudo certo?");
+        }
+        assertEquals(0, alertas(br.com.unisenai.smartrent.model.enums.TipoAlertaInterno.ENVIO_EM_MASSA), "conversas distintas e que contam");
+    }
+
+    @Test
+    @DisplayName("Envio em massa - so o HMAC do texto normalizado e guardado, nunca o texto; textos curtos nao entram")
+    void guardaSoHmac() {
+        Conversa c = chat.abrirPorImovel(cliente, imovel.getId());
+        EnvioResposta r = chat.enviar(cliente, c.codigo(), "Olá, quero saber sobre o apartamento!");
+        chat.enviar(cliente, c.codigo(), "ok");
+        em.flush();
+        List<String> hmacs = jdbcTemplate.queryForList("select texto_hmac from smartchat_mensagens order by id", String.class);
+        assertEquals(64, hmacs.get(0).length());
+        assertTrue(hmacs.get(0).matches("[0-9a-f]{64}"));
+        assertFalse(hmacs.get(0).contains("apartamento"));
+        assertNull(hmacs.get(1), "texto curto demais para comparar");
+        assertNotNull(r);
+    }
+
+    @Test
+    @DisplayName("Envio em massa - depois do alerta o limite de envio fica restrito; a conta nao e suspensa")
+    void limiteRestritoSemSuspender() {
+        List<java.util.UUID> ids = conversasDoCliente(cliente, 3);
+        for (java.util.UUID id : ids) {
+            chat.enviar(cliente, id, "Fale comigo fora daqui, tenho uma oferta imperdível.");
+        }
+        assertEquals(1, alertas(br.com.unisenai.smartrent.model.enums.TipoAlertaInterno.ENVIO_EM_MASSA));
+        // limite restrito = 3 por minuto: ja foram 3 na janela
+        assertThrows(LimiteExcedidoException.class, () -> chat.enviar(cliente, ids.get(0), "Mais uma mensagem qualquer aqui."));
+        assertTrue(em.find(Usuario.class, cliente.getId()).isAtivo(), "nao suspende a conta");
+        // passado o tempo do limite restrito (60 min) volta ao normal
+        relogio.avancar(Duration.ofMinutes(61));
+        assertDoesNotThrow(() -> chat.enviar(cliente, ids.get(0), "Agora posso escrever de novo normalmente."));
+    }
+
+    @Test
+    @DisplayName("Fraude - gera um alerta interno por usuario na janela, sem conteudo, e a mensagem segue normal")
+    void alertaInternoDeFraude() {
+        Conversa c = chat.abrirPorImovel(cliente, imovel.getId());
+        chat.enviar(cliente, c.codigo(), "Podemos pagar por fora? Faço um pix direto.");
+        chat.enviar(cliente, c.codigo(), "Me passa a chave pix então.");
+        assertEquals(1, alertas(br.com.unisenai.smartrent.model.enums.TipoAlertaInterno.SUSPEITA_FRAUDE));
+        assertEquals(1, alertasInternos.findAll().get(0).getContagem());
+        assertEquals(0, alertas(br.com.unisenai.smartrent.model.enums.TipoAlertaInterno.ENVIO_EM_MASSA));
+        relogio.avancar(Duration.ofMinutes(61));
+        chat.enviar(cliente, c.codigo(), "Aceita deposito antecipado?");
+        assertEquals(2, alertas(br.com.unisenai.smartrent.model.enums.TipoAlertaInterno.SUSPEITA_FRAUDE), "novo alerta so depois da janela");
+    }
+
+    // --------------------------------------------------- e-mail verificado
+
+    @Test
+    @DisplayName("E-mail nao verificado - le as conversas, mas nao envia mensagem nem abre conversa nova (regra no backend)")
+    void semEmailVerificadoSoLe() {
+        Conversa c = chat.abrirPorImovel(cliente, imovel.getId());
+        chat.enviar(cliente, c.codigo(), "Mensagem enviada com o e-mail verificado.");
+        chat.enviar(gestor, c.codigo(), "Resposta do gestor.");
+
+        cliente.setEmailVerificadoEm(null);
+        assertThrows(br.com.unisenai.smartrent.service.erro.EmailNaoVerificadoException.class,
+                () -> chat.enviar(cliente, c.codigo(), "Tentando enviar sem verificar."));
+        assertEquals(2, chat.listarMensagens(cliente, c.codigo(), 0L).size(), "a mensagem recusada nao foi gravada");
+        assertEquals(1, chat.listar(cliente, null).size(), "a lista continua");
+        assertEquals(c.codigo(), chat.abrirPorImovel(cliente, imovel.getId()).codigo(), "conversa existente abre (leitura)");
+
+        Imovel outro = novoImovel(gestor, StatusAnuncio.PUBLICADO);
+        em.flush();
+        assertThrows(br.com.unisenai.smartrent.service.erro.EmailNaoVerificadoException.class,
+                () -> chat.abrirPorImovel(cliente, outro.getId()), "conversa nova exige verificacao");
+        Reserva r = reserva(cliente, outro, StatusReserva.CONFIRMADA, 20);
+        assertThrows(br.com.unisenai.smartrent.service.erro.EmailNaoVerificadoException.class,
+                () -> chat.abrirPorReserva(cliente, r.getId()));
+        assertEquals(1, conversas.count(), "nenhuma conversa nova foi criada");
+
+        cliente.setEmailVerificadoEm(relogio.instant());
+        assertDoesNotThrow(() -> chat.enviar(cliente, c.codigo(), "Agora sim, e-mail verificado."));
+    }
+
+    @Test
+    @DisplayName("E-mail nao verificado - a mensagem de sistema e a criacao automatica da conversa pela reserva continuam funcionando")
+    void sistemaContinuaSemVerificacao() {
+        cliente.setEmailVerificadoEm(null);
+        Reserva r = reserva(cliente, imovel, StatusReserva.CONFIRMADA, 0);
+        em.flush();
+        chat.garantirConversaDaReserva(r.getId());
+        assertEquals(1, conversas.count());
+        List<Mensagem> msgs = chat.listarMensagens(cliente, conversas.findAll().get(0).getCodigoPublico(), 0L);
+        assertEquals(1, msgs.size());
+        assertEquals("SISTEMA", msgs.get(0).tipo());
+    }
+
+    @Test
+    @DisplayName("Perfil da conversa - mostra se o e-mail do interlocutor esta verificado (selo), sem falar em identidade")
+    void perfilMostraSeloDeEmail() {
+        Conversa c = chat.abrirPorImovel(cliente, imovel.getId());
+        assertTrue(chat.perfil(cliente, c.codigo()).interlocutor().verificado());
+        gestor.setEmailVerificadoEm(null);
+        assertFalse(chat.perfil(cliente, c.codigo()).interlocutor().verificado());
+        assertTrue(chat.perfil(gestor, c.codigo()).interlocutor().verificado(), "o cliente continua verificado");
+        assertFalse(chat.perfil(cliente, c.codigo()).toString().toLowerCase().contains("identidade"));
+    }
+
+    // ------------------------------------------------ UUID no lugar do id sequencial
+
+    @org.springframework.boot.test.mock.mockito.SpyBean private ChatEventos eventosEspionado;
+
+    @Test
+    @DisplayName("UUID - conversa de terceiro e conversa inexistente dao exatamente a mesma resposta (404, mesma mensagem) em toda operacao")
+    void mesmoNaoEncontradoParaTerceiroEInexistente() {
+        Conversa minha = chat.abrirPorImovel(cliente, imovel.getId());
+        java.util.UUID inexistente = java.util.UUID.randomUUID();
+        Usuario intruso = outroCliente;
+
+        java.util.List<org.junit.jupiter.api.function.Executable> deTerceiro = java.util.List.of(
+                () -> chat.buscar(intruso, minha.codigo()),
+                () -> chat.listarMensagens(intruso, minha.codigo(), 0L),
+                () -> chat.enviar(intruso, minha.codigo(), "invasao"),
+                () -> chat.perfil(intruso, minha.codigo()),
+                () -> chat.marcarLidas(intruso, minha.codigo()),
+                () -> chat.denunciar(intruso, minha.codigo(), new DenunciaPedido("SPAM", null, List.of())),
+                () -> chat.bloquear(intruso, minha.codigo()));
+        java.util.List<org.junit.jupiter.api.function.Executable> deInexistente = java.util.List.of(
+                () -> chat.buscar(intruso, inexistente),
+                () -> chat.listarMensagens(intruso, inexistente, 0L),
+                () -> chat.enviar(intruso, inexistente, "invasao"),
+                () -> chat.perfil(intruso, inexistente),
+                () -> chat.marcarLidas(intruso, inexistente),
+                () -> chat.denunciar(intruso, inexistente, new DenunciaPedido("SPAM", null, List.of())),
+                () -> chat.bloquear(intruso, inexistente));
+        for (int k = 0; k < deTerceiro.size(); k++) {
+            var a = assertThrows(br.com.unisenai.smartrent.service.erro.RecursoNaoEncontradoException.class, deTerceiro.get(k));
+            var b = assertThrows(br.com.unisenai.smartrent.service.erro.RecursoNaoEncontradoException.class, deInexistente.get(k));
+            assertEquals(b.getMessage(), a.getMessage(), "operacao " + k);
+            assertEquals(b.getClass(), a.getClass());
+        }
+        assertEquals(0, chat.listarMensagens(cliente, minha.codigo(), 0L).size(), "a invasao nao gravou nada");
+    }
+
+    @Test
+    @DisplayName("UUID - o controlador trata id numerico antigo e UUID malformado como conversa inexistente (mesmo 404)")
+    void controladorTrataIdMalformadoComoInexistente() {
+        br.com.unisenai.smartrent.controller.SmartChatController ctrl =
+                new br.com.unisenai.smartrent.controller.SmartChatController(chat, eventosEspionado);
+        Conversa minha = chat.abrirPorImovel(cliente, imovel.getId());
+        String mensagem = assertThrows(br.com.unisenai.smartrent.service.erro.RecursoNaoEncontradoException.class,
+                () -> ctrl.buscar(outroCliente, java.util.UUID.randomUUID().toString())).getMessage();
+        for (String malformado : new String[]{"1", String.valueOf(conversas.findAll().get(0).getId()), "nao-e-uuid", "", " "}) {
+            var e = assertThrows(br.com.unisenai.smartrent.service.erro.RecursoNaoEncontradoException.class,
+                    () -> ctrl.buscar(cliente, malformado), malformado);
+            assertEquals(mensagem, e.getMessage());
+        }
+        assertEquals(minha.codigo(), ctrl.buscar(cliente, minha.codigo().toString()).codigo(), "o UUID certo funciona");
+    }
+
+    @Test
+    @DisplayName("UUID - nenhum DTO do chat expoe id numerico de conversa ou de usuario")
+    void dtosSemIdNumericoDeConversaOuUsuario() {
+        // Conversa: so o UUID. Nenhum componente numerico "id" (de conversa) e nenhum id de usuario em lugar nenhum.
+        var componentesConversa = java.util.Arrays.stream(Conversa.class.getRecordComponents()).map(c -> c.getName()).toList();
+        assertTrue(componentesConversa.contains("codigo"));
+        assertFalse(componentesConversa.contains("id"));
+        assertEquals(java.util.UUID.class, java.util.Arrays.stream(Conversa.class.getRecordComponents())
+                .filter(c -> c.getName().equals("codigo")).findFirst().orElseThrow().getType());
+        java.util.regex.Pattern idDeUsuario = java.util.regex.Pattern.compile("(?i)(usuario|autor|cliente|gestor|denunciante|denunciado|interlocutor)_?id");
+        for (Class<?> dto : br.com.unisenai.smartrent.dto.SmartChatDtos.class.getDeclaredClasses()) {
+            if (!dto.isRecord()) {
+                continue;
+            }
+            for (var comp : dto.getRecordComponents()) {
+                assertFalse(idDeUsuario.matcher(comp.getName()).find(), dto.getSimpleName() + "." + comp.getName());
+                boolean numerico = Number.class.isAssignableFrom(comp.getType()) || comp.getType() == long.class;
+                boolean topoDaConversa = dto == Conversa.class || dto == Perfil.class
+                        || dto == br.com.unisenai.smartrent.dto.SmartChatDtos.Interlocutor.class;
+                assertFalse(topoDaConversa && numerico && comp.getName().toLowerCase().endsWith("id"), dto.getSimpleName() + "." + comp.getName());
+            }
+        }
+        // E o JSON de verdade: o id sequencial da conversa nao aparece em lugar nenhum
+        Conversa c = chat.abrirPorImovel(cliente, imovel.getId());
+        chat.enviar(cliente, c.codigo(), "Oi, tudo bem com a reserva?");
+        String json = c.toString() + chat.listar(cliente, null) + chat.listarMensagens(gestor, c.codigo(), 0L) + chat.perfil(gestor, c.codigo());
+        assertTrue(json.contains(c.codigo().toString()));
+        assertFalse(json.contains("id=" + cliente.getId() + ",") || json.contains("usuarioId"), json);
+    }
+
+    @Test
+    @DisplayName("UUID - o evento SSE e o link da notificacao levam so o UUID: nenhum id numerico")
+    void eventosELinksSoComUuid() {
+        Conversa c = chat.abrirPorImovel(cliente, imovel.getId());
+        chat.enviar(cliente, c.codigo(), "Chegamos amanhã às 14h, tudo certo?");
+        @SuppressWarnings("unchecked")
+        org.mockito.ArgumentCaptor<java.util.Map<String, Object>> dados = org.mockito.ArgumentCaptor.forClass(java.util.Map.class);
+        org.mockito.Mockito.verify(eventosEspionado, org.mockito.Mockito.atLeastOnce())
+                .publicar(org.mockito.ArgumentMatchers.eq(gestor.getId()), org.mockito.ArgumentMatchers.eq("mensagem"), dados.capture());
+        java.util.Map<String, Object> evento = dados.getValue();
+        assertEquals(java.util.Set.of("conversa"), evento.keySet(), "sem mensagemId nem conversaId numericos");
+        assertEquals(c.codigo().toString(), evento.get("conversa"));
+
+        // ticket do SSE: valor aleatorio (UUID), nunca o id do usuario
+        String ticket = eventosEspionado.emitirTicket(cliente.getId());
+        assertDoesNotThrow(() -> java.util.UUID.fromString(ticket));
+        assertNotEquals(String.valueOf(cliente.getId()), ticket);
+
+        // link da notificacao
+        String link = jdbcTemplate.queryForObject("select link from notificacoes where usuario_id = ? order by id desc limit 1",
+                String.class, gestor.getId());
+        assertEquals("/smartchat.html?conversa=" + c.codigo(), link);
     }
 }
