@@ -107,6 +107,13 @@ riscos = [
     ("R24", "Perda ou vazamento da chave de cifra do SmartChat (SMARTCHAT_CRYPTO_KEY).", "Baixa", "Alto", "Média",
      "Perder a chave torna as mensagens irrecuperáveis: guardá-la em cofre, com backup separado do banco. "
      "Vazar a chave junto com o banco anula a proteção. Formato versionado (v1) prepara a rotação, ainda sem rotina."),
+    ("R25", "Golpes e spam no SmartChat (pagamento por fora, contato fora da plataforma, envio em massa).", "Média", "Alto", "Alta",
+     "Aviso fixo; alerta ao destinatário e alerta interno sem bloquear; HMAC do texto para detectar envio em massa; limite de envio restrito; "
+     "e-mail verificado para escrever. Fraude por IA e verificação de identidade ficam para a V2."),
+    ("R26", "Vazamento de localização por foto (GPS no EXIF) ou por vídeo sem FFmpeg.", "Média", "Alto", "Alta",
+     "Fotos recodificadas sem metadados e job para as antigas; vídeo com FFmpeg remove metadados (o modo básico não: FFmpeg em produção)."),
+    ("R27", "Enumeração de conversas e reservas por id sequencial.", "Média", "Médio", "Média",
+     "Conversas por UUID com o mesmo 404; auditoria das rotas de reserva confirmou o teste do dono; falta uniformizar 403/404 em reserva e notificação."),
 ]
 rdata = [[Paragraph("ID", styles["CellHeader"]), Paragraph("Risco", styles["CellHeader"]),
           Paragraph("Prob.", styles["CellHeaderCenter"]), Paragraph("Impacto", styles["CellHeaderCenter"]),

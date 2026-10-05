@@ -338,6 +338,56 @@ Nenhuma query filtra ou ordena por essas colunas, e essa é uma regra de projeto
 Em produção, `DATABASE_URL` deve usar `sslmode=require`. Pendentes: retenção de `texto_original`, mensagens na exclusão de conta,
 cofre e rotação da chave.
 
+## 3.7 SmartChat e uploads: reforço de segurança (migrations V16 a V19)
+
+Decisões, auditoria das rotas e itens de V2: [ADR-007](adr/ADR-007-reforco-de-seguranca-do-smartchat-e-dos-uploads.md).
+
+**Endpoints alterados ou novos**
+
+| Endpoint | Mudança |
+|---|---|
+| `GET /api/smartchat/conversas/{codigo}` e todas as rotas `/conversas/{codigo}/...` (`mensagens`, `lidas`, `perfil`, `denuncias`, `bloqueio`) | `codigo` é o UUID público; id numérico, UUID inexistente e conversa de terceiros dão o mesmo 404 |
+| `POST /api/smartchat/conversas/{codigo}/mensagens` | 403 se o e-mail não está verificado; resposta traz `suspeitaFraude` (só para o destinatário) |
+| `POST /api/smartchat/conversas/por-imovel/{id}` · `por-reserva/{id}` | conversa **nova** exige e-mail verificado (a existente abre) |
+| `GET /api/smartchat/conversas` e `/{codigo}` | `Conversa.codigo` (UUID) no lugar de `id`; `interlocutor.verificado` (selo "E-mail verificado") |
+| evento SSE `mensagem` / `lida` | `{conversa: <uuid>}`; sem `conversaId` nem `mensagemId` |
+| `POST /api/perfil/email/verificacao/reenviar` (autenticado) · `POST /api/perfil/email/verificar` (público) | reenvio com limite e confirmação do link de uso único |
+| `GET /api/auth/me`, login e cadastro | `usuario.emailVerificado` |
+| `POST /api/gestor/imoveis/{id}/midias` | a imagem é recodificada sem EXIF/GPS antes de gravar |
+
+**Novas propriedades** (`smartrent.chat.*`, `smartrent.perfil.*`, `smartrent.midia.*`; variáveis no `README.md`)
+
+| Propriedade | Padrão | Efeito |
+|---|---|---|
+| `smartrent.chat.hmac-key` | — (obrigatória fora de `dev`/`test`) | chave do HMAC-SHA-256 do texto normalizado (`SMARTCHAT_HMAC_KEY`) |
+| `smartrent.chat.envio-massa-conversas` / `-conta-nova` | 5 / 3 | N: conversas distintas com o mesmo texto que disparam o alerta |
+| `smartrent.chat.envio-massa-minutos` | 10 | M: janela da contagem |
+| `smartrent.chat.conta-nova-dias` | 7 | X: até quantos dias a conta é "nova" |
+| `smartrent.chat.limite-restrito-por-minuto` / `-minutos` | 3 / 60 | limite de envio após o alerta e por quanto tempo |
+| `smartrent.chat.alerta-janela-minutos` | 60 | não repete o mesmo alerta do mesmo usuário na janela |
+| `smartrent.perfil.email-verificacao-horas` | 24 | validade do link de verificação |
+| `smartrent.midia.sanear-ao-iniciar` | true | reprocessa, uma vez, as fotos de anúncio antigas |
+
+**Tabelas e colunas novas:** `imovel_midias.metadados_removidos`; `smartchat_mensagens.texto_hmac` (HMAC, nunca o texto) e `alertas_internos`
+(usuário, tipo, contagem, janela, status; sem conteúdo); `usuarios.email_verificado_em` e `verificacao_email` (só o SHA-256 do token);
+`smartchat_conversas.codigo_publico` (UUID, único).
+
+```mermaid
+sequenceDiagram
+    participant U as Usuário
+    participant S as SmartChatService
+    participant F as MessageFilterService
+    participant A as AnaliseComportamentoChat
+    participant B as Banco
+    U->>S: POST /conversas/{uuid}/mensagens
+    S->>S: conversa pelo UUID; não participante = 404; e-mail não verificado = 403
+    S->>F: filtrar (mascara contato; marca SUSPEITA_FRAUDE sem mascarar)
+    S->>B: grava texto cifrado + categorias + texto_hmac
+    S->>A: aposEnvio (mesmo HMAC em N conversas em M min? fraude?)
+    A->>B: alerta interno (1 por usuário e tipo na janela) e, em massa, limite restrito
+    S-->>U: mensagem (suspeitaFraude=false para o autor)
+```
+
 ---
 
 # CAPÍTULO 4 — IMPLEMENTAÇÃO TÉCNICA E CÓDIGO-FONTE

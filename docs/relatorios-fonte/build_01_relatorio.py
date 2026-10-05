@@ -260,6 +260,18 @@ rf_list = [
              "temporárias parciais (novas reservas, publicação e confirmação de edição, e-mail), "
              "sem bloquear login, senha, chat, reservas confirmadas, reembolsos ou bloqueio de "
              "datas; a aprovação é barrada por reservas futuras, reembolso pendente ou denúncia aberta.", "Must"),
+    ("RF40", "O SmartChat deve exibir, sempre visível e sem poder ser dispensada, uma faixa de aviso para o "
+             "usuário nunca fazer pagamentos nem compartilhar contatos fora da plataforma.", "Must"),
+    ("RF41", "As fotos de anúncio devem ser recodificadas no servidor sem EXIF, GPS, XMP nem miniatura embutida, "
+             "com a orientação aplicada, e as já armazenadas devem ser reprocessadas uma única vez.", "Must"),
+    ("RF42", "Mensagens que citam pagamento ou contato fora da plataforma não são bloqueadas nem mascaradas: o "
+             "destinatário vê um alerta e a equipe recebe um alerta interno.", "Must"),
+    ("RF43", "O mesmo texto enviado a várias conversas em pouco tempo deve gerar um alerta interno (sem guardar "
+             "o texto) e restringir o limite de envio do usuário, sem suspender a conta.", "Should"),
+    ("RF44", "Só usuários com e-mail verificado podem enviar mensagens ou iniciar conversas no SmartChat; ler "
+             "continua livre e o perfil mostra o selo \"E-mail verificado\".", "Must"),
+    ("RF45", "As conversas devem ser identificadas por UUID nas rotas, nos eventos e nos links; conversa "
+             "inexistente e conversa de terceiros devem dar a mesma resposta.", "Must"),
     ("RF22", "O sistema deve manter trilha de auditoria dos aceites do termo (usuário, imóvel, "
              "versão, data, hora e IP), das alterações de preço e das ações sobre o anúncio.",
      "Should"),
@@ -624,7 +636,7 @@ story.append(Paragraph(
     "do usuário é garantida por restrição de unicidade na própria coluna, não por índice "
     "nomeado. O fluxo de anúncios acrescentou os índices idx_imoveis_status, "
     "idx_midias_imovel, idx_hist_preco_imovel, idx_aceites_imovel, idx_auditoria_imovel e "
-    "idx_notificacoes_usuario, além da restrição de unicidade uk_lembrete. As migrations V7 a V13 acrescentaram os campos comerciais e o snapshot da política, os pagamentos e reembolsos (com chaves de idempotência únicas), os bloqueios de datas, o SmartChat, o processamento de vídeo e o arquivamento seguido do descarte das colunas de WhatsApp. A migration V14 acrescentou a foto, a versão de sessão e o indicador de senha definida ao usuário, a auditoria de conta, os pedidos de troca de e-mail (com índice único parcial de um pedido pendente por usuário) e a solicitação de exclusão de dados com seu histórico (com índice único parcial de uma solicitação em andamento por usuário); nenhuma dessas tabelas guarda senha, hash em claro ou token, apenas o SHA-256 dos tokens de uso único. A migration V15 passou para TEXT as colunas de texto do SmartChat (mensagens, denúncias e a prévia das notificações), que agora guardam o valor cifrado no formato v1:Base64.", styles["Body"]))
+    "idx_notificacoes_usuario, além da restrição de unicidade uk_lembrete. As migrations V7 a V13 acrescentaram os campos comerciais e o snapshot da política, os pagamentos e reembolsos (com chaves de idempotência únicas), os bloqueios de datas, o SmartChat, o processamento de vídeo e o arquivamento seguido do descarte das colunas de WhatsApp. A migration V14 acrescentou a foto, a versão de sessão e o indicador de senha definida ao usuário, a auditoria de conta, os pedidos de troca de e-mail (com índice único parcial de um pedido pendente por usuário) e a solicitação de exclusão de dados com seu histórico (com índice único parcial de uma solicitação em andamento por usuário); nenhuma dessas tabelas guarda senha, hash em claro ou token, apenas o SHA-256 dos tokens de uso único. A migration V15 passou para TEXT as colunas de texto do SmartChat (mensagens, denúncias e a prévia das notificações), que agora guardam o valor cifrado no formato v1:Base64. As migrations V16 a V19 acrescentaram a marca de foto sem metadados, o HMAC do texto das mensagens e a tabela de alertas internos (sem conteúdo de mensagem), a verificação de e-mail (data na conta e links de uso único, só com o hash do token) e o código público (UUID) das conversas.", styles["Body"]))
 story.append(PageBreak())
 
 # ---------------------------------------------------------------------

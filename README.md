@@ -69,6 +69,7 @@ src/main/java/com/temporada/gestao
    export IA_API_URL=https://api.groq.com/openai/v1/chat/completions
    export IA_API_MODEL=llama-3.3-70b-versatile
    export SMARTCHAT_CRYPTO_KEY=<base64-de-32-bytes>   # ver "Cifragem em repouso do SmartChat"
+   export SMARTCHAT_HMAC_KEY=<base64-de-pelo-menos-32-bytes>   # openssl rand -base64 32
    ```
 
 3. Compile e execute os testes:
@@ -178,13 +179,22 @@ interação (flag no backend) e sempre para o gestor. Telefones, e-mails, links 
 **borrados no servidor** (o original nunca chega ao navegador); links de `SMARTCHAT_DOMINIOS_PERMITIDOS` passam.
 Denúncia e bloqueio de usuário são **protótipo**: persistem, sem efeito (`SMARTCHAT_BLOCK_ENFORCEMENT=false`).
 
+Reforço de segurança ([ADR-007](docs/adr/ADR-007-reforco-de-seguranca-do-smartchat-e-dos-uploads.md)): faixa fixa de aviso no topo das mensagens; mensagens que citam pagamento ou contato
+fora da plataforma (`SUSPEITA_FRAUDE`) **não são bloqueadas**, mas o destinatário vê um alerta e a equipe recebe um alerta interno; o mesmo
+texto enviado a várias conversas em pouco tempo gera um alerta interno e restringe o limite de envio (sem suspender a conta); só quem tem
+**e-mail verificado** envia mensagem ou inicia conversa (ler continua livre); conversas usam **UUID** nas rotas, nos eventos e nos links.
+Fotos de anúncio são recodificadas **sem EXIF/GPS** no envio e as já armazenadas são reprocessadas uma vez no boot (`MIDIA_SANEAR_AO_INICIAR`).
+
 | Método | Endpoint | Descrição |
 |---|---|---|
 | `GET` | `/api/smartchat/conversas?imovelId=` · `/nao-lidas` | Minhas conversas / contador |
-| `POST` | `/api/smartchat/conversas/por-imovel/{id}` · `/por-reserva/{id}` | Abre ou reutiliza a conversa |
-| `GET` \| `POST` | `/api/smartchat/conversas/{id}/mensagens` | Lê (texto já filtrado) / envia |
-| `POST` | `/api/smartchat/conversas/{id}/lidas` · `/denuncias` · `/bloqueio` | Leitura, denúncia, pedido de bloqueio |
-| `GET` | `/api/smartchat/conversas/{id}/perfil` | Perfil (sem e-mail nem telefone) |
+| `POST` | `/api/smartchat/conversas/por-imovel/{imovelId}` · `/por-reserva/{reservaId}` | Abre ou reutiliza a conversa (conversa **nova** exige e-mail verificado) |
+| `GET` | `/api/smartchat/conversas/{codigo}` | Uma conversa; `codigo` é o **UUID** público (o id sequencial não sai da API) |
+| `GET` \| `POST` | `/api/smartchat/conversas/{codigo}/mensagens` | Lê (texto já filtrado) / envia (exige e-mail verificado) |
+| `POST` | `/api/smartchat/conversas/{codigo}/lidas` · `/denuncias` · `/bloqueio` | Leitura, denúncia, pedido de bloqueio |
+| `GET` | `/api/smartchat/conversas/{codigo}/perfil` | Perfil (sem e-mail nem telefone; selo "E-mail verificado") |
+| `POST` | `/api/perfil/email/verificacao/reenviar` | Reenvia o link de verificação do e-mail (com limite de taxa) |
+| `POST` | `/api/perfil/email/verificar` | Confirma o link (público; o token de uso único é a prova) |
 | `POST` \| `GET` | `/api/smartchat/stream-ticket` · `/stream?ticket=` | Tempo quase real por SSE (ticket de uso único) |
 
 ## 🎬 Vídeos
@@ -205,6 +215,10 @@ sem fuso, prazos (24h, 2h, lembretes) como tempo decorrido.
 | `APP_TIMEZONE` (`America/Sao_Paulo`) | Fuso oficial da plataforma |
 | `CANCEL_ANTECEDENCIA_HORAS` (48) · `CHECKIN_HORA_PADRAO` (14:00) · `CANCEL_REGRET_DAYS` (0) · `RESERVA_PENDENTE_EXPIRA_MINUTOS` (30) | Política de cancelamento e expiração de pendente |
 | `SMARTCHAT_CRYPTO_KEY` · `SMARTCHAT_CRYPTO_MIGRATE_ON_START` (true) | Chave AES-256 (Base64 de 32 bytes) da cifra em repouso e migração das linhas antigas; ver abaixo |
+| `SMARTCHAT_HMAC_KEY` | Chave (Base64, ≥ 32 bytes; `openssl rand -base64 32`) do HMAC que compara textos iguais sem guardá-los. **Obrigatória fora de `dev`/`test`**: sem ela a aplicação não sobe |
+| `SMARTCHAT_ENVIO_MASSA_CONVERSAS` (5) · `SMARTCHAT_ENVIO_MASSA_CONVERSAS_CONTA_NOVA` (3) · `SMARTCHAT_ENVIO_MASSA_MINUTOS` (10) · `SMARTCHAT_CONTA_NOVA_DIAS` (7) | Envio em massa: N conversas distintas com o mesmo texto em M minutos; conta com menos de X dias tem limiar menor |
+| `SMARTCHAT_LIMITE_RESTRITO_POR_MINUTO` (3) · `SMARTCHAT_LIMITE_RESTRITO_MINUTOS` (60) · `SMARTCHAT_ALERTA_JANELA_MINUTOS` (60) | Limite de envio após o alerta, por quanto tempo vale e janela sem repetir o mesmo alerta |
+| `PERFIL_EMAIL_VERIFICACAO_HORAS` (24) · `MIDIA_SANEAR_AO_INICIAR` (true) | Validade do link de verificação de e-mail; reprocessa as fotos de anúncio antigas sem EXIF/GPS |
 | `SMARTCHAT_DOMINIOS_PERMITIDOS` · `SMARTCHAT_TERMOS_ARQUIVO` · `SMARTCHAT_BLOCK_ENFORCEMENT` (false) · `SMARTCHAT_MENSAGENS_POR_MINUTO` (20) | Filtro de conteúdo, termos e limites do chat |
 | `VIDEO_FFMPEG_PATH` · `VIDEO_DURACAO_MAX_SEGUNDOS` (90) · `VIDEO_TAMANHO_MAX_MB` (500) · `VIDEO_APAGAR_ORIGINAL` (true) | Processamento e limites de vídeo |
 
