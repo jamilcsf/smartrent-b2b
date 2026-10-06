@@ -123,7 +123,7 @@ Auditoria de responsividade das 14 páginas do front (login, cadastro, catálogo
 Painel do Gestor com as três abas, formulário de anúncio, SmartChat e as telas de confirmação por link) em 320, 360, 375, 390, 414 e 768 px
 (retrato) e 667 px (paisagem), com 1280 px como controle de regressão. Metodologia: Playwright com o Edge da máquina e emulação de toque,
 medindo rolagem horizontal, elementos fora da tela, alvos de toque, `font-size` dos campos e erros de console/rede, mais capturas de tela de cada
-página em cada largura. O backend não pôde ser usado (Docker Desktop não iniciou nesta máquina), então a API foi **simulada** por um servidor Node
+página em cada largura. Na primeira passada o backend não pôde ser usado (Docker Desktop travado), então a API foi **simulada** por um servidor Node
 de teste com dados de estresse (títulos sem espaços, e-mails e endereços longos, valores de sete dígitos); os fluxos ponta a ponta contra
 Postgres real continuam pendentes de uma passada (ver abaixo).
 
@@ -148,10 +148,31 @@ notificações do gestor aberto para fora da tela e sem fechar ao tocar fora; fi
 44 px, exceto as células do calendário (29–43 px de largura × 44 de altura em 320–414 px, acima do mínimo de 24 px do WCAG 2.2 AA; ver pendências);
 0 erro de JavaScript; os 446 testes do Maven continuam passando.
 
-**Pendências / V2:** (1) repetir a passada contra o backend real com Postgres, incluindo a ordem de cancelamento, upload de foto/vídeo e o SSE do
-SmartChat (o servidor simulado não o implementa; o único erro de console restante é essa limitação); (2) teclado virtual: testado só por emulação, sem
+**Pendências / V2:** (1) upload de foto/vídeo com o backend real (a segunda passada, abaixo, cobre reservas, calendário, IA, chat e perfil); (2) teclado virtual: testado só por emulação, sem
 aparelho físico (iOS Safari/Android Chrome reais); (3) células do calendário com 44 px de largura exigem layout de uma ou duas semanas por vez no
 celular (V2); (4) tabelas de reservas em cartões no mobile em vez de rolagem lateral (V2); (5) Tailwind e Lucide vêm de CDN (`cdn.tailwindcss.com`
 é indicado só para desenvolvimento): compilar o CSS e hospedar os ícones localmente é pendência de produção e do tempo de carregamento em 3G;
-(6) o `favicon.ico` não existe (404 no console); (7) o texto `PRE_PUBLICACAO_*` aparece cru na lista "Imóveis por situação" do Dashboard
+(6) [resolvido na segunda passada] favicon; (7) o texto `PRE_PUBLICACAO_*` aparece cru na lista "Imóveis por situação" do Dashboard
 (rótulo amigável é pendência de conteúdo); (8) testes automatizados do front (Playwright) ainda não entram no pipeline.
+
+### Revisão mobile — passada com o backend real (2026-10-06)
+
+Repetida contra a aplicação Spring Boot em execução (PostgreSQL 16 no Docker, banco próprio `smartrent_mobile`, `scripts/dados-demonstracao.sql`
+mais títulos longos e dois anúncios em pré-publicação). Auditoria de 18 telas em 320, 360, 375, 390, 414, 768, 667 paisagem e 1280 px, e fluxos
+com toque em 375 e 320 px (20 verificações, todas aprovadas):
+- Reserva do cliente: datas invertidas recusadas; período em conflito avisado já na prévia e recusado ao confirmar; modal de confirmação dentro da tela,
+  com rolagem do fundo travada e liberada ao fechar; cancelamento abre o modal.
+- Reserva do gestor: "check-out deve ser posterior à de check-in" e "Conflito de datas detectado para este imovel." exibidos; calendário abre o
+  popover da reserva ao toque, dentro da tela.
+- Sugestão de preço por IA em estado de contingência (sem chave configurada): a tabela mostra "A sugestão por IA não está configurada neste ambiente",
+  sem rolagem horizontal, e o valor pode ser definido à mão.
+- Sino de notificações, SmartChat (SSE real, sem erro de console) e perfil sem rolagem horizontal.
+
+Dois defeitos novos achados e corrigidos nesta passada: as abas do Painel do Gestor se sobrepunham em 320 px (`[role=tablist]` agora não encolhe as abas) e a
+tira de abas do formulário de anúncio passou a rolar em vez de estourar a página; o `favicon.ico` inexistente (404) ganhou `img/favicon.svg`.
+Resultado final: 0 rolagem horizontal, 0 campo abaixo de 16 px, 0 alvo de toque abaixo de 44 px (exceto células do calendário e links dentro de texto),
+0 erro de JavaScript. Erros de console remanescentes são externos ao front: o botão do Google recusa a origem `localhost` (403) e o link de confirmação
+de e-mail de teste devolve 400 por token inválido.
+
+Ainda pendente: envio do formulário de login/cadastro (exige resolver o reCAPTCHA, que a automação não faz), caminho feliz da sugestão de preço da IA
+(sem chave Groq configurada), teclado virtual e rolagem em aparelhos reais (iOS Safari/Android Chrome).

@@ -127,3 +127,6 @@ header p, header h1 { overflow-wrap: break-word; }
 
 /* Rotulo de botao nunca parte no meio da palavra ("Adicio|nar"). */
 button { overflow-wrap: normal; word-break: normal; }
+
+/* Abas em tira rolavel: cada aba mantem o tamanho do rotulo (encolher sobrepunha "Meus anuncios" ao contador vizinho). */
+[role="tablist"] > * { flex-shrink: 0; }
