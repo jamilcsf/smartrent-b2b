@@ -28,6 +28,14 @@ public interface MidiaStorage {
      */
     Path caminhoLocal(String nome);
 
+    /**
+     * Endereco publico direto (CDN/bucket) do arquivo, ou nulo quando ele deve ser entregue pela propria
+     * aplicacao. Com endereco, o controller responde 302 e os bytes nao passam pelo servidor.
+     */
+    default String urlPublica(String nome) {
+        return null;
+    }
+
     /** Remove tudo sob o prefixo (pasta de um video e suas variantes). Nao falha se nao existir. */
     void removerPrefixo(String prefixo);
 }

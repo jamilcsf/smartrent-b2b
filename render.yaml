@@ -40,6 +40,18 @@ services:
       - key: EMAIL_REMETENTE     # endereco verificado na conta da Brevo
         sync: false
 
+      # --- Fotos no Cloudflare R2 (sem elas, as fotos ficam no disco, que e apagado a cada deploy no Render) ---
+      - key: R2_BUCKET
+        sync: false
+      - key: R2_ENDPOINT         # https://<ID_DA_CONTA>.r2.cloudflarestorage.com
+        sync: false
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
+      - key: R2_URL_PUBLICA      # opcional: dominio publico do bucket; as fotos passam a sair direto da CDN
+        sync: false
+
       # --- Integracoes (opcionais) ---
       - key: GROQ_API_KEY
         sync: false
