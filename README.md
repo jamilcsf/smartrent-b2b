@@ -278,6 +278,7 @@ troca de senha, SmartChat, reservas confirmadas, cancelamentos e reembolsos, des
 | `PERFIL_SENHA_TENTATIVAS` (5) · `PERFIL_SENHA_JANELA_MINUTOS` (15) · `PERFIL_EMAIL_PEDIDOS_POR_HORA` (3) · `PERFIL_FOTO_UPLOADS_POR_HORA` (10) | Limites de tentativas |
 | `PERFIL_EMAIL_TOKEN_MINUTOS` (60) · `APP_BASE_URL` | Validade e endereço dos links enviados por e-mail |
 | `BREVO_API_KEY` · `EMAIL_REMETENTE` · `EMAIL_REMETENTE_NOME` (SmartRent) | E-mail de verdade pela API HTTPS da Brevo (o Render gratuito bloqueia SMTP). Sem a chave, os e-mails ficam só em log. `EMAIL_REMETENTE` deve ser um endereço verificado na conta |
+| `R2_BUCKET` · `R2_ENDPOINT` · `R2_ACCESS_KEY_ID` · `R2_SECRET_ACCESS_KEY` · `R2_URL_PUBLICA` | Fotos (anúncio, miniaturas, perfil) no Cloudflare R2. Só ligam com bucket e endpoint (`https://<conta>.r2.cloudflarestorage.com`); `R2_URL_PUBLICA` (domínio do bucket) faz o site redirecionar para a CDN. Vídeos continuam no disco |
 | `EMAIL_LOG_CORPO` (true) | Enquanto o e-mail é só log: `false` em produção, para links e tokens não irem ao log |
 | `DATA_DELETION_MIN_REVIEW_HOURS` (48) · `DATA_DELETION_RISK_DAYS` (30) · `DATA_DELETION_NOTIFY_EMAIL` · `DATA_DELETION_RESTRICTIONS_ENABLED` (true) · `DATA_DELETION_REQUESTS_PER_DAY` (3) | Pedido de exclusão: análise mínima, sinais de risco, aviso à equipe e restrições |
 
