@@ -5,6 +5,7 @@ import jakarta.persistence.Converter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
@@ -26,6 +27,8 @@ public class TextoCifradoConverter implements AttributeConverter<String, String>
     private final ObjectProvider<CifraCampo> cifra;
     private final String contexto;
 
+    // Dois construtores e nenhum anotado: o Spring exigiria um construtor padrao e a aplicacao nao subiria.
+    @Autowired
     public TextoCifradoConverter(ObjectProvider<CifraCampo> cifra) {
         this(cifra, "");
     }
