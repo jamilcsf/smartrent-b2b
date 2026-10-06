@@ -74,6 +74,7 @@ public class MidiaPublicaController {
     @GetMapping("/{chave}/miniatura")
     public ResponseEntity<Resource> miniatura(@PathVariable String chave) {
         return midiaRepository.findByChave(chave)
+                .filter(ImovelMidia::visivelAoPublico)
                 .filter(m -> m.getMiniatura() != null)
                 .map((ImovelMidia m) -> entregar(m.getMiniatura(), "image/jpeg"))
                 .orElse(ResponseEntity.notFound().build());

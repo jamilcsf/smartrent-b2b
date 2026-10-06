@@ -10,7 +10,7 @@ import java.util.OptionalDouble;
  * Processamento sem FFmpeg (padrao quando o binario nao existe): valida o MP4/MOV
  * lendo o cabecalho {@code moov/mvhd} e publica o proprio arquivo, sem
  * transcodificar, sem HLS, sem poster e sem remover metadados. E um recurso de
- * desenvolvimento e de emergencia: em producao configure o FFmpeg
+ * desenvolvimento (so nos perfis dev/test, ver VideoConfig): em producao instale o FFmpeg
  * ({@code smartrent.video.ffmpeg-path}).
  */
 public class VideoProcessingBasico implements VideoProcessingService {

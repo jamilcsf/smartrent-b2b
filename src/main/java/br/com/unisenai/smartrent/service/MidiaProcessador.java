@@ -2,6 +2,8 @@ package br.com.unisenai.smartrent.service;
 
 import br.com.unisenai.smartrent.config.MidiaProperties;
 import br.com.unisenai.smartrent.service.erro.ValidacaoAnuncioException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.imageio.ImageIO;
@@ -29,8 +31,12 @@ import java.util.Set;
 @Component
 public class MidiaProcessador {
 
-    /** Teto de pixels: protege a memoria do servidor contra imagens-bomba. */
-    private static final long MAX_PIXELS = 60_000_000L;
+    /**
+     * Teto de pixels padrao (MIDIA_MAX_PIXELS_IMAGEM): protege a memoria contra imagens-bomba. A imagem e decodificada
+     * por inteiro (4 bytes por pixel, mais a copia da regravacao): 30 MP cabem numa instancia de 512 MB e cobrem
+     * uma foto 360 de 7680x3840.
+     */
+    static final long PIXELS_PADRAO = 30_000_000L;
     private static final double TOLERANCIA_360 = 0.02;
     private static final int LARGURA_MINIATURA = 480;
     private static final float QUALIDADE_JPEG = 0.92f;
@@ -39,10 +45,18 @@ public class MidiaProcessador {
 
     private final long maxBytesImagem;
     private final long maxBytesVideo;
+    private final long maxPixels;
 
-    public MidiaProcessador(MidiaProperties props) {
+    @Autowired
+    public MidiaProcessador(MidiaProperties props,
+                            @Value("${smartrent.midia.max-pixels-imagem:" + PIXELS_PADRAO + "}") long maxPixels) {
         this.maxBytesImagem = props.tamanhoMaxImagemMb() * 1024 * 1024;
         this.maxBytesVideo = props.tamanhoMaxVideoMb() * 1024 * 1024;
+        this.maxPixels = maxPixels;
+    }
+
+    public MidiaProcessador(MidiaProperties props) {
+        this(props, PIXELS_PADRAO);
     }
 
     /** Resultado da inspecao. {@code extensao} vai no nome do arquivo guardado. */
@@ -62,8 +76,9 @@ public class MidiaProcessador {
                 throw new ValidacaoAnuncioException("Formato de imagem não aceito. Envie JPEG ou PNG.");
             }
             int[] dim = dimensoes(arquivo);
-            if ((long) dim[0] * dim[1] > MAX_PIXELS) {
-                throw new ValidacaoAnuncioException("A resolução da imagem é alta demais (máximo 60 megapixels).");
+            if ((long) dim[0] * dim[1] > maxPixels) {
+                throw new ValidacaoAnuncioException("A resolução da imagem é alta demais (máximo "
+                        + maxPixels / 1_000_000L + " megapixels). Reduza a imagem e tente de novo.");
             }
             if (real.equals("image/jpeg") && ImagemSegura.trocaEixos(ImagemSegura.orientacaoExif(Files.readAllBytes(arquivo)))) {
                 dim = new int[]{dim[1], dim[0]}; // a regra 2:1 vale para a imagem como sera exibida (orientacao aplicada)
