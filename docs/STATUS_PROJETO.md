@@ -137,3 +137,7 @@ Pendente: revisão jurídica dos textos novos (aviso fixo, alerta de fraude, e-m
 retenção de `texto_hmac` e dos alertas internos; metadados no vídeo do modo básico (sem FFmpeg); uniformizar 403/404 nas rotas de reserva e notificação;
 autenticar `GET /api/precificacao/sugerir` (público e grava). **V2 (não implementado):** imagens e comprovantes no chat, verificação por telefone e por documento
 (e o selo de identidade verificada), classificação de fraude por IA.
+
+Em 2026-10-06 o serviço foi publicado no Render (Docker) com o banco no Supabase (migrations V1 a V19 aplicadas). Foi acrescentado o envio de e-mail de verdade pela API HTTPS da Brevo
+(`BREVO_API_KEY` e `EMAIL_REMETENTE`; o Render gratuito bloqueia SMTP), que substitui o log quando a chave existe e nunca registra corpo nem endereços; e foi removida a senha padrão que o Spring Boot
+imprimia no log. Pendente: configurar a conta da Brevo e o reCAPTCHA real no ambiente; o e-mail de notificações do chat (`NotificadorEmailLog`) continua só em log.
