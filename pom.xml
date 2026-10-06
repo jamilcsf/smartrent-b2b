@@ -21,7 +21,7 @@
         <java.version>17</java.version>
         <jjwt.version>0.12.7</jjwt.version>
         <aws-sdk.version>2.25.60</aws-sdk.version>
-        <owasp-sanitizer.version>20240325.1</owasp-sanitizer.version>
+        <owasp-sanitizer.version>20260924.2</owasp-sanitizer.version>
     </properties>
 
     <!-- SDK da AWS v2 so para falar com o Cloudflare R2 (API compativel com S3). -->
