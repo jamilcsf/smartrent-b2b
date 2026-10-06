@@ -48,7 +48,7 @@ public class SecurityConfig {
                         // Autorizacao real fica aqui, no servidor: esconder
                         // botao no front nao protege endpoint nenhum. Alem do
                         // papel, cada servico confere que o imovel e do gestor.
-                        .requestMatchers("/api/gestor/**", "/api/reservas/**")
+                        .requestMatchers("/api/gestor/**", "/api/reservas/**", "/api/precificacao/**")
                                 .hasAnyRole("ANFITRIAO", "ADMIN")
                         // Reserva do cliente e SmartChat: qualquer usuario autenticado; a
                         // propriedade (so as proprias reservas e conversas) e conferida nos servicos.
