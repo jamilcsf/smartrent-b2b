@@ -15,6 +15,7 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 
 import java.util.Map;
 
@@ -32,6 +33,9 @@ import java.util.Map;
 @EnableWebSecurity
 public class SecurityConfig {
 
+    /** Diretivas seguras com o front atual: sem plugins, sem <base> trocado, sem embutir em iframe, formularios so para o proprio site. */
+    static final String CSP = "object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'";
+
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
@@ -42,6 +46,13 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
+                // Cabecalhos: nosniff, X-Frame-Options DENY e HSTS (em HTTPS) ja vem por padrao. A CSP abaixo so traz
+                // as diretivas que NAO quebram as paginas atuais (Tailwind/Chart.js por CDN e scripts inline exigem
+                // 'unsafe-inline'): a CSP completa, com nonce, e Visao Futura (V2), ver ADR-007.
+                .headers(h -> h
+                        .contentSecurityPolicy(csp -> csp.policyDirectives(CSP))
+                        .referrerPolicy(r -> r.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
+                        .permissionsPolicy(p -> p.policy("camera=(), microphone=(), geolocation=(), payment=()")))
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/me").authenticated()

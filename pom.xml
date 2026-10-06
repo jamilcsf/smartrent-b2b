@@ -21,6 +21,7 @@
         <java.version>17</java.version>
         <jjwt.version>0.12.7</jjwt.version>
         <aws-sdk.version>2.25.60</aws-sdk.version>
+        <owasp-sanitizer.version>20240325.1</owasp-sanitizer.version>
     </properties>
 
     <!-- SDK da AWS v2 so para falar com o Cloudflare R2 (API compativel com S3). -->
@@ -64,6 +65,13 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+
+        <!-- Sanitizacao de texto do usuario no servidor (ADR-007): remove HTML ativo (script, style, eventos). -->
+        <dependency>
+            <groupId>com.googlecode.owasp-java-html-sanitizer</groupId>
+            <artifactId>owasp-java-html-sanitizer</artifactId>
+            <version>${owasp-sanitizer.version}</version>
         </dependency>
 
         <!-- JWT: versao explicita porque o Spring Boot nao gerencia o jjwt.

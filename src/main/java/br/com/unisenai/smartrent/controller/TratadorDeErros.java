@@ -110,8 +110,18 @@ public class TratadorDeErros {
         return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(Map.of("erro", e.getMessage()));
     }
 
+    /**
+     * So devolve a mensagem quando o PROPRIO codigo da aplicacao lancou a excecao (texto escrito para o usuario).
+     * IllegalArgumentException vinda do JDK ou de bibliotecas (UUID, Base64, Path...) pode carregar detalhes internos.
+     */
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, Object>> argumento(IllegalArgumentException e) {
-        return ResponseEntity.badRequest().body(Map.of("erro", e.getMessage()));
+        return ResponseEntity.badRequest().body(Map.of("erro", mensagemSegura(e)));
+    }
+
+    static String mensagemSegura(IllegalArgumentException e) {
+        StackTraceElement[] pilha = e.getStackTrace();
+        boolean proprio = pilha.length > 0 && pilha[0].getClassName().startsWith("br.com.unisenai.smartrent.");
+        return proprio && e.getMessage() != null && !e.getMessage().isBlank() ? e.getMessage() : "Requisição inválida.";
     }
 }

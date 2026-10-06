@@ -12,6 +12,7 @@ import br.com.unisenai.smartrent.dto.SmartChatDtos.Ticket;
 import br.com.unisenai.smartrent.model.Usuario;
 import br.com.unisenai.smartrent.service.ChatEventos;
 import br.com.unisenai.smartrent.service.SmartChatService;
+import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -63,8 +64,8 @@ public class SmartChatController {
     }
 
     @PostMapping("/conversas/{codigo}/mensagens")
-    public EnvioResposta enviar(@AuthenticationPrincipal Usuario usuario, @PathVariable String codigo, @RequestBody EnvioPedido pedido) {
-        return service.enviar(usuario, uuid(codigo), pedido == null ? null : pedido.texto());
+    public EnvioResposta enviar(@AuthenticationPrincipal Usuario usuario, @PathVariable String codigo, @Valid @RequestBody EnvioPedido pedido) {
+        return service.enviar(usuario, uuid(codigo), pedido.texto());
     }
 
     @PostMapping("/conversas/{codigo}/lidas")
@@ -83,7 +84,7 @@ public class SmartChatController {
     }
 
     @PostMapping("/conversas/{codigo}/denuncias")
-    public Confirmacao denunciar(@AuthenticationPrincipal Usuario usuario, @PathVariable String codigo, @RequestBody DenunciaPedido pedido) {
+    public Confirmacao denunciar(@AuthenticationPrincipal Usuario usuario, @PathVariable String codigo, @Valid @RequestBody DenunciaPedido pedido) {
         return service.denunciar(usuario, uuid(codigo), pedido);
     }
 
