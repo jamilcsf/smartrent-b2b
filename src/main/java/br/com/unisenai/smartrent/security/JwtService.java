@@ -4,23 +4,19 @@ import br.com.unisenai.smartrent.model.Usuario;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Date;
 
-/** Emite e valida os tokens JWT da aplicacao. */
-@Service
+/** Emite e valida os tokens JWT da aplicacao. O bean e criado por {@code JwtConfig}, que valida o segredo. */
 public class JwtService {
 
     private final SecretKey chave;
     private final long validadeSegundos;
 
-    public JwtService(@Value("${smartrent.jwt.secret}") String segredo,
-                      @Value("${smartrent.jwt.expiracao-segundos}") long validadeSegundos) {
+    public JwtService(String segredo, long validadeSegundos) {
         // RNF03: o segredo vem do ambiente, nunca do codigo-fonte.
         this.chave = Keys.hmacShaKeyFor(segredo.getBytes(StandardCharsets.UTF_8));
         this.validadeSegundos = validadeSegundos;

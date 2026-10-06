@@ -99,3 +99,12 @@ SUSPEITA_FRAUDE|me chama no zap
 SUSPEITA_FRAUDE|me chama no whats
 SUSPEITA_FRAUDE|me chama no whatsap
 SUSPEITA_FRAUDE|me chama no telegram
+SUSPEITA_FRAUDE|meu pix
+SUSPEITA_FRAUDE|manda pix
+SUSPEITA_FRAUDE|mande pix
+SUSPEITA_FRAUDE|faz um pix
+SUSPEITA_FRAUDE|faca um pix
+SUSPEITA_FRAUDE|pix pra mim
+SUSPEITA_FRAUDE|pix para mim
+SUSPEITA_FRAUDE|pix por fora
+SUSPEITA_FRAUDE|pago no pix direto

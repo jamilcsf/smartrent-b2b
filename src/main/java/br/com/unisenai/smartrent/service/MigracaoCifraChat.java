@@ -98,8 +98,9 @@ public class MigracaoCifraChat implements ApplicationRunner {
                     boolean mudou = false;
                     for (int c = 0; c < colunas.length; c++) {
                         String valor = (String) linha[c + 1];
-                        if (valor != null && cifra.ehTextoPuro(valor)) {
-                            params[c] = cifra.cifrar(valor);
+                        String contexto = tabela + "." + colunas[c]; // o mesmo AAD dos conversores JPA
+                        if (valor != null && cifra.ehTextoPuro(valor, contexto)) {
+                            params[c] = cifra.cifrar(valor, contexto);
                             mudou = true;
                             cifrados++;
                         } else {

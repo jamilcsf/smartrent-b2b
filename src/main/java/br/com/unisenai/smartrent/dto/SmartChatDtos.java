@@ -3,6 +3,8 @@ package br.com.unisenai.smartrent.dto;
 import br.com.unisenai.smartrent.dto.CalendarioDtos.ImovelResumo;
 import br.com.unisenai.smartrent.model.enums.StatusReserva;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -25,8 +27,8 @@ public final class SmartChatDtos {
     public record Interlocutor(String nome, String iniciais, String papel, String fotoUrl, boolean verificado) {
     }
 
+    /** Sem id: o chat nao precisa dele e o id sequencial da reserva nao deve sair por aqui. */
     public record ReservaResumo(
-            Long id,
             StatusReserva status,
             @JsonFormat(pattern = "yyyy-MM-dd") LocalDate dataCheckin,
             @JsonFormat(pattern = "yyyy-MM-dd") LocalDate dataCheckout,
@@ -52,7 +54,7 @@ public final class SmartChatDtos {
      * DESTINATARIO (o autor nunca ve o alerta): a mensagem cita pagamento ou contato fora da plataforma.
      */
     public record Mensagem(
-            Long id,
+            java.util.UUID codigo,
             String tipo,
             boolean minha,
             String autor,
@@ -63,7 +65,10 @@ public final class SmartChatDtos {
             boolean suspeitaFraude) {
     }
 
-    public record EnvioPedido(String texto) {
+    /** O limite de negocio (SMARTCHAT_MAX_CARACTERES) e do servico; este e so um teto contra corpo gigante. */
+    public record EnvioPedido(
+            @NotBlank(message = "Escreva uma mensagem.")
+            @Size(max = 4000, message = "A mensagem é longa demais.") String texto) {
     }
 
     public record EnvioResposta(Mensagem mensagem, String aviso) {
@@ -72,7 +77,10 @@ public final class SmartChatDtos {
     public record Perfil(Interlocutor interlocutor, ImovelResumo imovel, ReservaResumo reserva) {
     }
 
-    public record DenunciaPedido(String motivo, String descricao, List<Long> mensagensIds) {
+    public record DenunciaPedido(
+            @NotBlank(message = "Escolha o motivo da denúncia.") @Size(max = 40) String motivo,
+            @Size(max = 4000, message = "A descrição é longa demais.") String descricao,
+            @Size(max = 50, message = "Selecione no máximo 50 mensagens.") List<java.util.UUID> mensagensIds) {
     }
 
     public record Confirmacao(String mensagem) {

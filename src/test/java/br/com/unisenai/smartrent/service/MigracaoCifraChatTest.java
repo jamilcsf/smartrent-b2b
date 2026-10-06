@@ -37,8 +37,8 @@ class MigracaoCifraChatTest {
     }
 
     private long mensagem(String filtrado, String original) {
-        jdbc.update("insert into smartchat_mensagens (conversa_id, tipo, texto_filtrado, texto_original, ocorrencias, criada_em) "
-                + "values (1, 'NORMAL', ?, ?, 0, current_timestamp)", filtrado, original);
+        jdbc.update("insert into smartchat_mensagens (conversa_id, tipo, texto_filtrado, texto_original, ocorrencias, criada_em, codigo_publico) "
+                + "values (1, 'NORMAL', ?, ?, 0, current_timestamp, ?)", filtrado, original, java.util.UUID.randomUUID());
         return jdbc.queryForObject("select max(id) from smartchat_mensagens", Long.class);
     }
 
@@ -63,8 +63,9 @@ class MigracaoCifraChatTest {
     void idempotente() {
         long m1 = mensagem("Olá, tudo bem? 😀", "Olá, me liga no 48 99999-0000");
         long m2 = mensagem("só filtrado", null);
-        String jaCifrado = cifra.cifrar("já protegido");
-        long m3 = mensagem(jaCifrado, jaCifrado);
+        String jaCifrado = cifra.cifrar("já protegido", "smartchat_mensagens.texto_filtrado");
+        String jaCifradoOriginal = cifra.cifrar("já protegido", "smartchat_mensagens.texto_original");
+        long m3 = mensagem(jaCifrado, jaCifradoOriginal);
         long d1 = denuncia("ele foi grosseiro");
         long d2 = denuncia(null);
 
@@ -74,12 +75,12 @@ class MigracaoCifraChatTest {
         assertEquals(4, primeira.valoresCifrados());
 
         assertTrue(CifraCampo.estaCifrado(coluna("smartchat_mensagens", "texto_filtrado", m1)));
-        assertEquals("Olá, tudo bem? 😀", cifra.decifrar(coluna("smartchat_mensagens", "texto_filtrado", m1)));
-        assertEquals("Olá, me liga no 48 99999-0000", cifra.decifrar(coluna("smartchat_mensagens", "texto_original", m1)));
-        assertEquals("só filtrado", cifra.decifrar(coluna("smartchat_mensagens", "texto_filtrado", m2)));
+        assertEquals("Olá, tudo bem? 😀", cifra.decifrar(coluna("smartchat_mensagens", "texto_filtrado", m1), "smartchat_mensagens.texto_filtrado"));
+        assertEquals("Olá, me liga no 48 99999-0000", cifra.decifrar(coluna("smartchat_mensagens", "texto_original", m1), "smartchat_mensagens.texto_original"));
+        assertEquals("só filtrado", cifra.decifrar(coluna("smartchat_mensagens", "texto_filtrado", m2), "smartchat_mensagens.texto_filtrado"));
         assertNull(coluna("smartchat_mensagens", "texto_original", m2));
         assertEquals(jaCifrado, coluna("smartchat_mensagens", "texto_filtrado", m3));
-        assertEquals("ele foi grosseiro", cifra.decifrar(coluna("smartchat_denuncias", "descricao", d1)));
+        assertEquals("ele foi grosseiro", cifra.decifrar(coluna("smartchat_denuncias", "descricao", d1), "smartchat_denuncias.descricao"));
         assertNull(coluna("smartchat_denuncias", "descricao", d2));
 
         String depoisDaPrimeira = coluna("smartchat_mensagens", "texto_filtrado", m1);
@@ -98,10 +99,10 @@ class MigracaoCifraChatTest {
 
         MigracaoCifraChat.Resultado r = job.executar();
         assertEquals(3, r.valoresCifrados());
-        assertEquals("Olá, posso levar meu cachorro?", cifra.decifrar(coluna("notificacoes", "mensagem", n)));
+        assertEquals("Olá, posso levar meu cachorro?", cifra.decifrar(coluna("notificacoes", "mensagem", n), "notificacoes.mensagem"));
         assertTrue(CifraCampo.estaCifrado(coluna("notificacoes", "mensagem", n)));
-        assertEquals("v1: teste legado", cifra.decifrar(coluna("smartchat_mensagens", "texto_filtrado", m)));
-        assertEquals("v2: outro legado", cifra.decifrar(coluna("smartchat_mensagens", "texto_original", m)));
+        assertEquals("v1: teste legado", cifra.decifrar(coluna("smartchat_mensagens", "texto_filtrado", m), "smartchat_mensagens.texto_filtrado"));
+        assertEquals("v2: outro legado", cifra.decifrar(coluna("smartchat_mensagens", "texto_original", m), "smartchat_mensagens.texto_original"));
 
         assertEquals(0, job.executar().valoresCifrados(), "segunda execucao nao altera nada");
     }
@@ -116,6 +117,6 @@ class MigracaoCifraChatTest {
         MigracaoCifraChat.Resultado r = job.executar();
         assertEquals(n, r.linhasAlteradas());
         assertEquals(0, jdbc.queryForObject(
-                "select count(*) from smartchat_mensagens where texto_filtrado not like 'v1:%'", Long.class));
+                "select count(*) from smartchat_mensagens where texto_filtrado not like 'v2:%'", Long.class));
     }
 }

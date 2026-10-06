@@ -21,6 +21,11 @@ public interface SmartChatMensagemRepository extends JpaRepository<SmartChatMens
 
     Optional<SmartChatMensagem> findFirstByConversaIdOrderByIdDesc(Long conversaId);
 
+    /** So dentro da conversa informada: um codigo de outra conversa nao e encontrado. */
+    Optional<SmartChatMensagem> findByConversaIdAndCodigoPublico(Long conversaId, java.util.UUID codigoPublico);
+
+    List<SmartChatMensagem> findByConversaIdAndCodigoPublicoIn(Long conversaId, Collection<java.util.UUID> codigos);
+
     boolean existsByChaveIdempotencia(String chave);
 
     /** Mensagens de pessoas (nao de sistema) enviadas pelo outro lado e ainda nao lidas por quem consulta. */

@@ -1,6 +1,8 @@
 package br.com.unisenai.smartrent.model;
 
 import br.com.unisenai.smartrent.model.enums.TipoMensagem;
+import br.com.unisenai.smartrent.security.MensagemFiltradaConverter;
+import br.com.unisenai.smartrent.security.MensagemOriginalConverter;
 import br.com.unisenai.smartrent.security.TextoCifradoConverter;
 import jakarta.persistence.*;
 
@@ -20,6 +22,10 @@ public class SmartChatMensagem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /** Identificador que sai pela API (cursor, denuncia): o id sequencial nao e exposto. */
+    @Column(name = "codigo_publico", nullable = false, unique = true, updatable = false)
+    private java.util.UUID codigoPublico = java.util.UUID.randomUUID();
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "conversa_id", nullable = false)
     private SmartChatConversa conversa;
@@ -33,12 +39,12 @@ public class SmartChatMensagem {
     @Column(name = "tipo", nullable = false, length = 10)
     private TipoMensagem tipo = TipoMensagem.NORMAL;
 
-    @Convert(converter = TextoCifradoConverter.class)
+    @Convert(converter = MensagemFiltradaConverter.class)
     @Column(name = "texto_filtrado", nullable = false, columnDefinition = "TEXT")
     private String textoFiltrado;
 
     /** RESTRITO: nunca expor por endpoint de usuario, notificacao ou pre-visualizacao. */
-    @Convert(converter = TextoCifradoConverter.class)
+    @Convert(converter = MensagemOriginalConverter.class)
     @Column(name = "texto_original", columnDefinition = "TEXT")
     private String textoOriginal;
 
@@ -61,6 +67,8 @@ public class SmartChatMensagem {
 
     @Column(name = "lida_em")
     private Instant lidaEm;
+
+    public java.util.UUID getCodigoPublico() { return codigoPublico; }
 
     public Long getId() { return id; }
     public SmartChatConversa getConversa() { return conversa; }

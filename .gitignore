@@ -7,8 +7,18 @@ target/
 
 # Variáveis de ambiente / segredos
 .env
-.env.local
+.env.*
+!.env.example
 *.pem
+*.key
+*.jks
+*.p12
+*.pfx
+secrets/
+application-local*.properties
+application-local*.yml
+application-prod*.properties
+application-prod*.yml
 
 # IntelliJ IDEA
 .idea/
@@ -55,3 +65,7 @@ dados/
 CLAUDE.local.md
 .claude/settings.local.json
 .claude/worktrees/
+
+# Binarios de entrega: gerados pelo build, nunca versionados (podem embutir configuracao)
+*.jar
+!.mvn/wrapper/*.jar

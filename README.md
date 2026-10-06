@@ -70,7 +70,12 @@ src/main/java/com/temporada/gestao
    export IA_API_MODEL=llama-3.3-70b-versatile
    export SMARTCHAT_CRYPTO_KEY=<base64-de-32-bytes>   # ver "Cifragem em repouso do SmartChat"
    export SMARTCHAT_HMAC_KEY=<base64-de-pelo-menos-32-bytes>   # openssl rand -base64 32
+   export JWT_SECRET=<pelo-menos-32-bytes>                     # openssl rand -base64 32
+   export RECAPTCHA_SITE_KEY=<chave-do-site> RECAPTCHA_SECRET=<chave-secreta>
    ```
+
+   O modelo completo das variáveis está em [`.env.example`](.env.example) (sem valores reais). Fora do perfil `dev`/`test` a aplicação **não sobe**
+   sem `JWT_SECRET`, `SMARTCHAT_CRYPTO_KEY`, `SMARTCHAT_HMAC_KEY` e reCAPTCHA reais.
 
 3. Compile e execute os testes:
    ```bash
@@ -220,7 +225,11 @@ sem fuso, prazos (24h, 2h, lembretes) como tempo decorrido.
 | `SMARTCHAT_LIMITE_RESTRITO_POR_MINUTO` (3) · `SMARTCHAT_LIMITE_RESTRITO_MINUTOS` (60) · `SMARTCHAT_ALERTA_JANELA_MINUTOS` (60) | Limite de envio após o alerta, por quanto tempo vale e janela sem repetir o mesmo alerta |
 | `PERFIL_EMAIL_VERIFICACAO_HORAS` (24) · `MIDIA_SANEAR_AO_INICIAR` (true) | Validade do link de verificação de e-mail; reprocessa as fotos de anúncio antigas sem EXIF/GPS |
 | `SMARTCHAT_DOMINIOS_PERMITIDOS` · `SMARTCHAT_TERMOS_ARQUIVO` · `SMARTCHAT_BLOCK_ENFORCEMENT` (false) · `SMARTCHAT_MENSAGENS_POR_MINUTO` (20) | Filtro de conteúdo, termos e limites do chat |
-| `VIDEO_FFMPEG_PATH` · `VIDEO_DURACAO_MAX_SEGUNDOS` (90) · `VIDEO_TAMANHO_MAX_MB` (500) · `VIDEO_APAGAR_ORIGINAL` (true) | Processamento e limites de vídeo |
+| `JWT_SECRET` | Segredo do token (≥ 32 bytes). **Obrigatório fora de `dev`/`test`**: sem ele, ou com o segredo público de desenvolvimento, a aplicação não sobe |
+| `RECAPTCHA_SITE_KEY` · `RECAPTCHA_SECRET` | reCAPTCHA v2 do login e do cadastro. **Obrigatórios fora de `dev`/`test`**: com a chave de teste do Google (aprova qualquer token) a aplicação não sobe |
+| `SMARTRENT_CORS_ORIGENS` (vazio) · `HTTP_JSON_MAX_BYTES` (1048576) | Origens externas liberadas no CORS (vazio = só a mesma origem) e teto do corpo JSON |
+| `MIDIA_MAX_PIXELS_IMAGEM` (30000000) | Teto de pixels da foto (a imagem é decodificada por inteiro) |
+| `VIDEO_FFMPEG_PATH` · `VIDEO_DURACAO_MAX_SEGUNDOS` (90) · `VIDEO_TAMANHO_MAX_MB` (500) · `VIDEO_APAGAR_ORIGINAL` (true) | Processamento e limites de vídeo. **Sem FFmpeg, fora de `dev`/`test`, os vídeos são recusados** (o modo básico não remove metadados nem GPS) |
 
 Contas de demonstração (`scripts/dados-demonstracao.sql`, senha `senhaSegura123`): `ana@smartrent.dev` (gestora) e
 `cliente@smartrent.dev` (cliente). Decisões, suposições e pendências jurídicas: [ADR-004](docs/adr/ADR-004-calendario-smartchat-cancelamento-video-e-fuso.md).
@@ -228,7 +237,7 @@ Contas de demonstração (`scripts/dados-demonstracao.sql`, senha `senhaSegura12
 ### 🔐 Cifragem em repouso do SmartChat
 
 O texto das mensagens (`texto_filtrado`, `texto_original`), a descrição das denúncias e a prévia das notificações são gravados **cifrados** com
-AES-256-GCM pela aplicação (formato `v1:` + Base64). Isto protege contra vazamento do banco, de backups e contra acesso
+AES-256-GCM pela aplicação (formato `v2:` + Base64, com a coluna autenticada; `v1:` dos dados antigos continua legível). Isto protege contra vazamento do banco, de backups e contra acesso
 direto ao Supabase. **Não é cifragem entre os usuários**: o servidor continua lendo o texto, pois o filtro de conteúdo e
 as denúncias dependem disso, e quem tiver a chave e o banco ao mesmo tempo lê tudo. Detalhes: [ADR-006](docs/adr/ADR-006-cifragem-em-repouso-do-smartchat.md).
 

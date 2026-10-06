@@ -1,7 +1,7 @@
 # SmartRent B2B: imagem de producao (usada pelo Render, ver render.yaml).
 # Etapa 1 compila com Maven + JDK 17; etapa 2 roda so o .jar num JRE 17 enxuto.
 
-FROM maven:3.9-eclipse-temurin-17 AS build
+FROM maven:3.9.9-eclipse-temurin-17 AS build
 WORKDIR /build
 # Dependencias primeiro: so rebaixam quando o pom.xml muda.
 COPY pom.xml .
@@ -11,7 +11,7 @@ COPY src ./src
 RUN mvn -B -q -DskipTests package \
     && cp target/smartrent-b2b-*.jar /build/app.jar
 
-FROM eclipse-temurin:17-jre
+FROM eclipse-temurin:17.0.13_11-jre
 # FFmpeg: sem ele o processamento de video cai no modo basico, que NAO remove metadados
 # (inclusive localizacao). Com o binario no PATH a aplicacao o usa sozinha.
 RUN apt-get update \

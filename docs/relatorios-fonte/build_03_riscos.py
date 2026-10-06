@@ -111,9 +111,18 @@ riscos = [
      "Aviso fixo; alerta ao destinatário e alerta interno sem bloquear; HMAC do texto para detectar envio em massa; limite de envio restrito; "
      "e-mail verificado para escrever. Fraude por IA e verificação de identidade ficam para a V2."),
     ("R26", "Vazamento de localização por foto (GPS no EXIF) ou por vídeo sem FFmpeg.", "Média", "Alto", "Alta",
-     "Fotos recodificadas sem metadados e job para as antigas; vídeo com FFmpeg remove metadados (o modo básico não: FFmpeg em produção)."),
+     "Fotos recodificadas sem metadados e job para as antigas; vídeo com FFmpeg remove metadados; sem FFmpeg, fora de dev/test, o vídeo é recusado."),
     ("R27", "Enumeração de conversas e reservas por id sequencial.", "Média", "Médio", "Média",
-     "Conversas por UUID com o mesmo 404; auditoria das rotas de reserva confirmou o teste do dono; falta uniformizar 403/404 em reserva e notificação."),
+     "Conversas e mensagens por UUID; reserva, notificação e imóvel de outra pessoa respondem 404 idêntico ao inexistente (id numérico ainda nas rotas: UUID é V2)."),
+    ("R28", "Credencial do banco versionada (JAR de entrega com a senha) e ainda presente no histórico do git.", "Alta", "Alto", "Alta",
+     "JAR removido e *.jar ignorado; varredura de segredos no CI. Pendente: rotacionar a senha do Supabase e limpar o histórico (roteiro na ADR-008)."),
+    ("R29", "Contorno do filtro de contatos (Unicode, caracteres invisíveis, letras espaçadas, números por extenso) e disintermediação.", "Alta", "Alto", "Alta",
+     "Normalização NFKC antes dos regex, texto colapsado, números mistos e mensageiros isolados mascarados; alerta para pix e pagamento por fora. "
+     "Combinar contato sem escrevê-lo exige detecção semântica (V2)."),
+    ("R30", "Força bruta no login e criação de contas em massa, com captcha de teste ou segredo padrão do token.", "Média", "Alto", "Alta",
+     "Aplicação não sobe com JWT_SECRET ausente/público nem com a chave de teste do reCAPTCHA; limites por e-mail e por IP (rate limit em memória, uma instância)."),
+    ("R31", "Dependências desatualizadas com vulnerabilidades conhecidas.", "Média", "Médio", "Média",
+     "Spring Boot atualizado para 3.5.16 e Dependabot semanal (Maven, Docker, Actions). Scan completo de CVE no CI fica para a V2."),
 ]
 rdata = [[Paragraph("ID", styles["CellHeader"]), Paragraph("Risco", styles["CellHeader"]),
           Paragraph("Prob.", styles["CellHeaderCenter"]), Paragraph("Impacto", styles["CellHeaderCenter"]),

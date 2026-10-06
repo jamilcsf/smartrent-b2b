@@ -27,10 +27,12 @@ class SemWhatsappTest {
 
     private static final Pattern PADRAO = Pattern.compile("whatsapp|wa\\.me|api\\.whatsapp", Pattern.CASE_INSENSITIVE);
 
-    /** Unicos lugares onde a palavra pode aparecer: historico de migrations e o termo juridico (sinalizado, nao reescrito). */
+    /** Unicos lugares onde a palavra pode aparecer: historico de migrations, o termo juridico (sinalizado, nao reescrito) e o filtro que a bloqueia. */
     private static boolean permitido(Path p) {
         String s = p.toString().replace('\\', '/');
-        return s.contains("/db/migration/") || s.endsWith("/service/TermoUso.java");
+        return s.contains("/db/migration/") || s.endsWith("/service/TermoUso.java")
+                // lista de mensageiros que o filtro do SmartChat MASCARA (e o oposto de oferecer o canal)
+                || s.endsWith("/service/MessageFilterService.java");
     }
 
     @Test

@@ -317,6 +317,10 @@ rnf_list = [
     ("RNF12", "O texto das mensagens do SmartChat, o das denúncias e a prévia das notificações devem ser "
               "gravados cifrados em repouso (AES-256-GCM, chave fora do código) e o texto das mensagens "
               "não pode ser registrado em log; o servidor continua lendo o texto para filtro e denúncia.", "Segurança"),
+    ("RNF13", "A aplicação não deve subir fora de desenvolvimento sem segredo do token e sem reCAPTCHA reais; login e "
+              "cadastro devem ter limite de tentativas; o conteúdo do chat deve passar por filtro de contatos com "
+              "normalização Unicode e por sanitização no servidor; recursos de outra pessoa devem responder como "
+              "inexistentes (404) e as mensagens do chat sair com identificador público (UUID).", "Segurança"),
 ]
 rnf_data = [[Paragraph("ID", styles["CellHeader"]), Paragraph("Descrição", styles["CellHeader"]),
              Paragraph("Categoria", styles["CellHeaderCenter"])]]

@@ -154,6 +154,11 @@ casos = [
                     "cifragem, adulteração e chave errada lançam exceção, legado sem prefixo intacto, null "
                     "preservado, falha na inicialização sem chave fora de dev/test, banco guarda só texto "
                     "cifrado, migração idempotente (inclusive notificações e legado com prefixo vN:)", "RNF12", "Unitário, banco (H2)", "Crítica", "Implementado"),
+    ("CT1000–CT1102", "Auditoria de segurança: segredo do token e reCAPTCHA reais fora de dev/test; limites de login e cadastro por e-mail e por IP; "
+                    "sugestão de preço só para o gestor dono; inventário de rotas; filtro de contatos contra dígitos fullwidth/árabes/emoji, invisíveis, "
+                    "letras espaçadas, números mistos e mensageiros, sem mascarar preço, data, CEP e hóspedes; 404 idêntico para recurso alheio; "
+                    "teto de pixels e vídeo sem FFmpeg recusado; cifra v2 com contexto (coluna trocada, v1 legado, valor ilegível); sanitização OWASP; "
+                    "validação do chat, CSP e CORS fechado; teto de corpo JSON; teto de SSE", "RNF13", "Unitário, @WebMvcTest e banco (H2)", "Crítica", "Implementado"),
 ]
 cdata = [[Paragraph("ID", styles["CellHeader"]), Paragraph("Caso de teste", styles["CellHeader"]),
           Paragraph("RF", styles["CellHeaderCenter"]), Paragraph("Nível", styles["CellHeader"]),
@@ -171,7 +176,7 @@ story.extend(quadro(styles, "Matriz de casos de teste", quadro_table(
     header_align_center=[2, 4, 5])))
 
 story.append(Paragraph(
-    "A suíte automatizada executa hoje 544 testes a cada integração; as faixas de "
+    "A suíte automatizada executa hoje 671 testes a cada integração; as faixas de "
     "identificadores acrescentadas ao quadro (CT50 em diante) agrupam os casos do fluxo de "
     "anúncios, do calendário, do cancelamento, do SmartChat, dos vídeos, do fuso horário e do perfil do usuário. Nenhum deles depende de rede ou de um PostgreSQL externo: as consultas são "
     "exercitadas em banco H2 em memória e as chamadas externas são simuladas, de modo que a "

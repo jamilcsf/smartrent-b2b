@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.config.Customizer;
 import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -15,7 +16,13 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -32,6 +39,9 @@ import java.util.Map;
 @EnableWebSecurity
 public class SecurityConfig {
 
+    /** Diretivas seguras com o front atual: sem plugins, sem <base> trocado, sem embutir em iframe, formularios so para o proprio site. */
+    static final String CSP = "object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'";
+
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
@@ -42,13 +52,21 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
+                .cors(Customizer.withDefaults()) // usa o CorsConfigurationSource abaixo (sem origens = so mesma origem)
+                // Cabecalhos: nosniff, X-Frame-Options DENY e HSTS (em HTTPS) ja vem por padrao. A CSP abaixo so traz
+                // as diretivas que NAO quebram as paginas atuais (Tailwind/Chart.js por CDN e scripts inline exigem
+                // 'unsafe-inline'): a CSP completa, com nonce, e Visao Futura (V2), ver ADR-008.
+                .headers(h -> h
+                        .contentSecurityPolicy(csp -> csp.policyDirectives(CSP))
+                        .referrerPolicy(r -> r.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
+                        .permissionsPolicy(p -> p.policy("camera=(), microphone=(), geolocation=(), payment=()")))
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/me").authenticated()
                         // Autorizacao real fica aqui, no servidor: esconder
                         // botao no front nao protege endpoint nenhum. Alem do
                         // papel, cada servico confere que o imovel e do gestor.
-                        .requestMatchers("/api/gestor/**", "/api/reservas/**")
+                        .requestMatchers("/api/gestor/**", "/api/reservas/**", "/api/precificacao/**")
                                 .hasAnyRole("ANFITRIAO", "ADMIN")
                         // Reserva do cliente e SmartChat: qualquer usuario autenticado; a
                         // propriedade (so as proprias reservas e conversas) e conferida nos servicos.
@@ -70,6 +88,28 @@ public class SecurityConfig {
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    /**
+     * CORS so por configuracao: o front e servido pela propria aplicacao (mesma origem), entao sem
+     * SMARTRENT_CORS_ORIGENS nenhuma origem externa e liberada (antes, {@code @CrossOrigin("*")} em alguns controllers).
+     * Sem cookies nem credenciais: a autenticacao e por Bearer.
+     */
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource(
+            @org.springframework.beans.factory.annotation.Value("${smartrent.cors.origens:}") String origens) {
+        UrlBasedCorsConfigurationSource fonte = new UrlBasedCorsConfigurationSource();
+        List<String> permitidas = Arrays.stream(origens.split(",")).map(String::trim).filter(o -> !o.isEmpty()).toList();
+        if (!permitidas.isEmpty()) {
+            CorsConfiguration c = new CorsConfiguration();
+            c.setAllowedOrigins(permitidas);
+            c.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+            c.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+            c.setAllowCredentials(false);
+            c.setMaxAge(3600L);
+            fonte.registerCorsConfiguration("/api/**", c);
+        }
+        return fonte;
     }
 
     @Bean

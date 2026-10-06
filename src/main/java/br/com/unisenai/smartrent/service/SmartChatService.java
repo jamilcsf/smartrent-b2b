@@ -28,6 +28,7 @@ import br.com.unisenai.smartrent.repository.SmartChatMensagemRepository;
 import br.com.unisenai.smartrent.repository.UsuarioRepository;
 import br.com.unisenai.smartrent.service.MessageFilterService.Resultado;
 import br.com.unisenai.smartrent.service.erro.AcessoNegadoException;
+import br.com.unisenai.smartrent.service.erro.AcessoOcultoException;
 import br.com.unisenai.smartrent.service.erro.EmailNaoVerificadoException;
 import br.com.unisenai.smartrent.service.erro.LimiteExcedidoException;
 import br.com.unisenai.smartrent.service.erro.RecursoNaoEncontradoException;
@@ -124,7 +125,8 @@ public class SmartChatService {
         Imovel imovel = imoveis.findByIdParaAtualizar(imovelId)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Imóvel não encontrado."));
         if (!AnuncioGestorMapper.noCatalogo(imovel, Agora.de(clock))) {
-            throw new TransicaoInvalidaException("Este anúncio não está publicado no momento.");
+            // mesma resposta de id inexistente: nao revela que existe um anuncio nao publicado
+            throw new RecursoNaoEncontradoException("Imóvel não encontrado.");
         }
         if (imovel.getUsuario().getId().equals(cliente.getId())) {
             throw new AcessoNegadoException("Você não pode conversar consigo mesmo.");
@@ -143,7 +145,7 @@ public class SmartChatService {
         boolean ehCliente = r.getCliente() != null && r.getCliente().getId().equals(usuario.getId());
         boolean ehGestor = r.getImovel().getUsuario().getId().equals(usuario.getId());
         if (!ehCliente && !ehGestor) {
-            throw new AcessoNegadoException("Esta reserva não é sua.");
+            throw new AcessoOcultoException("Reserva não encontrada.");
         }
         if (r.getCliente() == null) {
             throw new TransicaoInvalidaException("Este hóspede não tem conta na plataforma, então não há conversa no SmartChat.");
@@ -286,9 +288,12 @@ public class SmartChatService {
     }
 
     @Transactional(readOnly = true)
-    public List<Mensagem> listarMensagens(Usuario usuario, java.util.UUID conversaId, Long depoisDe) {
+    public List<Mensagem> listarMensagens(Usuario usuario, java.util.UUID conversaId, java.util.UUID depoisDe) {
         SmartChatConversa c = participante(usuario, conversaId);
-        return mensagens.findDepoisDe(c.getId(), depoisDe == null ? 0L : depoisDe, PageRequest.of(0, 200)).stream()
+        // O cursor e o codigo publico; um codigo desconhecido ou de outra conversa volta ao inicio (nada vaza).
+        long cursor = depoisDe == null ? 0L
+                : mensagens.findByConversaIdAndCodigoPublico(c.getId(), depoisDe).map(SmartChatMensagem::getId).orElse(0L);
+        return mensagens.findDepoisDe(c.getId(), cursor, PageRequest.of(0, 200)).stream()
                 .map(m -> mensagem(m, usuario)).toList();
     }
 
@@ -398,7 +403,7 @@ public class SmartChatService {
         d.setDescricao(descricao == null || descricao.isBlank() ? null
                 : (descricao.length() > 1000 ? descricao.substring(0, 1000) : descricao));
         if (p.mensagensIds() != null && !p.mensagensIds().isEmpty()) {
-            List<Long> validas = mensagens.findByConversaIdAndIdIn(c.getId(), p.mensagensIds()).stream()
+            List<Long> validas = mensagens.findByConversaIdAndCodigoPublicoIn(c.getId(), p.mensagensIds()).stream()
                     .map(SmartChatMensagem::getId).toList();
             d.setMensagensAnexadas(validas.stream().map(String::valueOf).collect(Collectors.joining(",")));
         }
@@ -481,12 +486,12 @@ public class SmartChatService {
     private ReservaResumo reservaResumo(SmartChatConversa c) {
         List<Reserva> lista = reservas.findByClienteIdAndImovelIdOrderByDataCheckinDesc(c.getCliente().getId(), c.getImovel().getId());
         Reserva r = lista.stream().filter(x -> !x.getStatus().cancelada()).findFirst().orElse(lista.isEmpty() ? null : lista.get(0));
-        return r == null ? null : new ReservaResumo(r.getId(), r.getStatus(), r.getDataCheckin(), r.getDataCheckout(), r.getNumeroHospedes());
+        return r == null ? null : new ReservaResumo(r.getStatus(), r.getDataCheckin(), r.getDataCheckout(), r.getNumeroHospedes());
     }
 
     private static Mensagem mensagem(SmartChatMensagem m, Usuario usuario) {
         boolean sistema = m.getTipo() == TipoMensagem.SISTEMA;
-        return new Mensagem(m.getId(), m.getTipo().name(), !sistema && m.getAutor().getId().equals(usuario.getId()),
+        return new Mensagem(m.getCodigoPublico(), m.getTipo().name(), !sistema && m.getAutor().getId().equals(usuario.getId()),
                 sistema ? "SmartRent" : m.getAutor().getNome(), m.getTextoFiltrado(), m.getOcorrencias(), m.getCriadaEm(),
                 m.getLidaEm() != null, !sistema && !m.getAutor().getId().equals(usuario.getId()) && sinalizada(m));
     }

@@ -45,6 +45,8 @@ public class MessageFilterService implements ContentModerationService {
         TELEFONE('T', "Telefone ocultado"),
         EMAIL('E', "E-mail ocultado"),
         LINK('L', "Link externo ocultado"),
+        /** Mensageiros e redes sociais citados sozinhos ("me chama no zap"): o contato foi combinado fora da plataforma. */
+        CONTATO_EXTERNO('C', "Contato externo ocultado"),
         SEXUAL('S', "Conteúdo impróprio ocultado"),
         OFENSA('O', "Conteúdo ofensivo ocultado"),
         /** Sinal, nunca mascara: pagamento ou contato fora da plataforma (o destinatario recebe um alerta). */
@@ -117,10 +119,19 @@ public class MessageFilterService implements ContentModerationService {
             Pattern.compile("#\\d+"),
             Pattern.compile("(?i)\\b\\d+\\s*(?:x\\s*)?(?:pessoas?|h[oó]spedes?|di[aá]rias?|noites?|quartos?|banheiros?|vagas?|camas?|dias?|horas?|m2|m²|reais|real|anos?|crian[cç]as?)\\b"));
 
+    /** Mensageiros e redes sociais: mascarados mesmo isolados (sao o canal da disintermediacao). "pix" fica so como alerta. */
+    private static final List<String> MENSAGEIROS = List.of("whatsapp", "whatsap", "whats", "wpp", "zap", "zapzap",
+            "telegram", "instagram", "insta", "facebook", "messenger", "discord", "skype");
+
+    /** Numero falado ("nove", "quatro"), com a mesma grafia sem acento usada em {@code semAcentoMesmoTamanho}. */
+    private static final Pattern NUMERO_OU_PALAVRA = Pattern.compile(
+            "(?<![a-z])(?:zero|um|uma|dois|duas|tres|quatro|cinco|seis|meia|sete|oito|nove)(?![a-z])|\\d+");
+
     private final ChatProperties props;
     private final Pattern ofensas;
     private final Pattern sexuais;
     private final Pattern fraude;
+    private final Pattern mensageiros;
 
     public MessageFilterService(ChatProperties props) {
         this.props = props;
@@ -128,6 +139,7 @@ public class MessageFilterService implements ContentModerationService {
         this.ofensas = compilarTermos(termos.get(Categoria.OFENSA));
         this.sexuais = compilarTermos(termos.get(Categoria.SEXUAL));
         this.fraude = compilarTermos(termos.get(Categoria.SUSPEITA_FRAUDE));
+        this.mensageiros = compilarTermos(MENSAGEIROS);
     }
 
     // ------------------------------------------------------------- API
@@ -142,11 +154,12 @@ public class MessageFilterService implements ContentModerationService {
         if (entrada == null || entrada.isEmpty()) {
             return new Resultado("", EnumSet.noneOf(Categoria.class), 0);
         }
-        String texto = limparMarcadores(entrada);
+        String texto = normalizarUnicode(limparMarcadores(entrada));
         List<Trecho> achados = new ArrayList<>();
         detectarTelefones(texto, achados);
         detectarEmails(texto, achados);
         detectarLinks(texto, achados);
+        detectarNoTextoColapsado(texto, achados);
         detectarTermos(texto, achados);
         Resultado r = montar(texto, achados);
         if (mencionaPagamentoOuContatoPorFora(texto)) {
@@ -203,6 +216,7 @@ public class MessageFilterService implements ContentModerationService {
         // Numeros por extenso ("nove nove nove ...") e com letras no lugar de digitos ("4l 9999-OOOO").
         String semAcento = semAcentoMesmoTamanho(m);
         adicionar(FONE_POR_EXTENSO.matcher(semAcento), Categoria.TELEFONE, out);
+        detectarTelefonesMistos(semAcento, out);
         Matcher leet = FONE_LEET.matcher(m);
         while (leet.find()) {
             String g = leet.group();
@@ -211,6 +225,130 @@ public class MessageFilterService implements ContentModerationService {
             if (digitos >= 5 && letras >= 1 && digitos + letras >= 10) {
                 out.add(new Trecho(leet.start(), leet.end(), Categoria.TELEFONE));
             }
+        }
+    }
+
+    /**
+     * Antes de qualquer regex: remove caracteres invisiveis (zero-width, soft hyphen, seletores de variacao, o
+     * quadrinho dos digitos-emoji), aplica NFKC (digitos e pontos fullwidth, espacos especiais, digitos matematicos),
+     * converte qualquer digito nao ASCII (arabe-indico etc.) e o ponto ideografico. Sem isso, "４８ 9999-0000" ou
+     * "48 99999&#8203;0000" passavam pelo filtro. O texto devolvido ao usuario sai da versao normalizada.
+     */
+    static String normalizarUnicode(String s) {
+        StringBuilder limpo = new StringBuilder(s.length());
+        for (int i = 0; i < s.length(); ) {
+            int cp = s.codePointAt(i);
+            i += Character.charCount(cp);
+            if (Character.getType(cp) == Character.FORMAT || (cp >= 0xFE00 && cp <= 0xFE0F) || (cp >= 0xE0100 && cp <= 0xE01EF)
+                    || cp == 0x20E3 || cp == 0x034F || cp == 0x3164 || cp == 0x2800) {
+                continue;
+            }
+            limpo.appendCodePoint(cp);
+        }
+        String nfkc = Normalizer.normalize(limpo, Normalizer.Form.NFKC);
+        StringBuilder saida = new StringBuilder(nfkc.length());
+        for (int i = 0; i < nfkc.length(); ) {
+            int cp = nfkc.codePointAt(i);
+            i += Character.charCount(cp);
+            if (cp > 127 && Character.isDigit(cp)) {
+                saida.append((char) ('0' + Character.digit(cp, 10)));
+            } else if (cp == 0x3002) {
+                saida.append('.');
+            } else {
+                saida.appendCodePoint(cp);
+            }
+        }
+        return saida.toString();
+    }
+
+    /** Texto sem o espaco entre tokens de UM caractere ("j o a o @ g m a i l . c o m"), com o indice original. */
+    private record Colapsado(String texto, int[] indice) {
+    }
+
+    private static Colapsado colapsarEspacos(String texto) {
+        StringBuilder sb = new StringBuilder(texto.length());
+        List<Integer> idx = new ArrayList<>();
+        int n = texto.length();
+        for (int i = 0; i < n; i++) {
+            char c = texto.charAt(i);
+            if (c == ' ' && i > 0 && i < n - 1 && tokenUnico(texto, i - 1, -1) && tokenUnico(texto, i + 1, 1)) {
+                continue;
+            }
+            sb.append(c);
+            idx.add(i);
+        }
+        return new Colapsado(sb.toString(), idx.stream().mapToInt(Integer::intValue).toArray());
+    }
+
+    /** O caractere em {@code pos} e um token sozinho (vizinho do outro lado e espaco ou borda)? */
+    private static boolean tokenUnico(String t, int pos, int direcao) {
+        char c = t.charAt(pos);
+        if (!(Character.isLetterOrDigit(c) || c == '@' || c == '.')) {
+            return false;
+        }
+        int alem = pos + direcao;
+        return alem < 0 || alem >= t.length() || t.charAt(alem) == ' ';
+    }
+
+    /** E-mail e link escritos com espacos entre as letras ("g m a i l ponto com"): procura no texto colapsado. */
+    private void detectarNoTextoColapsado(String texto, List<Trecho> out) {
+        Colapsado c = colapsarEspacos(texto);
+        if (c.texto().length() == texto.length()) {
+            return;
+        }
+        coletarNoColapsado(c, EMAIL, Categoria.EMAIL, out, false);
+        coletarNoColapsado(c, EMAIL_FALADO, Categoria.EMAIL, out, false);
+        coletarNoColapsado(c, URL_WWW, Categoria.LINK, out, true);
+        coletarNoColapsado(c, DOMINIO_NU, Categoria.LINK, out, true);
+        Matcher m = DOMINIO_FALADO.matcher(c.texto());
+        while (m.find()) {
+            if (!PALAVRAS_COMUNS.contains(m.group(1).toLowerCase(Locale.ROOT))) {
+                out.add(new Trecho(c.indice()[m.start()], c.indice()[m.end() - 1] + 1, Categoria.LINK));
+            }
+        }
+    }
+
+    private void coletarNoColapsado(Colapsado c, Pattern p, Categoria cat, List<Trecho> out, boolean link) {
+        Matcher m = p.matcher(c.texto());
+        while (m.find()) {
+            if (link && dominioPermitido(m.group())) {
+                continue;
+            }
+            out.add(new Trecho(c.indice()[m.start()], c.indice()[m.end() - 1] + 1, cat));
+        }
+    }
+
+    /**
+     * Telefone misturando numeros por extenso e digitos ("cinco cinco quatro oito 9 9 9 9 9 0 0 0 0"): uma sequencia
+     * so de digitos/palavras-numero, separada por espaco, virgula, ponto ou hifen, com 10 ou mais algarismos e ao
+     * menos uma palavra. So digitos e so palavras ja sao tratados pelos outros padroes; datas, precos, CEP e
+     * quantidades chegam aqui mascarados (letra neutra) e nunca formam a sequencia.
+     */
+    private static void detectarTelefonesMistos(String semAcento, List<Trecho> out) {
+        Matcher m = NUMERO_OU_PALAVRA.matcher(semAcento);
+        int ini = -1, fim = -1, algarismos = 0, palavras = 0;
+        while (m.find()) {
+            boolean continua = ini >= 0 && semAcento.substring(fim, m.start()).matches("[\\s,.\\-]*");
+            if (!continua) {
+                fecharMisto(ini, fim, algarismos, palavras, out);
+                ini = m.start();
+                algarismos = 0;
+                palavras = 0;
+            }
+            fim = m.end();
+            if (Character.isDigit(m.group().charAt(0))) {
+                algarismos += m.group().length();
+            } else {
+                algarismos++;
+                palavras++;
+            }
+        }
+        fecharMisto(ini, fim, algarismos, palavras, out);
+    }
+
+    private static void fecharMisto(int ini, int fim, int algarismos, int palavras, List<Trecho> out) {
+        if (ini >= 0 && algarismos >= 10 && palavras >= 1) {
+            out.add(new Trecho(ini, fim, Categoria.TELEFONE));
         }
     }
 
@@ -292,6 +430,7 @@ public class MessageFilterService implements ContentModerationService {
         Normalizado n = normalizar(texto);
         coletarTermos(n, ofensas, Categoria.OFENSA, out);
         coletarTermos(n, sexuais, Categoria.SEXUAL, out);
+        coletarTermos(n, mensageiros, Categoria.CONTATO_EXTERNO, out);
     }
 
     private static void coletarTermos(Normalizado n, Pattern p, Categoria cat, List<Trecho> out) {

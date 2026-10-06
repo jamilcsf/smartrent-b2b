@@ -1,6 +1,6 @@
 package br.com.unisenai.smartrent.model;
 
-import br.com.unisenai.smartrent.security.TextoCifradoConverter;
+import br.com.unisenai.smartrent.security.DenunciaDescricaoConverter;
 import jakarta.persistence.*;
 
 import java.time.Instant;
@@ -33,7 +33,7 @@ public class DenunciaChat {
     private String motivo;
 
     /** Cifrada em repouso (AES-256-GCM); nao usar em filtros de query. */
-    @Convert(converter = TextoCifradoConverter.class)
+    @Convert(converter = DenunciaDescricaoConverter.class)
     @Column(name = "descricao", columnDefinition = "TEXT")
     private String descricao;
 
