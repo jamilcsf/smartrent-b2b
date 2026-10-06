@@ -148,7 +148,7 @@ class AuthControllerTest {
     }
 
     @Test
-    @DisplayName("CT516 - Login bloqueado por excesso de tentativas responde 429 sem consultar captcha nem senha")
+    @DisplayName("CT1016 - Login bloqueado por excesso de tentativas responde 429 sem consultar captcha nem senha")
     void loginBloqueadoDeveResponder429() throws Exception {
         doThrow(new br.com.unisenai.smartrent.service.erro.LimiteExcedidoException("Muitas tentativas de login. Tente novamente em alguns minutos."))
                 .when(limites).exigirLogin(any(), any());

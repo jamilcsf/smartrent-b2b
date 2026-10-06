@@ -26,7 +26,7 @@ class MidiaPixelsTest {
     }
 
     @Test
-    @DisplayName("CT552 - Acima do teto de pixels a imagem e recusada com mensagem clara; abaixo, passa")
+    @DisplayName("CT1052 - Acima do teto de pixels a imagem e recusada com mensagem clara; abaixo, passa")
     void tetoDePixels() throws IOException {
         MidiaProperties props = new MidiaProperties(pasta.toString(), 10, 100);
         MidiaProcessador limitado = new MidiaProcessador(props, 1_000_000L);
@@ -39,7 +39,7 @@ class MidiaPixelsTest {
     }
 
     @Test
-    @DisplayName("CT553 - O teto padrao e de 30 megapixels (cabe em instancia de 512 MB)")
+    @DisplayName("CT1053 - O teto padrao e de 30 megapixels (cabe em instancia de 512 MB)")
     void padrao() {
         assertEquals(30_000_000L, MidiaProcessador.PIXELS_PADRAO);
     }

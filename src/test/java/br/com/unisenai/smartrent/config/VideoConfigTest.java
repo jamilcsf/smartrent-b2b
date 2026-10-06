@@ -22,14 +22,14 @@ class VideoConfigTest {
     };
 
     @Test
-    @DisplayName("CT550 - Com FFmpeg, usa o processamento completo em qualquer perfil")
+    @DisplayName("CT1050 - Com FFmpeg, usa o processamento completo em qualquer perfil")
     void comFfmpeg() {
         assertInstanceOf(VideoProcessingFfmpeg.class, VideoConfig.escolher(VideoProperties.padrao(), COM_FFMPEG, false));
         assertInstanceOf(VideoProcessingFfmpeg.class, VideoConfig.escolher(VideoProperties.padrao(), COM_FFMPEG, true));
     }
 
     @Test
-    @DisplayName("CT551 - Sem FFmpeg: dev/test usa o modo basico; fora deles o video e recusado")
+    @DisplayName("CT1051 - Sem FFmpeg: dev/test usa o modo basico; fora deles o video e recusado")
     void semFfmpeg() {
         assertInstanceOf(VideoProcessingBasico.class, VideoConfig.escolher(VideoProperties.padrao(), SEM_FFMPEG, true));
         VideoProcessingService producao = VideoConfig.escolher(VideoProperties.padrao(), SEM_FFMPEG, false);

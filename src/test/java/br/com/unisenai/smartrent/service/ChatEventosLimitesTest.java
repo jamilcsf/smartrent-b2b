@@ -13,7 +13,7 @@ class ChatEventosLimitesTest {
     private final ChatEventos eventos = new ChatEventos(Clock.systemUTC());
 
     @Test
-    @DisplayName("CT600 - Tickets pendentes por usuario tem teto; os mais antigos caem e os novos funcionam")
+    @DisplayName("CT1100 - Tickets pendentes por usuario tem teto; os mais antigos caem e os novos funcionam")
     void tetoDeTickets() {
         String primeiro = eventos.emitirTicket(7L);
         for (int i = 0; i < 20; i++) {
@@ -25,7 +25,7 @@ class ChatEventosLimitesTest {
     }
 
     @Test
-    @DisplayName("CT601 - Conexoes SSE por usuario tem teto; a mais antiga cai ao passar dele")
+    @DisplayName("CT1101 - Conexoes SSE por usuario tem teto; a mais antiga cai ao passar dele")
     void tetoDeConexoes() {
         for (int i = 0; i < 12; i++) {
             eventos.abrir(eventos.emitirTicket(9L));
@@ -36,7 +36,7 @@ class ChatEventosLimitesTest {
     }
 
     @Test
-    @DisplayName("CT602 - Ticket e de uso unico")
+    @DisplayName("CT1102 - Ticket e de uso unico")
     void usoUnico() {
         String t = eventos.emitirTicket(11L);
         assertNotNull(eventos.abrir(t));

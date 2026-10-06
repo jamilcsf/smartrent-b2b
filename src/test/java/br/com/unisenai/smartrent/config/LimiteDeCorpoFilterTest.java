@@ -25,7 +25,7 @@ class LimiteDeCorpoFilterTest {
     }
 
     @Test
-    @DisplayName("CT590 - Content-Length acima do teto: 413 sem chamar o restante da cadeia")
+    @DisplayName("CT1090 - Content-Length acima do teto: 413 sem chamar o restante da cadeia")
     void acimaDoTeto() throws ServletException, IOException {
         MockHttpServletResponse resposta = new MockHttpServletResponse();
         MockFilterChain cadeia = new MockFilterChain();
@@ -36,7 +36,7 @@ class LimiteDeCorpoFilterTest {
     }
 
     @Test
-    @DisplayName("CT591 - Dentro do teto passa; corpo sem Content-Length que estoura o teto na leitura falha")
+    @DisplayName("CT1091 - Dentro do teto passa; corpo sem Content-Length que estoura o teto na leitura falha")
     void dentroEEstouroNaLeitura() throws Exception {
         MockFilterChain cadeia = new MockFilterChain();
         filtro.doFilter(requisicao("application/json", new byte[100]), new MockHttpServletResponse(), cadeia);
@@ -57,7 +57,7 @@ class LimiteDeCorpoFilterTest {
     }
 
     @Test
-    @DisplayName("CT592 - Upload (multipart) e outros tipos nao sao limitados por este filtro")
+    @DisplayName("CT1092 - Upload (multipart) e outros tipos nao sao limitados por este filtro")
     void outrosTipos() throws Exception {
         MockFilterChain cadeia = new MockFilterChain();
         filtro.doFilter(requisicao("multipart/form-data; boundary=x", new byte[5000]), new MockHttpServletResponse(), cadeia);

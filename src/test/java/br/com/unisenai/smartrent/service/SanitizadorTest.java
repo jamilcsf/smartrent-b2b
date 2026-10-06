@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class SanitizadorTest {
 
     @ParameterizedTest(name = "ataque: {0}")
-    @DisplayName("CT570 - Marcacao ativa nao sobrevive (script, eventos, iframe, svg, javascript:, entidades, HTML quebrado)")
+    @DisplayName("CT1070 - Marcacao ativa nao sobrevive (script, eventos, iframe, svg, javascript:, entidades, HTML quebrado)")
     @ValueSource(strings = {
             "<script>alert(1)</script>",
             "<img src=x onerror=alert(1)>",
@@ -39,14 +39,14 @@ class SanitizadorTest {
     }
 
     @Test
-    @DisplayName("CT571 - O conteudo de script e style some junto com a tag")
+    @DisplayName("CT1071 - O conteudo de script e style some junto com a tag")
     void conteudoDeScript() {
         assertEquals("oi", Sanitizador.texto("<script>roubar()</script>oi"));
         assertEquals("ok", Sanitizador.linha("<style>body{display:none}</style>ok"));
     }
 
     @ParameterizedTest(name = "preservado: {0}")
-    @DisplayName("CT572 - Texto normal fica intacto: precos, '<' e '&' soltos, acentos, emoji, paragrafos")
+    @DisplayName("CT1072 - Texto normal fica intacto: precos, '<' e '&' soltos, acentos, emoji, paragrafos")
     @CsvSource(delimiter = ';', value = {
             "Preco < R$ 100 e > R$ 50;Preco < R$ 100 e > R$ 50",
             "Cafe & pao;Cafe & pao",
@@ -59,7 +59,7 @@ class SanitizadorTest {
     }
 
     @Test
-    @DisplayName("CT573 - Paragrafos, emoji e controle: preserva paragrafo, remove caracteres de controle, nulo continua nulo")
+    @DisplayName("CT1073 - Paragrafos, emoji e controle: preserva paragrafo, remove caracteres de controle, nulo continua nulo")
     void formatacao() {
         assertEquals("linha 1\n\nlinha 2 \uD83D\uDE00", Sanitizador.texto("linha 1\r\n\r\n\r\n\r\nlinha\u0000  2   \uD83D\uDE00"));
         assertEquals("a b", Sanitizador.linha("a\nb"));

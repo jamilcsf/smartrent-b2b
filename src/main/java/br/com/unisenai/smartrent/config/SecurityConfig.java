@@ -55,7 +55,7 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults()) // usa o CorsConfigurationSource abaixo (sem origens = so mesma origem)
                 // Cabecalhos: nosniff, X-Frame-Options DENY e HSTS (em HTTPS) ja vem por padrao. A CSP abaixo so traz
                 // as diretivas que NAO quebram as paginas atuais (Tailwind/Chart.js por CDN e scripts inline exigem
-                // 'unsafe-inline'): a CSP completa, com nonce, e Visao Futura (V2), ver ADR-007.
+                // 'unsafe-inline'): a CSP completa, com nonce, e Visao Futura (V2), ver ADR-008.
                 .headers(h -> h
                         .contentSecurityPolicy(csp -> csp.policyDirectives(CSP))
                         .referrerPolicy(r -> r.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))

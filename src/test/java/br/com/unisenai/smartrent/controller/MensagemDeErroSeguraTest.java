@@ -11,13 +11,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class MensagemDeErroSeguraTest {
 
     @Test
-    @DisplayName("CT593 - IAE lancada pelo codigo da aplicacao mantem a mensagem")
+    @DisplayName("CT1093 - IAE lancada pelo codigo da aplicacao mantem a mensagem")
     void doProprioCodigo() {
         assertEquals("Informe o motivo.", TratadorDeErros.mensagemSegura(new IllegalArgumentException("Informe o motivo.")));
     }
 
     @Test
-    @DisplayName("CT594 - IAE do JDK (UUID, Base64, Path) vira mensagem generica")
+    @DisplayName("CT1094 - IAE do JDK (UUID, Base64, Path) vira mensagem generica")
     void daBiblioteca() {
         IllegalArgumentException jdk = null;
         try {

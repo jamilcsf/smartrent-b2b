@@ -7,7 +7,7 @@ import org.owasp.html.PolicyFactory;
 import java.util.regex.Pattern;
 
 /**
- * Limpa texto digitado pelo usuario antes de gravar (ADR-007).
+ * Limpa texto digitado pelo usuario antes de gravar (ADR-008).
  *
  * <p>Politica "nenhum HTML": o OWASP Java HTML Sanitizer remove todos os elementos (e o CONTEUDO de {@code script}
  * e {@code style}), atributos de evento e comentarios, mesmo em HTML malformado. O resultado volta a texto puro

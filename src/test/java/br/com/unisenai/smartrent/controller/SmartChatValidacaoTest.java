@@ -62,7 +62,7 @@ class SmartChatValidacaoTest {
     }
 
     @Test
-    @DisplayName("CT580 - Mensagem vazia, em branco ou gigante: 400 com o campo, sem chegar ao servico")
+    @DisplayName("CT1080 - Mensagem vazia, em branco ou gigante: 400 com o campo, sem chegar ao servico")
     void mensagemInvalida() throws Exception {
         enviar("/mensagens", "{\"texto\":\"   \"}").andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.campos.texto").value("Escreva uma mensagem."));
@@ -72,7 +72,7 @@ class SmartChatValidacaoTest {
     }
 
     @Test
-    @DisplayName("CT581 - Denuncia sem motivo ou com lista enorme de mensagens: 400")
+    @DisplayName("CT1081 - Denuncia sem motivo ou com lista enorme de mensagens: 400")
     void denunciaInvalida() throws Exception {
         enviar("/denuncias", "{\"motivo\":\"\"}").andExpect(status().isBadRequest());
         String ids = ("\"" + UUID.randomUUID() + "\",").repeat(51);
@@ -82,14 +82,14 @@ class SmartChatValidacaoTest {
     }
 
     @Test
-    @DisplayName("CT582 - Pedido valido chega ao servico")
+    @DisplayName("CT1082 - Pedido valido chega ao servico")
     void pedidoValido() throws Exception {
         when(service.denunciar(any(), any(), any())).thenReturn(new Confirmacao("Denúncia registrada."));
         enviar("/denuncias", "{\"motivo\":\"SPAM\",\"descricao\":\"x\"}").andExpect(status().isOk());
     }
 
     @Test
-    @DisplayName("CT584 - CORS: sem SMARTRENT_CORS_ORIGENS nenhuma origem externa e liberada")
+    @DisplayName("CT1084 - CORS: sem SMARTRENT_CORS_ORIGENS nenhuma origem externa e liberada")
     void corsFechadoPorPadrao() throws Exception {
         mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options("/api/auth/login")
                         .header("Origin", "https://site-malicioso.exemplo")
@@ -99,7 +99,7 @@ class SmartChatValidacaoTest {
     }
 
     @Test
-    @DisplayName("CT583 - Cabecalhos de seguranca: CSP restritiva, nosniff, frame DENY, Referrer-Policy e Permissions-Policy")
+    @DisplayName("CT1083 - Cabecalhos de seguranca: CSP restritiva, nosniff, frame DENY, Referrer-Policy e Permissions-Policy")
     void cabecalhos() throws Exception {
         mockMvc.perform(get("/api/smartchat/nao-lidas").header("Authorization", "Bearer tk"))
                 .andExpect(header().string("Content-Security-Policy",

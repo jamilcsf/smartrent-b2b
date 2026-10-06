@@ -23,6 +23,8 @@ texto, porque o filtro de conteúdo roda nele e a denúncia exige o original (AD
    adulteração: valor alterado ou chave errada lança `FalhaDecifragemException`; nunca se devolve lixo nem se engole o erro.
 2. **Formato gravado:** `"v1:" + Base64(IV || ciphertext+tag)`. O prefixo é a versão da chave e abre caminho para
    rotação futura (ler `v1`, gravar `v2`). `null` entra e `null` sai.
+   **Atualização (ADR-008):** as gravações novas usam `v2:`, que autentica também o contexto `tabela.coluna` (AAD) por um conversor
+   JPA por coluna; `v1` (sem AAD) continua legível. Um valor ilegível aparece como "[mensagem indisponível]" e vai ao log sem conteúdo.
 3. **Legado tolerado.** Na leitura, valor **sem** prefixo de versão (`vN:`) é texto puro antigo e volta como está; é
    o que mantém o sistema funcionando entre a migration e a migração dos dados. Valor com prefixo e tag inválida
    lança exceção.
@@ -94,6 +96,6 @@ documentação não o chama de outra coisa.
 
 - Todo ambiente fora de `dev`/`test` precisa de `SMARTCHAT_CRYPTO_KEY` antes do deploy; localmente, `executar.bat` e
   `mvn spring-boot:run` com `SPRING_PROFILES_ACTIVE=dev` dispensam a chave.
-- Quem consultar o banco à mão para suporte passa a ver `v1:...` nessas colunas.
+- Quem consultar o banco à mão para suporte passa a ver `v1:...` (dados antigos) ou `v2:...` nessas colunas.
 - Custo de CPU desprezível (AES com instrução de hardware); o tamanho cresce ~33% (Base64) mais 28 bytes por valor.
 - A V15 foi aplicada em PostgreSQL 16 junto com `ddl-auto=validate`, e a migração dos dados foi exercitada com uma linha legada.

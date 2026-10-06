@@ -69,6 +69,7 @@ rows = [
     ("RF44", "E-mail verificado para usar o chat", "4.3", "VerificacaoEmailService, AuthService, SmartChatService", "CT560–CT599"),
     ("RF45", "UUID público nas conversas", "4.3", "SmartChatConversa, SmartChatService, SmartChatController, ChatEventos", "CT560–CT599"),
     ("RNF12", "Cifra em repouso do SmartChat (AES-256-GCM)", "4.3", "CifraCampo, TextoCifradoConverter, CifraCampoConfig, MigracaoCifraChat", "CT540–CT556"),
+    ("RNF13", "Segurança de acesso e de entrada (segredos obrigatórios, limites de login, filtro de contatos, UUID, 404 uniforme)", "4.3", "JwtConfig, CaptchaService, LimitesDeAutenticacao, MessageFilterService, Sanitizador, AcessoOcultoException, LimiteDeCorpoFilter, SecurityConfig", "CT1000–CT1102"),
 ]
 tdata = [[Paragraph("RF", styles["CellHeader"]), Paragraph("Descrição", styles["CellHeader"]),
           Paragraph("Caso de uso", styles["CellHeaderCenter"]), Paragraph("Componente", styles["CellHeader"]),

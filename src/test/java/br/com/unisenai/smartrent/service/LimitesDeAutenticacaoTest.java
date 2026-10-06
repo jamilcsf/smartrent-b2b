@@ -28,7 +28,7 @@ class LimitesDeAutenticacaoTest {
     }
 
     @Test
-    @DisplayName("CT510 - Cinco senhas erradas para o mesmo e-mail bloqueiam a sexta tentativa, mesmo de outro IP")
+    @DisplayName("CT1010 - Cinco senhas erradas para o mesmo e-mail bloqueiam a sexta tentativa, mesmo de outro IP")
     void bloqueiaPorEmail() {
         for (int i = 0; i < LimitesDeAutenticacao.FALHAS_POR_EMAIL; i++) {
             limites.exigirLogin("10.0.0." + i, "Ana@SmartRent.dev");
@@ -38,7 +38,7 @@ class LimitesDeAutenticacaoTest {
     }
 
     @Test
-    @DisplayName("CT511 - O bloqueio expira depois da janela e um login valido zera o contador do e-mail")
+    @DisplayName("CT1011 - O bloqueio expira depois da janela e um login valido zera o contador do e-mail")
     void expiraELimpa() {
         for (int i = 0; i < LimitesDeAutenticacao.FALHAS_POR_EMAIL; i++) {
             limites.registrarFalhaDeLogin("10.0.0.1", "ana@smartrent.dev");
@@ -55,7 +55,7 @@ class LimitesDeAutenticacaoTest {
     }
 
     @Test
-    @DisplayName("CT512 - Muitas falhas do mesmo IP (e-mails diferentes) bloqueiam o IP")
+    @DisplayName("CT1012 - Muitas falhas do mesmo IP (e-mails diferentes) bloqueiam o IP")
     void bloqueiaPorIp() {
         for (int i = 0; i < LimitesDeAutenticacao.FALHAS_POR_IP; i++) {
             limites.registrarFalhaDeLogin("203.0.113.7", "alvo" + i + "@smartrent.dev");
@@ -65,7 +65,7 @@ class LimitesDeAutenticacaoTest {
     }
 
     @Test
-    @DisplayName("CT513 - Cadastro: dez tentativas por hora por IP; a seguinte e recusada")
+    @DisplayName("CT1013 - Cadastro: dez tentativas por hora por IP; a seguinte e recusada")
     void limitaCadastro() {
         for (int i = 0; i < LimitesDeAutenticacao.CADASTROS_POR_IP; i++) {
             limites.exigirCadastro("198.51.100.1");
@@ -75,7 +75,7 @@ class LimitesDeAutenticacaoTest {
     }
 
     @Test
-    @DisplayName("CT514 - O limitador descarta chaves ociosas quando o mapa cresce demais")
+    @DisplayName("CT1014 - O limitador descarta chaves ociosas quando o mapa cresce demais")
     void varreChavesOciosas() {
         for (int i = 0; i <= LimitadorDeTaxa.LIMITE_PARA_VARRER; i++) {
             limitador.registrar("k" + i);
@@ -86,7 +86,7 @@ class LimitesDeAutenticacaoTest {
     }
 
     @Test
-    @DisplayName("CT515 - Chave de teste do reCAPTCHA: recusada fora de dev/test, aceita em dev e test")
+    @DisplayName("CT1015 - Chave de teste do reCAPTCHA: recusada fora de dev/test, aceita em dev e test")
     void captchaComChaveDeTeste() {
         CaptchaService producao = new CaptchaService(RestClient.builder(), "site", CaptchaService.SECRET_DE_TESTE, "http://x");
         producao.setEnvironment(new MockEnvironment());

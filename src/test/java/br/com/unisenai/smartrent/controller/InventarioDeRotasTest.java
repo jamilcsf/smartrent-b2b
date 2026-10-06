@@ -46,7 +46,7 @@ class InventarioDeRotasTest {
             Map.entry("VideoGestorController", GESTOR));
 
     @Test
-    @DisplayName("CT524 - Todo controller REST esta no inventario de rotas; um novo exige decisao explicita")
+    @DisplayName("CT1024 - Todo controller REST esta no inventario de rotas; um novo exige decisao explicita")
     void inventario() {
         ClassPathScanningCandidateComponentProvider scanner = new ClassPathScanningCandidateComponentProvider(false);
         scanner.addIncludeFilter(new AnnotationTypeFilter(RestController.class));

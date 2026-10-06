@@ -48,7 +48,7 @@ class CifraContextoTest {
     }
 
     @Test
-    @DisplayName("CT560 - O valor so decifra com o contexto com que foi cifrado")
+    @DisplayName("CT1060 - O valor so decifra com o contexto com que foi cifrado")
     void contextoAutenticado() {
         String valor = cifra.cifrar("segredo", "smartchat_mensagens.texto_filtrado");
         assertEquals("segredo", cifra.decifrar(valor, "smartchat_mensagens.texto_filtrado"));
@@ -58,7 +58,7 @@ class CifraContextoTest {
     }
 
     @Test
-    @DisplayName("CT561 - O que ja estava gravado em v1 (sem AAD) continua legivel em qualquer contexto")
+    @DisplayName("CT1061 - O que ja estava gravado em v1 (sem AAD) continua legivel em qualquer contexto")
     void v1Legado() throws Exception {
         String antigo = v1("mensagem antiga");
         assertTrue(antigo.startsWith("v1:"));
@@ -68,7 +68,7 @@ class CifraContextoTest {
     }
 
     @Test
-    @DisplayName("CT562 - Valor copiado de uma coluna para outra aparece como indisponivel, sem derrubar a leitura")
+    @DisplayName("CT1062 - Valor copiado de uma coluna para outra aparece como indisponivel, sem derrubar a leitura")
     void valorTrocadoDeColuna() throws Exception {
         TextoCifradoConverter filtrada = conversor(MensagemFiltradaConverter.class);
         TextoCifradoConverter original = conversor(MensagemOriginalConverter.class);
@@ -81,7 +81,7 @@ class CifraContextoTest {
     }
 
     @Test
-    @DisplayName("CT563 - Valor adulterado ou de outra chave: aviso no lugar; nulo e texto puro legado seguem como antes")
+    @DisplayName("CT1063 - Valor adulterado ou de outra chave: aviso no lugar; nulo e texto puro legado seguem como antes")
     void leituraTolerante() throws Exception {
         TextoCifradoConverter conv = conversor(DenunciaDescricaoConverter.class);
         String valido = conv.convertToDatabaseColumn("descricao");

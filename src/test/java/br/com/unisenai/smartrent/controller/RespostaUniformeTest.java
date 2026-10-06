@@ -44,7 +44,7 @@ class RespostaUniformeTest {
     }
 
     @Test
-    @DisplayName("CT540 - Recurso de outra pessoa e recurso inexistente: mesmo status e mesmo corpo (404)")
+    @DisplayName("CT1040 - Recurso de outra pessoa e recurso inexistente: mesmo status e mesmo corpo (404)")
     void alheioIgualInexistente() throws Exception {
         String inexistente = mvc.perform(get("/inexistente")).andExpect(status().isNotFound()).andReturn().getResponse().getContentAsString();
         String alheio = mvc.perform(get("/alheio")).andExpect(status().isNotFound()).andReturn().getResponse().getContentAsString();
@@ -52,7 +52,7 @@ class RespostaUniformeTest {
     }
 
     @Test
-    @DisplayName("CT541 - Falta de papel continua 403 (nao depende de nenhum registro existir)")
+    @DisplayName("CT1041 - Falta de papel continua 403 (nao depende de nenhum registro existir)")
     void papelContinua403() throws Exception {
         mvc.perform(get("/papel")).andExpect(status().isForbidden());
     }

@@ -35,7 +35,7 @@ class MessageFilterBypassTest {
     }
 
     @ParameterizedTest(name = "telefone {index}")
-    @DisplayName("CT530 - Telefone com digitos fullwidth, arabe-indicos, emoji, matematicos, invisiveis e espacos especiais e borrado")
+    @DisplayName("CT1030 - Telefone com digitos fullwidth, arabe-indicos, emoji, matematicos, invisiveis e espacos especiais e borrado")
     @ValueSource(strings = {
             "\uFF14\uFF18\uFF19\uFF19\uFF19\uFF19\uFF19\uFF10\uFF10\uFF10\uFF10",            // fullwidth
             "\u0664\u0668\u0669\u0669\u0669\u0669\u0669\u0660\u0660\u0660\u0660",            // arabe-indicos
@@ -56,14 +56,14 @@ class MessageFilterBypassTest {
     }
 
     @Test
-    @DisplayName("CT531 - Telefone em digitos-emoji (keycap) e borrado")
+    @DisplayName("CT1031 - Telefone em digitos-emoji (keycap) e borrado")
     void telefoneKeycap() {
         Resultado r = f("me chama " + keycaps("48999990000"));
         assertTrue(r.categorias().contains(Categoria.TELEFONE), r.texto());
     }
 
     @ParameterizedTest(name = "misto: {0}")
-    @DisplayName("CT532 - Telefone misturando numeros por extenso e digitos e borrado")
+    @DisplayName("CT1032 - Telefone misturando numeros por extenso e digitos e borrado")
     @ValueSource(strings = {
             "cinco cinco quatro oito 9 9 9 9 9 0 0 0 0",
             "quatro8 nove9 nove9 nove9 zero zero zero zero",
@@ -76,7 +76,7 @@ class MessageFilterBypassTest {
     }
 
     @ParameterizedTest(name = "email/link: {0}")
-    @DisplayName("CT533 - E-mail e link com letras espacadas, pontos ideograficos/fullwidth e invisiveis sao borrados")
+    @DisplayName("CT1033 - E-mail e link com letras espacadas, pontos ideograficos/fullwidth e invisiveis sao borrados")
     @CsvSource(delimiter = ';', value = {
             "j o a o @ g m a i l . c o m;EMAIL",
             "j o a o arroba g m a i l ponto com;EMAIL",
@@ -95,7 +95,7 @@ class MessageFilterBypassTest {
     }
 
     @ParameterizedTest(name = "mensageiro: {0}")
-    @DisplayName("CT534 - Mensageiros e redes sociais citados sozinhos sao borrados (CONTATO_EXTERNO)")
+    @DisplayName("CT1034 - Mensageiros e redes sociais citados sozinhos sao borrados (CONTATO_EXTERNO)")
     @ValueSource(strings = {
             "me chama no whats", "meu zap eh esse", "fala comigo no WhatsApp", "wpp?", "me acha no telegram",
             "meu insta eh fulano", "w h a t s a p p", "chama no zapzap", "meu facebook", "tem discord?",
@@ -108,7 +108,7 @@ class MessageFilterBypassTest {
     }
 
     @ParameterizedTest(name = "legitimo: {0}")
-    @DisplayName("CT535 - Falsos positivos: precos, datas, hospedes, CEP, codigos e palavras parecidas NAO sao mascarados")
+    @DisplayName("CT1035 - Falsos positivos: precos, datas, hospedes, CEP, codigos e palavras parecidas NAO sao mascarados")
     @ValueSource(strings = {
             "R$ 1.200,00 por 3 noites",
             "R$ 10.000.000,00 de entrada",
@@ -133,7 +133,7 @@ class MessageFilterBypassTest {
     }
 
     @Test
-    @DisplayName("CT536 - 'pix' continua so como alerta: nada e borrado, mas a mensagem e sinalizada")
+    @DisplayName("CT1036 - 'pix' continua so como alerta: nada e borrado, mas a mensagem e sinalizada")
     void pixSoAlerta() {
         for (String t : new String[]{"me manda o pix direto", "faz um pix por fora", "meu pix e o email"}) {
             Resultado r = f(t);
@@ -144,7 +144,7 @@ class MessageFilterBypassTest {
     }
 
     @Test
-    @DisplayName("CT537 - O texto devolvido nao contem o contato original nem os caracteres invisiveis")
+    @DisplayName("CT1037 - O texto devolvido nao contem o contato original nem os caracteres invisiveis")
     void saidaSemOriginal() {
         Resultado r = f("ligue 48\u200B 99999\u200B-0000 ou joao\uFF20gmail\uFF0Ecom");
         assertFalse(r.texto().contains("9999"));

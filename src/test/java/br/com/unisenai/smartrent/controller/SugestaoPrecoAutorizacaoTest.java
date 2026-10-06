@@ -61,7 +61,7 @@ class SugestaoPrecoAutorizacaoTest {
     }
 
     @Test
-    @DisplayName("CT520 - Visitante recebe 401 e cliente 403; nada e gravado nem enviado a IA")
+    @DisplayName("CT1020 - Visitante recebe 401 e cliente 403; nada e gravado nem enviado a IA")
     void semPapelDeGestor() throws Exception {
         mockMvc.perform(get(URL)).andExpect(status().isUnauthorized());
         mockMvc.perform(get(URL).header("Authorization", "Bearer token-cliente")).andExpect(status().isForbidden());
@@ -69,7 +69,7 @@ class SugestaoPrecoAutorizacaoTest {
     }
 
     @Test
-    @DisplayName("CT521 - Gestor que nao e dono do imovel recebe 403 e nada e gravado")
+    @DisplayName("CT1021 - Gestor que nao e dono do imovel recebe 403 e nada e gravado")
     void gestorDeOutroImovel() throws Exception {
         when(acesso.doGestor(any(), eq(7L))).thenThrow(new AcessoNegadoException("Você não tem permissão sobre este imóvel."));
         mockMvc.perform(get(URL).header("Authorization", "Bearer token-gestor")).andExpect(status().isForbidden());
@@ -77,7 +77,7 @@ class SugestaoPrecoAutorizacaoTest {
     }
 
     @Test
-    @DisplayName("CT522 - Valor base zero, negativo ou absurdo: 400 antes de qualquer acesso")
+    @DisplayName("CT1022 - Valor base zero, negativo ou absurdo: 400 antes de qualquer acesso")
     void valorBaseInvalido() throws Exception {
         for (String v : new String[]{"0", "-5", "99999999"}) {
             mockMvc.perform(get("/api/precificacao/sugerir?imovelId=7&dataRef=2026-12-20&valorBase=" + v)
@@ -87,7 +87,7 @@ class SugestaoPrecoAutorizacaoTest {
     }
 
     @Test
-    @DisplayName("CT523 - Gestor dono do imovel recebe a sugestao")
+    @DisplayName("CT1023 - Gestor dono do imovel recebe a sugestao")
     void gestorDono() throws Exception {
         Imovel imovel = new Imovel();
         imovel.setId(7L);
