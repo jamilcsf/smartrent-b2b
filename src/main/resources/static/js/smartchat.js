@@ -10,7 +10,7 @@
   'use strict';
 
   var ABRE = '', FECHA = '';
-  var ROTULO_CAT = { T: 'Telefone ocultado', E: 'E-mail ocultado', L: 'Link externo ocultado', S: 'Conteúdo impróprio ocultado', O: 'Conteúdo ofensivo ocultado' };
+  var ROTULO_CAT = { T: 'Telefone ocultado', E: 'E-mail ocultado', L: 'Link externo ocultado', C: 'Contato externo ocultado', S: 'Conteúdo impróprio ocultado', O: 'Conteúdo ofensivo ocultado' };
   var AVISO_FILTRO = 'Alguns trechos foram ocultados por conterem telefone, link externo ou conteúdo impróprio. Use o SmartChat para tratar tudo sobre a reserva.';
   var AVISO_FRAUDE = 'Esta mensagem menciona pagamento ou contato fora da plataforma. Pagamentos feitos por fora não têm proteção.';
   var STATUS_RESERVA = { PENDENTE: 'Pendente', CONFIRMADA: 'Confirmada', CONCLUIDA: 'Concluída', CANCELADA_COM_REEMBOLSO: 'Cancelada', CANCELADA_SEM_REEMBOLSO: 'Cancelada', CANCELADA_PELO_GESTOR: 'Cancelada' };
