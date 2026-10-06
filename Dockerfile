@@ -11,7 +11,7 @@ COPY src ./src
 RUN mvn -B -q -DskipTests package \
     && cp target/smartrent-b2b-*.jar /build/app.jar
 
-FROM eclipse-temurin:17.0.13_11-jre
+FROM eclipse-temurin:24.0.2_12-jre
 # FFmpeg: sem ele o processamento de video cai no modo basico, que NAO remove metadados
 # (inclusive localizacao). Com o binario no PATH a aplicacao o usa sozinha.
 RUN apt-get update \
