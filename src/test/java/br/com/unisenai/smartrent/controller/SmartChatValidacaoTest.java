@@ -89,6 +89,16 @@ class SmartChatValidacaoTest {
     }
 
     @Test
+    @DisplayName("CT584 - CORS: sem SMARTRENT_CORS_ORIGENS nenhuma origem externa e liberada")
+    void corsFechadoPorPadrao() throws Exception {
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options("/api/auth/login")
+                        .header("Origin", "https://site-malicioso.exemplo")
+                        .header("Access-Control-Request-Method", "POST"))
+                .andExpect(status().isForbidden())
+                .andExpect(header().doesNotExist("Access-Control-Allow-Origin"));
+    }
+
+    @Test
     @DisplayName("CT583 - Cabecalhos de seguranca: CSP restritiva, nosniff, frame DENY, Referrer-Policy e Permissions-Policy")
     void cabecalhos() throws Exception {
         mockMvc.perform(get("/api/smartchat/nao-lidas").header("Authorization", "Bearer tk"))

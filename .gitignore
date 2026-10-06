@@ -7,8 +7,18 @@ target/
 
 # Variáveis de ambiente / segredos
 .env
-.env.local
+.env.*
+!.env.example
 *.pem
+*.key
+*.jks
+*.p12
+*.pfx
+secrets/
+application-local*.properties
+application-local*.yml
+application-prod*.properties
+application-prod*.yml
 
 # IntelliJ IDEA
 .idea/
