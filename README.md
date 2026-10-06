@@ -303,6 +303,17 @@ A cada `push` na branch `main`, o GitHub Actions executa build e testes automati
 - **Frontend:** Vercel, com deploy automático a partir do repositório
 - **Banco de Dados:** Supabase (PostgreSQL gerenciado)
 
+### 🧭 Render (online) e ambiente local
+
+O site no Render e o `localhost` são independentes: o Render roda o código da `main` do GitHub, então mexer nos arquivos locais não o altera até haver `push` e `merge`.
+
+- **Banco:** o Render usa o Supabase. No ambiente local use o PostgreSQL do Docker (porta 55432); nunca aponte `DATABASE_URL` do terminal ou do `.env` para o Supabase, ou os testes alteram os dados da demonstração.
+- **Chaves:** não copie `SMARTCHAT_CRYPTO_KEY`/`SMARTCHAT_HMAC_KEY` do Render para o ambiente local, que usa a chave pública de desenvolvimento. Mensagens cifradas com uma chave não abrem com a outra.
+- **Segredos:** nunca versione arquivos com `BREVO_API_KEY`, `RECAPTCHA_SECRET`, `R2_*`, senhas do banco ou chaves de cifragem.
+- **Fotos no Render:** sem as variáveis `R2_*`, as fotos ficam no disco do Render, apagado a cada deploy ou reinício. Cadastre os anúncios com fotos pouco antes de usar o site.
+- **Deploys:** com o auto-deploy ligado, todo `push` na `main` refaz o deploy e apaga essas fotos. Antes de uma demonstração, adie o `merge` ou desligue o auto-deploy (Settings → Build & Deploy).
+- **Hibernação:** o plano gratuito hiberna o serviço; a primeira visita leva cerca de 3 minutos. Abra o site uns 5 minutos antes de apresentá-lo.
+
 ## 🗺️ Roadmap (V2)
 
 - Aplicativo nativo em Flutter

@@ -50,3 +50,8 @@ __pycache__/
 
 # Midias enviadas em desenvolvimento (smartrent.midia.diretorio)
 dados/
+
+# Preferencias pessoais do assistente de IA (as diretrizes do projeto ficam no CLAUDE.md, versionado)
+CLAUDE.local.md
+.claude/settings.local.json
+.claude/worktrees/
