@@ -5,6 +5,7 @@ import br.com.unisenai.smartrent.model.Usuario;
 import br.com.unisenai.smartrent.model.enums.PapelUsuario;
 import br.com.unisenai.smartrent.repository.ImovelRepository;
 import br.com.unisenai.smartrent.service.erro.AcessoNegadoException;
+import br.com.unisenai.smartrent.service.erro.AcessoOcultoException;
 import br.com.unisenai.smartrent.service.erro.RecursoNaoEncontradoException;
 import org.springframework.stereotype.Component;
 
@@ -51,8 +52,11 @@ public class ImovelAcesso {
                 && imovel.getUsuario().getId().equals(gestor.getId());
         boolean admin = gestor.getPapel() == PapelUsuario.ADMIN;
         boolean gestorDeImoveis = gestor.getPapel() == PapelUsuario.ANFITRIAO || admin;
-        if (!gestorDeImoveis || !(dono || admin)) {
+        if (!gestorDeImoveis) {
             throw new AcessoNegadoException("Você não tem permissão sobre este imóvel.");
+        }
+        if (!(dono || admin)) { // imovel de outro gestor: responde como inexistente (404), nao como proibido (403)
+            throw new AcessoOcultoException("Imóvel não encontrado.");
         }
         return imovel;
     }

@@ -18,7 +18,7 @@
     ['ASSEDIO_OFENSAS', 'Assédio ou ofensas'], ['SPAM', 'Spam'], ['TENTATIVA_DE_GOLPE', 'Tentativa de golpe'],
     ['CONTEUDO_IMPROPRIO', 'Conteúdo impróprio'], ['CONTATO_EXTERNO', 'Tentativa de levar a conversa para fora da plataforma'], ['OUTRO', 'Outro']];
 
-  var S = { emailVerificado: true, conversas: [], atual: null, mensagens: [], ultimoId: 0, filtro: '', es: null, poll: null, reconexao: null, vista: 'lista', imoveisFiltro: {} };
+  var S = { emailVerificado: true, conversas: [], atual: null, mensagens: [], ultimoId: null, filtro: '', es: null, poll: null, reconexao: null, vista: 'lista', imoveisFiltro: {} };
 
   function $(id) { return document.getElementById(id); }
   function esc(t) { return UI.escapar(t); }
@@ -185,10 +185,10 @@
     if (!S.atual) { return; }
     var id = S.atual.codigo;
     try {
-      var novas = await Api.get('/api/smartchat/conversas/' + id + '/mensagens?depoisDe=' + (todas ? 0 : S.ultimoId));
+      var novas = await Api.get('/api/smartchat/conversas/' + id + '/mensagens' + (todas || !S.ultimoId ? '' : '?depoisDe=' + encodeURIComponent(S.ultimoId)));
       if (!S.atual || S.atual.codigo !== id) { return; }
       S.mensagens = todas ? novas : S.mensagens.concat(novas);
-      if (S.mensagens.length) { S.ultimoId = S.mensagens[S.mensagens.length - 1].id; }
+      if (S.mensagens.length) { S.ultimoId = S.mensagens[S.mensagens.length - 1].codigo; }
       renderMensagens(todas);
       if (novas.some(function (m) { return !m.minha; })) { marcarLidas(); }
     } catch (e) {
@@ -211,7 +211,7 @@
     if (!c) {
       try { c = await Api.get('/api/smartchat/conversas/' + id); } catch (e) { UI.toast(e.message, 'erro'); return; }
     }
-    S.atual = c; S.mensagens = []; S.ultimoId = 0; S.perfilAberto = false;
+    S.atual = c; S.mensagens = []; S.ultimoId = null; S.perfilAberto = false;
     $('semConversa').classList.add('hidden');
     $('conversa').classList.remove('hidden');
     cabecalho();
@@ -236,7 +236,7 @@
       campo.style.height = 'auto';
       atualizarContador();
       S.mensagens.push(r.mensagem);
-      S.ultimoId = r.mensagem.id;
+      S.ultimoId = r.mensagem.codigo;
       renderMensagens(true);
       var aviso = $('avisoEnvio');
       if (r.aviso) { aviso.innerText = r.aviso; aviso.classList.remove('hidden'); } else { aviso.classList.add('hidden'); }
@@ -319,7 +319,7 @@
         '<textarea id="dn-desc" rows="3" maxlength="1000" class="mt-1 w-full border border-slate-300 rounded-lg p-2 text-xs"></textarea></label>' +
         (anexaveis.length ? '<fieldset class="mb-2"><legend class="text-xs font-semibold text-slate-700 mb-1">Anexar mensagens (opcional)</legend><div class="space-y-1 max-h-40 overflow-y-auto">' +
           anexaveis.map(function (x) {
-            return '<label class="flex items-start gap-2 text-xs"><input type="checkbox" class="dn-msg mt-0.5" value="' + x.id + '"><span>' + esc(hora(x.criadaEm)) + ' — ' + renderTexto(x.texto).replace(/<br>/g, ' ') + '</span></label>'; }).join('') + '</div></fieldset>' : '') +
+            return '<label class="flex items-start gap-2 text-xs"><input type="checkbox" class="dn-msg mt-0.5" value="' + esc(x.codigo) + '"><span>' + esc(hora(x.criadaEm)) + ' — ' + renderTexto(x.texto).replace(/<br>/g, ' ') + '</span></label>'; }).join('') + '</div></fieldset>' : '') +
         '<p class="text-[10px] text-slate-400">A denúncia fica registrada para análise e não é visível para a outra pessoa.</p>' +
         '<p id="dn-erro" class="hidden mt-2 text-xs font-semibold text-rose-700"></p>',
       botoes: [
@@ -329,7 +329,7 @@
             if (!motivo) { erro.innerText = 'Escolha o motivo da denúncia.'; erro.classList.remove('hidden'); return; }
             btn.disabled = true;
             try {
-              var ids = Array.prototype.slice.call(el.querySelectorAll('.dn-msg:checked')).map(function (c) { return Number(c.value); });
+              var ids = Array.prototype.slice.call(el.querySelectorAll('.dn-msg:checked')).map(function (c) { return c.value; });
               var r = await Api.post('/api/smartchat/conversas/' + S.atual.codigo + '/denuncias', { motivo: motivo, descricao: el.querySelector('#dn-desc').value.trim() || null, mensagensIds: ids });
               fechar();
               UI.toast(r.mensagem);

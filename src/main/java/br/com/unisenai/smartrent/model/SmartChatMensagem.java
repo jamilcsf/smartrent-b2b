@@ -20,6 +20,10 @@ public class SmartChatMensagem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /** Identificador que sai pela API (cursor, denuncia): o id sequencial nao e exposto. */
+    @Column(name = "codigo_publico", nullable = false, unique = true, updatable = false)
+    private java.util.UUID codigoPublico = java.util.UUID.randomUUID();
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "conversa_id", nullable = false)
     private SmartChatConversa conversa;
@@ -61,6 +65,8 @@ public class SmartChatMensagem {
 
     @Column(name = "lida_em")
     private Instant lidaEm;
+
+    public java.util.UUID getCodigoPublico() { return codigoPublico; }
 
     public Long getId() { return id; }
     public SmartChatConversa getConversa() { return conversa; }

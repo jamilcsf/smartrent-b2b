@@ -37,8 +37,8 @@ class MigracaoCifraChatTest {
     }
 
     private long mensagem(String filtrado, String original) {
-        jdbc.update("insert into smartchat_mensagens (conversa_id, tipo, texto_filtrado, texto_original, ocorrencias, criada_em) "
-                + "values (1, 'NORMAL', ?, ?, 0, current_timestamp)", filtrado, original);
+        jdbc.update("insert into smartchat_mensagens (conversa_id, tipo, texto_filtrado, texto_original, ocorrencias, criada_em, codigo_publico) "
+                + "values (1, 'NORMAL', ?, ?, 0, current_timestamp, ?)", filtrado, original, java.util.UUID.randomUUID());
         return jdbc.queryForObject("select max(id) from smartchat_mensagens", Long.class);
     }
 

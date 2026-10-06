@@ -58,8 +58,8 @@ public class SmartChatController {
 
     @GetMapping("/conversas/{codigo}/mensagens")
     public List<Mensagem> mensagens(@AuthenticationPrincipal Usuario usuario, @PathVariable String codigo,
-                                    @RequestParam(required = false) Long depoisDe) {
-        return service.listarMensagens(usuario, uuid(codigo), depoisDe);
+                                    @RequestParam(required = false) String depoisDe) {
+        return service.listarMensagens(usuario, uuid(codigo), cursor(depoisDe));
     }
 
     @PostMapping("/conversas/{codigo}/mensagens")
@@ -90,6 +90,18 @@ public class SmartChatController {
     @PostMapping("/conversas/{codigo}/bloqueio")
     public Confirmacao bloquear(@AuthenticationPrincipal Usuario usuario, @PathVariable String codigo) {
         return service.bloquear(usuario, uuid(codigo));
+    }
+
+    /** Cursor de paginacao: o codigo publico da ultima mensagem recebida (nulo = desde o inicio). */
+    private static java.util.UUID cursor(String depoisDe) {
+        if (depoisDe == null || depoisDe.isBlank() || "0".equals(depoisDe)) {
+            return null;
+        }
+        try {
+            return java.util.UUID.fromString(depoisDe);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Cursor de mensagens invalido.");
+        }
     }
 
     /** UUID mal formado (inclusive um id numerico antigo) recebe o mesmo 404 de conversa inexistente ou de terceiros. */

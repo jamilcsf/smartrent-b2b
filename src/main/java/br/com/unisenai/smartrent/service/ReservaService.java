@@ -13,6 +13,7 @@ import br.com.unisenai.smartrent.repository.ImovelRepository;
 import br.com.unisenai.smartrent.repository.ReservaRepository;
 import br.com.unisenai.smartrent.repository.UsuarioRepository;
 import br.com.unisenai.smartrent.service.erro.AcessoNegadoException;
+import br.com.unisenai.smartrent.service.erro.AcessoOcultoException;
 import br.com.unisenai.smartrent.service.erro.RecursoNaoEncontradoException;
 import br.com.unisenai.smartrent.service.erro.TransicaoInvalidaException;
 import org.springframework.context.ApplicationEventPublisher;
@@ -293,6 +294,8 @@ public class ReservaService {
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Reserva nao encontrada."));
         try {
             acesso.conferir(gestor, reserva.getImovel());
+        } catch (AcessoOcultoException e) {
+            throw new AcessoOcultoException("Reserva nao encontrada.");
         } catch (AcessoNegadoException e) {
             throw new AcessoNegadoException("Voce nao tem permissao sobre esta reserva.");
         }

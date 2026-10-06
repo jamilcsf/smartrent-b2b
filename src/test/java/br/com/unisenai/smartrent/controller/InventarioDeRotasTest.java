@@ -52,6 +52,9 @@ class InventarioDeRotasTest {
         scanner.addIncludeFilter(new AnnotationTypeFilter(RestController.class));
         Map<String, String> encontrados = new TreeMap<>();
         for (BeanDefinition bd : scanner.findCandidateComponents("br.com.unisenai.smartrent.controller")) {
+            if (bd.getBeanClassName().contains("$")) {
+                continue; // controllers falsos aninhados em testes
+            }
             String nome = bd.getBeanClassName().substring(bd.getBeanClassName().lastIndexOf('.') + 1);
             encontrados.put(nome, ESPERADO.getOrDefault(nome, "NAO CLASSIFICADO: decida e registre aqui"));
         }

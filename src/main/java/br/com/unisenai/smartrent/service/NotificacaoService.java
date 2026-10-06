@@ -5,6 +5,7 @@ import br.com.unisenai.smartrent.model.Notificacao;
 import br.com.unisenai.smartrent.model.Usuario;
 import br.com.unisenai.smartrent.repository.NotificacaoRepository;
 import br.com.unisenai.smartrent.service.erro.AcessoNegadoException;
+import br.com.unisenai.smartrent.service.erro.AcessoOcultoException;
 import br.com.unisenai.smartrent.service.erro.RecursoNaoEncontradoException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -54,7 +55,7 @@ public class NotificacaoService {
         Notificacao n = repository.findById(id)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Notificação não encontrada."));
         if (!n.getUsuario().getId().equals(usuario.getId())) {
-            throw new AcessoNegadoException("Esta notificação não é sua.");
+            throw new AcessoOcultoException("Notificação não encontrada.");
         }
         n.setLida(true);
         repository.save(n);
