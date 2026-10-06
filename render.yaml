@@ -55,6 +55,7 @@ services:
       # --- Integracoes (opcionais) ---
       - key: GROQ_API_KEY
         sync: false
+      # reCAPTCHA v2: OBRIGATORIO. Com a chave de teste do Google a aplicacao nao sobe (aprovaria qualquer token).
       - key: RECAPTCHA_SITE_KEY
         sync: false
       - key: RECAPTCHA_SECRET

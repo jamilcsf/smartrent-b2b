@@ -65,6 +65,9 @@ class AuthControllerTest {
     @MockBean
     private br.com.unisenai.smartrent.service.AccountRestrictionService accountRestrictionService;
 
+    @MockBean
+    private br.com.unisenai.smartrent.service.LimitesDeAutenticacao limites;
+
     @Test
     @DisplayName("CT27 - /api/auth/me sem token deve responder 401 em JSON")
     void deveResponder401SemToken() throws Exception {
@@ -142,6 +145,22 @@ class AuthControllerTest {
                                 Map.of("email", "ana@smartrent.dev", "senha", "errada"))))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.erro").value("E-mail ou senha inválidos."));
+    }
+
+    @Test
+    @DisplayName("CT516 - Login bloqueado por excesso de tentativas responde 429 sem consultar captcha nem senha")
+    void loginBloqueadoDeveResponder429() throws Exception {
+        doThrow(new br.com.unisenai.smartrent.service.erro.LimiteExcedidoException("Muitas tentativas de login. Tente novamente em alguns minutos."))
+                .when(limites).exigirLogin(any(), any());
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                Map.of("email", "ana@smartrent.dev", "senha", "senhaSegura123"))))
+                .andExpect(status().isTooManyRequests());
+
+        verify(captchaService, never()).verificar(any());
+        verify(authService, never()).autenticar(any());
     }
 
     @Test

@@ -12,6 +12,7 @@ import br.com.unisenai.smartrent.service.AuditoriaContaService;
 import br.com.unisenai.smartrent.service.AuthService;
 import br.com.unisenai.smartrent.service.CaptchaService;
 import br.com.unisenai.smartrent.service.GoogleTokenVerifier;
+import br.com.unisenai.smartrent.service.LimitesDeAutenticacao;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -28,17 +29,20 @@ public class AuthController {
     private final GoogleTokenVerifier googleTokenVerifier;
     private final AuditoriaContaService auditoriaConta;
     private final AccountRestrictionService restricoes;
+    private final LimitesDeAutenticacao limites;
 
     public AuthController(AuthService authService,
                           CaptchaService captchaService,
                           GoogleTokenVerifier googleTokenVerifier,
                           AuditoriaContaService auditoriaConta,
-                          AccountRestrictionService restricoes) {
+                          AccountRestrictionService restricoes,
+                          LimitesDeAutenticacao limites) {
         this.authService = authService;
         this.captchaService = captchaService;
         this.googleTokenVerifier = googleTokenVerifier;
         this.auditoriaConta = auditoriaConta;
         this.restricoes = restricoes;
+        this.limites = limites;
     }
 
     /** Chaves públicas para o front montar o captcha e o botão do Google. */
@@ -49,7 +53,8 @@ public class AuthController {
     }
 
     @PostMapping("/cadastro")
-    public ResponseEntity<AuthResponse> cadastrar(@Valid @RequestBody CadastroRequest req) {
+    public ResponseEntity<AuthResponse> cadastrar(@Valid @RequestBody CadastroRequest req, HttpServletRequest http) {
+        limites.exigirCadastro(http.getRemoteAddr());
         // Sem captcha, qualquer script criaria contas em massa.
         captchaService.verificar(req.captchaToken());
         return ResponseEntity.ok(authService.cadastrar(req));
@@ -59,8 +64,17 @@ public class AuthController {
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest req, HttpServletRequest http) {
         // O captcha vem antes de tocar na senha: sem ele, a API seria um
         // oráculo de tentativa e erro para robôs.
+        String ip = http.getRemoteAddr();
+        limites.exigirLogin(ip, req.email());
         captchaService.verificar(req.captchaToken());
-        AuthResponse resposta = authService.autenticar(req);
+        AuthResponse resposta;
+        try {
+            resposta = authService.autenticar(req);
+        } catch (AuthService.CredenciaisInvalidasException e) {
+            limites.registrarFalhaDeLogin(ip, req.email());
+            throw e;
+        }
+        limites.registrarLoginValido(req.email());
         registrarLogin(resposta, http);
         return ResponseEntity.ok(resposta);
     }
