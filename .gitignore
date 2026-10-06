@@ -55,3 +55,7 @@ dados/
 CLAUDE.local.md
 .claude/settings.local.json
 .claude/worktrees/
+
+# Binarios de entrega: gerados pelo build, nunca versionados (podem embutir configuracao)
+*.jar
+!.mvn/wrapper/*.jar

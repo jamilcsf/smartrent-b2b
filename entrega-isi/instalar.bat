@@ -34,9 +34,13 @@ echo [%DATE% %TIME%] [OK] Diretorios criados em %ESTRUTURA_DIR% >> "%ARQ_LOG%"
 set ARQ_JAR_ORIGEM=origem\SmartRentB2B.jar
 set ARQ_INI_ORIGEM=origem\application.ini
 
+REM O JAR nao e versionado (pode embutir configuracao): gere com "mvnw -DskipTests package" na raiz do projeto.
+if not exist "%ARQ_JAR_ORIGEM%" (
+    for %%J in ("..\target\smartrent-b2b-*.jar") do if exist "%%~J" copy /Y "%%~J" "%ARQ_JAR_ORIGEM%" >nul
+)
 if not exist "%ARQ_JAR_ORIGEM%" (
     echo [%DATE% %TIME%] [ERRO] Arquivo de execucao %ARQ_JAR_ORIGEM% nao foi encontrado! >> "%ARQ_LOG%"
-    echo [ERRO] Executavel de origem nao encontrado. Crie a pasta 'origem' com o arquivo SmartRentB2B.jar.
+    echo [ERRO] Executavel de origem nao encontrado. Rode 'mvnw -DskipTests package' na raiz do projeto e execute este script de novo.
     pause
     exit /b 1
 )
