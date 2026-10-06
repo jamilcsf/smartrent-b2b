@@ -1,7 +1,7 @@
 # SmartRent B2B: imagem de producao (usada pelo Render, ver render.yaml).
 # Etapa 1 compila com Maven + JDK 17; etapa 2 roda so o .jar num JRE 17 enxuto.
 
-FROM maven:3.9.9-eclipse-temurin-17 AS build
+FROM maven:3.9-eclipse-temurin-26 AS build
 WORKDIR /build
 # Dependencias primeiro: so rebaixam quando o pom.xml muda.
 COPY pom.xml .
