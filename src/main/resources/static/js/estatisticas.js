@@ -23,7 +23,7 @@
   function cartao(titulo, valor, nota) {
     return '<div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4">' +
       '<p class="text-[11px] font-semibold text-slate-500">' + titulo + '</p>' +
-      '<p class="text-xl font-extrabold text-slate-900 mt-1">' + valor + '</p>' +
+      '<p class="kpi-valor text-xl font-extrabold text-slate-900 mt-1">' + valor + '</p>' +
       (nota ? '<p class="text-[10px] text-slate-400 mt-0.5">' + nota + '</p>' : '') + '</div>';
   }
 
@@ -32,8 +32,13 @@
     graficos[id] = new Chart($(id), {
       type: tipo,
       data: { labels: rotulos, datasets: series },
-      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: series.length > 1 } },
-                 scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+      // Toque: o tooltip abre ao encostar em qualquer ponto da coluna do mes (nao exige acertar o pixel).
+      options: { responsive: true, maintainAspectRatio: false,
+                 interaction: { mode: 'index', intersect: false },
+                 plugins: { legend: { display: series.length > 1, labels: { boxWidth: 12, font: { size: 12 } } },
+                            tooltip: { titleFont: { size: 13 }, bodyFont: { size: 13 }, padding: 10 } },
+                 scales: { x: { ticks: { font: { size: 11 }, maxRotation: 45, autoSkip: true } },
+                           y: { beginAtZero: true, ticks: { precision: 0, font: { size: 11 } } } } }
     });
   }
 

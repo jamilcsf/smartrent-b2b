@@ -120,6 +120,66 @@ de segurança, do período mínimo de análise, dos prazos de retenção e do qu
 recuperação de senha (contas criadas só pelo Google e anteriores à V14 não têm caminho para definir a primeira senha); foto em
 armazenamento de objetos; moderação do conteúdo da foto; rate limit distribuído; testes automatizados do front.
 
+## 📱 Revisão mobile (2026-10-06)
+
+Auditoria de responsividade das 14 páginas do front (login, cadastro, catálogo, detalhe do imóvel, reserva do cliente, perfil, Dashboard,
+Painel do Gestor com as três abas, formulário de anúncio, SmartChat e as telas de confirmação por link) em 320, 360, 375, 390, 414 e 768 px
+(retrato) e 667 px (paisagem), com 1280 px como controle de regressão. Metodologia: Playwright com o Edge da máquina e emulação de toque,
+medindo rolagem horizontal, elementos fora da tela, alvos de toque, `font-size` dos campos e erros de console/rede, mais capturas de tela de cada
+página em cada largura. Na primeira passada o backend não pôde ser usado (Docker Desktop travado), então a API foi **simulada** por um servidor Node
+de teste com dados de estresse (títulos sem espaços, e-mails e endereços longos, valores de sete dígitos); os fluxos ponta a ponta contra
+Postgres real continuam pendentes de uma passada (ver abaixo).
+
+**Antes:** rolagem horizontal em 11 das 14 páginas quando logado (cabeçalho com marca + menu + conta numa linha só, até 511 px em tela de 320 px);
+título longo estourava o detalhe do imóvel (703 px); campos com 12–14 px (zoom automático no iOS); alvos de toque de 16–40 px; menu de
+notificações do gestor aberto para fora da tela e sem fechar ao tocar fora; filtro do catálogo sem botão de fechar; textos de 10–11 px.
+
+**Corrigido, com solução global:** `static/css/mobile.css` (carregado nas 12 páginas com Tailwind) + ajustes pontuais.
+- Cabeçalho em duas linhas até 899 px (marca e conta em cima, menu embaixo com ícones de 44 px, `aria-label`/`aria-current` nos links do menu),
+  nome do usuário truncado com reticências, `safe-area-inset-*` e `viewport-fit=cover`.
+- `overflow-wrap:anywhere` global, `min-width:0` em filhos de flex/grid, imagens/canvas com `max-width:100%`, tabelas largas com rolagem
+  horizontal dentro do próprio contêiner (largura mínima de 36 rem), valores monetários dos cartões do Dashboard com fonte fluida.
+- Campos com `font-size:16px` (inclusive tablets em toque), alvos de toque de 44 px, caixas de seleção de 24 px, rótulos de 10–11 px elevados a 12 px,
+  botões sem quebra no meio da palavra.
+- Modais: rolagem do fundo travada enquanto abertos (`body:has([role=dialog])`, sem estado que possa ficar preso), altura em `dvh`, margens seguras;
+  toasts com largura limitada à tela.
+- Catálogo: botão **Ver resultados** e Esc no painel de filtros, rolagem do fundo travada. Painel do Gestor: o sino fecha ao tocar fora/Esc e o menu
+  ocupa a largura da tela; títulos dos anúncios em duas linhas em vez de truncados. Gráficos Chart.js: tooltip por coluna (`interaction.mode:index`),
+  fontes de 11–13 px e rótulos com rotação automática.
+
+**Depois:** 0 página com rolagem horizontal nas 7 larguras e no controle de 1280 px; 0 `font-size` de campo abaixo de 16 px; 0 alvo de toque abaixo de
+44 px, exceto as células do calendário (29–43 px de largura × 44 de altura em 320–414 px, acima do mínimo de 24 px do WCAG 2.2 AA; ver pendências);
+0 erro de JavaScript; os 446 testes do Maven continuam passando.
+
+**Pendências / V2:** (1) upload de foto/vídeo com o backend real (a segunda passada, abaixo, cobre reservas, calendário, IA, chat e perfil); (2) teclado virtual: testado só por emulação, sem
+aparelho físico (iOS Safari/Android Chrome reais); (3) células do calendário com 44 px de largura exigem layout de uma ou duas semanas por vez no
+celular (V2); (4) tabelas de reservas em cartões no mobile em vez de rolagem lateral (V2); (5) Tailwind e Lucide vêm de CDN (`cdn.tailwindcss.com`
+é indicado só para desenvolvimento): compilar o CSS e hospedar os ícones localmente é pendência de produção e do tempo de carregamento em 3G;
+(6) [resolvido na segunda passada] favicon; (7) o texto `PRE_PUBLICACAO_*` aparece cru na lista "Imóveis por situação" do Dashboard
+(rótulo amigável é pendência de conteúdo); (8) testes automatizados do front (Playwright) ainda não entram no pipeline.
+
+### Revisão mobile — passada com o backend real (2026-10-06)
+
+Repetida contra a aplicação Spring Boot em execução (PostgreSQL 16 no Docker, banco próprio `smartrent_mobile`, `scripts/dados-demonstracao.sql`
+mais títulos longos e dois anúncios em pré-publicação). Auditoria de 18 telas em 320, 360, 375, 390, 414, 768, 667 paisagem e 1280 px, e fluxos
+com toque em 375 e 320 px (20 verificações, todas aprovadas):
+- Reserva do cliente: datas invertidas recusadas; período em conflito avisado já na prévia e recusado ao confirmar; modal de confirmação dentro da tela,
+  com rolagem do fundo travada e liberada ao fechar; cancelamento abre o modal.
+- Reserva do gestor: "check-out deve ser posterior à de check-in" e "Conflito de datas detectado para este imovel." exibidos; calendário abre o
+  popover da reserva ao toque, dentro da tela.
+- Sugestão de preço por IA em estado de contingência (sem chave configurada): a tabela mostra "A sugestão por IA não está configurada neste ambiente",
+  sem rolagem horizontal, e o valor pode ser definido à mão.
+- Sino de notificações, SmartChat (SSE real, sem erro de console) e perfil sem rolagem horizontal.
+
+Dois defeitos novos achados e corrigidos nesta passada: as abas do Painel do Gestor se sobrepunham em 320 px (`[role=tablist]` agora não encolhe as abas) e a
+tira de abas do formulário de anúncio passou a rolar em vez de estourar a página; o `favicon.ico` inexistente (404) ganhou `img/favicon.svg`.
+Resultado final: 0 rolagem horizontal, 0 campo abaixo de 16 px, 0 alvo de toque abaixo de 44 px (exceto células do calendário e links dentro de texto),
+0 erro de JavaScript. Erros de console remanescentes são externos ao front: o botão do Google recusa a origem `localhost` (403) e o link de confirmação
+de e-mail de teste devolve 400 por token inválido.
+
+Ainda pendente: envio do formulário de login/cadastro (exige resolver o reCAPTCHA, que a automação não faz), caminho feliz da sugestão de preço da IA
+(sem chave Groq configurada), teclado virtual e rolagem em aparelhos reais (iOS Safari/Android Chrome).
+
 Em 2026-10-05 foi entregue a cifragem em repouso do SmartChat (ver [ADR-006](adr/ADR-006-cifragem-em-repouso-do-smartchat.md) e o `README.md`):
 migration V15 (as três colunas de texto viram `TEXT`), `CifraCampo` (AES-256-GCM, `v1:` + Base64), conversor JPA, falha na inicialização
 sem `SMARTCHAT_CRYPTO_KEY` fora de `dev`/`test` e job idempotente que cifra o legado. A V15 e a migração foram exercitadas em PostgreSQL 16
