@@ -26,7 +26,7 @@ class CifraCampoTest {
     void idaEVolta() {
         String texto = "Olá, ação não é São João 😀🏖️\nsegunda linha — “aspas”";
         String cifrado = cifra.cifrar(texto);
-        assertTrue(cifrado.startsWith("v1:"));
+        assertTrue(cifrado.startsWith("v2:"));
         assertFalse(cifrado.contains("Olá"));
         assertEquals(texto, cifra.decifrar(cifrado));
         assertEquals("", cifra.decifrar(cifra.cifrar("")));
@@ -44,12 +44,12 @@ class CifraCampoTest {
         String cifrado = cifra.cifrar("mensagem importante");
         byte[] bytes = Base64.getDecoder().decode(cifrado.substring(3));
         bytes[bytes.length - 1] ^= 0x01; // mexe na tag
-        String adulterado = "v1:" + Base64.getEncoder().encodeToString(bytes);
+        String adulterado = "v2:" + Base64.getEncoder().encodeToString(bytes);
         assertThrows(FalhaDecifragemException.class, () -> cifra.decifrar(adulterado));
 
         byte[] corpo = Base64.getDecoder().decode(cifrado.substring(3));
         corpo[13] ^= 0x01; // mexe no texto cifrado
-        String adulterado2 = "v1:" + Base64.getEncoder().encodeToString(corpo);
+        String adulterado2 = "v2:" + Base64.getEncoder().encodeToString(corpo);
         assertThrows(FalhaDecifragemException.class, () -> cifra.decifrar(adulterado2));
     }
 
@@ -58,7 +58,7 @@ class CifraCampoTest {
     void malformado() {
         assertThrows(FalhaDecifragemException.class, () -> cifra.decifrar("v1:abc"));
         assertThrows(FalhaDecifragemException.class, () -> cifra.decifrar("v1:%%%nao-e-base64%%%"));
-        assertThrows(FalhaDecifragemException.class, () -> cifra.decifrar("v2:" + cifra.cifrar("x").substring(3)));
+        assertThrows(FalhaDecifragemException.class, () -> cifra.decifrar("v9:" + cifra.cifrar("x").substring(3)));
     }
 
     @Test
@@ -107,7 +107,7 @@ class CifraCampoTest {
         TextoCifradoConverter conversor = new TextoCifradoConverter(provedor);
 
         String coluna = conversor.convertToDatabaseColumn("Oi, tudo bem?");
-        assertTrue(coluna.startsWith("v1:"));
+        assertTrue(coluna.startsWith("v2:"));
         assertEquals("Oi, tudo bem?", conversor.convertToEntityAttribute(coluna));
         assertNull(conversor.convertToDatabaseColumn(null));
         assertNull(conversor.convertToEntityAttribute(null));

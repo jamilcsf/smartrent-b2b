@@ -1,6 +1,8 @@
 package br.com.unisenai.smartrent.model;
 
 import br.com.unisenai.smartrent.model.enums.TipoMensagem;
+import br.com.unisenai.smartrent.security.MensagemFiltradaConverter;
+import br.com.unisenai.smartrent.security.MensagemOriginalConverter;
 import br.com.unisenai.smartrent.security.TextoCifradoConverter;
 import jakarta.persistence.*;
 
@@ -37,12 +39,12 @@ public class SmartChatMensagem {
     @Column(name = "tipo", nullable = false, length = 10)
     private TipoMensagem tipo = TipoMensagem.NORMAL;
 
-    @Convert(converter = TextoCifradoConverter.class)
+    @Convert(converter = MensagemFiltradaConverter.class)
     @Column(name = "texto_filtrado", nullable = false, columnDefinition = "TEXT")
     private String textoFiltrado;
 
     /** RESTRITO: nunca expor por endpoint de usuario, notificacao ou pre-visualizacao. */
-    @Convert(converter = TextoCifradoConverter.class)
+    @Convert(converter = MensagemOriginalConverter.class)
     @Column(name = "texto_original", columnDefinition = "TEXT")
     private String textoOriginal;
 

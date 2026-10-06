@@ -1,6 +1,6 @@
 package br.com.unisenai.smartrent.model;
 
-import br.com.unisenai.smartrent.security.TextoCifradoConverter;
+import br.com.unisenai.smartrent.security.NotificacaoMensagemConverter;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -24,7 +24,7 @@ public class Notificacao {
     private String titulo;
 
     /** Cifrada em repouso (AES-256-GCM): pode trazer a previa de uma mensagem do SmartChat (ADR-006). */
-    @Convert(converter = TextoCifradoConverter.class)
+    @Convert(converter = NotificacaoMensagemConverter.class)
     @Column(name = "mensagem", nullable = false, columnDefinition = "TEXT")
     private String mensagem;
 

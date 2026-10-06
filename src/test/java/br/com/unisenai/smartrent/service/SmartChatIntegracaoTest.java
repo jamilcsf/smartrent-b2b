@@ -604,8 +604,8 @@ class SmartChatIntegracaoTest {
                 String.class, r.mensagem().codigo());
         String originalNoBanco = jdbc.queryForObject("select texto_original from smartchat_mensagens where codigo_publico = ?",
                 String.class, r.mensagem().codigo());
-        assertTrue(filtradoNoBanco.startsWith("v1:") && !filtradoNoBanco.contains("cachorro"));
-        assertTrue(originalNoBanco.startsWith("v1:") && !originalNoBanco.contains("99999"));
+        assertTrue(filtradoNoBanco.startsWith("v2:") && !filtradoNoBanco.contains("cachorro"));
+        assertTrue(originalNoBanco.startsWith("v2:") && !originalNoBanco.contains("99999"));
 
         em.clear();
         SmartChatMensagem lida = mensagens.findAll().stream().filter(m -> m.getCodigoPublico().equals(r.mensagem().codigo())).findFirst().orElseThrow();
@@ -615,7 +615,7 @@ class SmartChatIntegracaoTest {
 
         chat.denunciar(cliente, c.codigo(), new DenunciaPedido("ASSEDIO_OFENSAS", "ele pediu o meu telefone", List.of(r.mensagem().codigo())));
         em.flush();
-        assertTrue(jdbc.queryForObject("select descricao from smartchat_denuncias", String.class).startsWith("v1:"));
+        assertTrue(jdbc.queryForObject("select descricao from smartchat_denuncias", String.class).startsWith("v2:"));
         em.clear();
         assertEquals("ele pediu o meu telefone", denuncias.findAll().get(0).getDescricao());
     }
