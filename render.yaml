@@ -32,8 +32,13 @@ services:
         sync: false
       - key: FORWARD_HEADERS_STRATEGY   # atras do proxy do Render: usa X-Forwarded-For para o IP
         value: framework
-      - key: EMAIL_LOG_CORPO     # enquanto o e-mail e so log, nao registrar links com token
+      - key: EMAIL_LOG_CORPO     # nunca registrar links com token em log
         value: "false"
+      # E-mail de verdade pela API da Brevo (o plano gratuito do Render bloqueia SMTP). Sem BREVO_API_KEY, so log.
+      - key: BREVO_API_KEY
+        sync: false
+      - key: EMAIL_REMETENTE     # endereco verificado na conta da Brevo
+        sync: false
 
       # --- Integracoes (opcionais) ---
       - key: GROQ_API_KEY
