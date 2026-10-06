@@ -3,9 +3,10 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>SmartRent B2B - Catálogo de Imóveis</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/mobile.css">
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
     /* Sliders sobrepostos: a trilha nativa some e só o polegar recebe evento,
@@ -55,7 +56,7 @@
       <h2 class="text-2xl font-bold text-slate-700">Portfólio de Imóveis</h2>
       <div class="flex items-center gap-3">
         <button type="button" id="btnAbrirFiltro"
-          class="lg:hidden text-xs font-bold bg-white border border-slate-300 text-slate-700 px-3 py-1.5 rounded-lg shadow-sm">
+          class="lg:hidden text-xs font-bold bg-white border border-slate-300 text-slate-700 px-4 py-2 rounded-lg shadow-sm">
           Filtros
         </button>
         <span id="contadorImoveis"
@@ -69,6 +70,11 @@
       <aside id="painelFiltro"
         class="hidden lg:block bg-white rounded-xl border border-slate-200 shadow-sm px-4 py-3
                lg:sticky lg:top-6">
+        <div class="lg:hidden flex items-center justify-between gap-3 pb-3 mb-2 border-b border-slate-200 sticky top-0 bg-white z-10">
+          <span class="text-sm font-bold text-slate-800">Filtros</span>
+          <button type="button" id="btnFecharFiltro"
+            class="text-xs font-bold bg-blue-600 text-white px-4 py-2 rounded-lg">Ver resultados</button>
+        </div>
         <div id="filtroImoveis"></div>
       </aside>
 
@@ -160,8 +166,9 @@
       fundo.classList.toggle('hidden', !abrir);
       painel.classList.toggle('fixed', abrir);
       painel.classList.toggle('inset-x-4', abrir);
-      painel.classList.toggle('top-16', abrir);
-      painel.classList.toggle('bottom-6', abrir);
+      painel.classList.toggle('top-2', abrir);
+      painel.classList.toggle('bottom-2', abrir);
+      document.body.classList.toggle('overflow-hidden', abrir);
       painel.classList.toggle('z-50', abrir);
       painel.classList.toggle('overflow-y-auto', abrir);
     }
@@ -172,6 +179,9 @@
         .addEventListener('click', () => alternarPainel(true));
       document.getElementById('fundoFiltro')
         .addEventListener('click', () => alternarPainel(false));
+      document.getElementById('btnFecharFiltro')
+        .addEventListener('click', () => alternarPainel(false));
+      document.addEventListener('keydown', e => { if (e.key === 'Escape') { alternarPainel(false); } });
     });
   </script>
 </body>

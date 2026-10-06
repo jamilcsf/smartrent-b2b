@@ -10,7 +10,7 @@
 (function (global) {
   'use strict';
 
-  var BASE = 'flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition ';
+  var BASE = 'flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition whitespace-nowrap ';
   var ATIVO = BASE + 'bg-blue-50 text-blue-700 border border-blue-200';
   var INATIVO = BASE + 'text-slate-600 hover:text-slate-900 hover:bg-slate-100';
 
@@ -37,7 +37,7 @@
     var atual = location.pathname;
     nav.innerHTML = itens(estado).map(function (i) {
       var ativo = atual === i.href || (i.href === '/imoveis.html' && /^\/imoveis\//.test(atual));
-      return '<a href="' + i.href + '"' + (i.id ? ' id="' + i.id + '"' : '') + ' class="' + (ativo ? ATIVO : INATIVO) + '">' +
+      return '<a href="' + i.href + '"' + (i.id ? ' id="' + i.id + '"' : '') + ' aria-label="' + i.texto + '" title="' + i.texto + '"' + (ativo ? ' aria-current="page"' : '') + ' class="' + (ativo ? ATIVO : INATIVO) + '">' +
         '<i data-lucide="' + i.icone + '" class="w-4 h-4"></i>' +
         '<span class="hidden sm:inline">' + i.texto + '</span>' +
         (i.id ? '<span data-nao-lidas class="hidden min-w-[1.1rem] h-[1.1rem] px-1 rounded-full bg-rose-600 text-white text-[10px] font-bold items-center justify-center"></span>' : '') +

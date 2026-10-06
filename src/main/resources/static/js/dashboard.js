@@ -72,7 +72,7 @@
     return '<article class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 ' + (E.destaque === a.id ? 'ring-2 ring-blue-500' : '') + '" id="anuncio-' + a.id + '">' +
       '<div class="flex gap-4">' + capa(a) +
         '<div class="flex-1 min-w-0">' +
-          '<div class="flex flex-wrap items-center gap-2"><h3 class="font-bold text-slate-900 truncate">' + esc(d.titulo) + '</h3>' + selo(a.status) + '</div>' +
+          '<div class="flex flex-wrap items-center gap-2"><h3 class="font-bold text-slate-900 line-clamp-2 break-words" title="' + esc(d.titulo) + '">' + esc(d.titulo) + '</h3>' + selo(a.status) + '</div>' +
           '<p class="text-xs text-slate-500 mt-0.5">' + local(a) + ' • ' + a.totalImagens + ' imagens, ' + a.totalVideos + ' vídeos</p>' +
         '</div>' +
       '</div>' +
@@ -132,7 +132,7 @@
       (E.destaque === a.id ? ' ring-2 ring-blue-500' : '') + '" id="anuncio-' + a.id + '">' +
       '<div class="flex gap-4">' + capa(a) +
         '<div class="flex-1 min-w-0">' +
-          '<div class="flex flex-wrap items-center gap-2"><h3 class="font-bold text-slate-900 truncate">' + esc(d.titulo) + '</h3>' + selo(a.status) + '</div>' +
+          '<div class="flex flex-wrap items-center gap-2"><h3 class="font-bold text-slate-900 line-clamp-2 break-words" title="' + esc(d.titulo) + '">' + esc(d.titulo) + '</h3>' + selo(a.status) + '</div>' +
           '<p class="text-xs text-slate-500 mt-0.5">' + local(a) + '</p>' +
           '<div class="mt-2">' + corpo + '</div>' +
         '</div>' +
@@ -319,10 +319,19 @@
 
     document.querySelectorAll('.aba').forEach(function (b) { b.addEventListener('click', function () { mostrarAba(b.dataset.aba); }); });
     ['aba-pre', 'aba-anuncios'].forEach(function (id) { $(id).addEventListener('click', aoClicarAcao); });
+    function fecharSino() {
+      $('menuSino').classList.add('hidden');
+      $('btnSino').setAttribute('aria-expanded', 'false');
+    }
     $('btnSino').addEventListener('click', function () {
       var aberto = $('menuSino').classList.toggle('hidden') === false;
       $('btnSino').setAttribute('aria-expanded', String(aberto));
     });
+    // Toque/clique fora ou Esc fecham o menu (no celular nao ha hover nem foco para fechar).
+    document.addEventListener('click', function (e) {
+      if (!e.target.closest('#menuSino') && !e.target.closest('#btnSino')) { fecharSino(); }
+    });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { fecharSino(); } });
     $('listaNotificacoes').addEventListener('click', aoClicarNotificacao);
 
     carregarNotificacoes();

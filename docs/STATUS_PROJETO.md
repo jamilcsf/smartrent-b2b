@@ -116,3 +116,42 @@ de segurança, do período mínimo de análise, dos prazos de retenção e do qu
 **concluir a exclusão não está implementado**); SMTP real (os links de e-mail só saem em log); tela de análise e perfil de administrador;
 recuperação de senha (contas criadas só pelo Google e anteriores à V14 não têm caminho para definir a primeira senha); foto em
 armazenamento de objetos; moderação do conteúdo da foto; rate limit distribuído; testes automatizados do front.
+
+## 📱 Revisão mobile (2026-10-06)
+
+Auditoria de responsividade das 14 páginas do front (login, cadastro, catálogo, detalhe do imóvel, reserva do cliente, perfil, Dashboard,
+Painel do Gestor com as três abas, formulário de anúncio, SmartChat e as telas de confirmação por link) em 320, 360, 375, 390, 414 e 768 px
+(retrato) e 667 px (paisagem), com 1280 px como controle de regressão. Metodologia: Playwright com o Edge da máquina e emulação de toque,
+medindo rolagem horizontal, elementos fora da tela, alvos de toque, `font-size` dos campos e erros de console/rede, mais capturas de tela de cada
+página em cada largura. O backend não pôde ser usado (Docker Desktop não iniciou nesta máquina), então a API foi **simulada** por um servidor Node
+de teste com dados de estresse (títulos sem espaços, e-mails e endereços longos, valores de sete dígitos); os fluxos ponta a ponta contra
+Postgres real continuam pendentes de uma passada (ver abaixo).
+
+**Antes:** rolagem horizontal em 11 das 14 páginas quando logado (cabeçalho com marca + menu + conta numa linha só, até 511 px em tela de 320 px);
+título longo estourava o detalhe do imóvel (703 px); campos com 12–14 px (zoom automático no iOS); alvos de toque de 16–40 px; menu de
+notificações do gestor aberto para fora da tela e sem fechar ao tocar fora; filtro do catálogo sem botão de fechar; textos de 10–11 px.
+
+**Corrigido, com solução global:** `static/css/mobile.css` (carregado nas 12 páginas com Tailwind) + ajustes pontuais.
+- Cabeçalho em duas linhas até 899 px (marca e conta em cima, menu embaixo com ícones de 44 px, `aria-label`/`aria-current` nos links do menu),
+  nome do usuário truncado com reticências, `safe-area-inset-*` e `viewport-fit=cover`.
+- `overflow-wrap:anywhere` global, `min-width:0` em filhos de flex/grid, imagens/canvas com `max-width:100%`, tabelas largas com rolagem
+  horizontal dentro do próprio contêiner (largura mínima de 36 rem), valores monetários dos cartões do Dashboard com fonte fluida.
+- Campos com `font-size:16px` (inclusive tablets em toque), alvos de toque de 44 px, caixas de seleção de 24 px, rótulos de 10–11 px elevados a 12 px,
+  botões sem quebra no meio da palavra.
+- Modais: rolagem do fundo travada enquanto abertos (`body:has([role=dialog])`, sem estado que possa ficar preso), altura em `dvh`, margens seguras;
+  toasts com largura limitada à tela.
+- Catálogo: botão **Ver resultados** e Esc no painel de filtros, rolagem do fundo travada. Painel do Gestor: o sino fecha ao tocar fora/Esc e o menu
+  ocupa a largura da tela; títulos dos anúncios em duas linhas em vez de truncados. Gráficos Chart.js: tooltip por coluna (`interaction.mode:index`),
+  fontes de 11–13 px e rótulos com rotação automática.
+
+**Depois:** 0 página com rolagem horizontal nas 7 larguras e no controle de 1280 px; 0 `font-size` de campo abaixo de 16 px; 0 alvo de toque abaixo de
+44 px, exceto as células do calendário (29–43 px de largura × 44 de altura em 320–414 px, acima do mínimo de 24 px do WCAG 2.2 AA; ver pendências);
+0 erro de JavaScript; os 446 testes do Maven continuam passando.
+
+**Pendências / V2:** (1) repetir a passada contra o backend real com Postgres, incluindo a ordem de cancelamento, upload de foto/vídeo e o SSE do
+SmartChat (o servidor simulado não o implementa; o único erro de console restante é essa limitação); (2) teclado virtual: testado só por emulação, sem
+aparelho físico (iOS Safari/Android Chrome reais); (3) células do calendário com 44 px de largura exigem layout de uma ou duas semanas por vez no
+celular (V2); (4) tabelas de reservas em cartões no mobile em vez de rolagem lateral (V2); (5) Tailwind e Lucide vêm de CDN (`cdn.tailwindcss.com`
+é indicado só para desenvolvimento): compilar o CSS e hospedar os ícones localmente é pendência de produção e do tempo de carregamento em 3G;
+(6) o `favicon.ico` não existe (404 no console); (7) o texto `PRE_PUBLICACAO_*` aparece cru na lista "Imóveis por situação" do Dashboard
+(rótulo amigável é pendência de conteúdo); (8) testes automatizados do front (Playwright) ainda não entram no pipeline.
