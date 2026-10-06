@@ -200,6 +200,70 @@ class MessageFilterServiceTest {
         assertThrows(UnsupportedOperationException.class, () -> filtro.moderarImagem(new byte[]{1}, "image/png"));
     }
 
+    // ------------------------------------------------------- suspeita de fraude
+
+    @ParameterizedTest(name = "fraude: {0}")
+    @DisplayName("Fraude - termos de pagamento/contato por fora sao detectados, com variacoes de acento, caixa, simbolos e espacos")
+    @ValueSource(strings = {
+            "preciso de um depósito antecipado", "deposito antecipado por favor", "DEPÓSITO ANTECIPADO",
+            "dá pra fazer desconto por fora?", "pagamento por fora fica mais barato", "podemos pagar por fora",
+            "pix direto pra mim", "faz um pix  direto", "pix, direto", "transferência direta", "transferencia direta de R$ 300",
+            "me passa a chave pix", "chave PIX é meu cpf", "mando um sinal adiantado", "sinal adiantaaado",
+            "vamos combinar fora da plataforma", "fora do site é melhor", "fora do s1te",
+            "me chama no zap", "me chama no whats", "me chama no whatsapp", "me chama no telegram", "me  chama  no   ZAP",
+            "p a g a r  p o r  f o r a", "pagam3nto por f0ra", "d3pósito antecipado"})
+    void termosDeFraude(String texto) {
+        Resultado r = f(texto);
+        assertTrue(r.suspeitaFraude(), texto + " -> " + r.categorias());
+        assertTrue(r.categorias().contains(Categoria.SUSPEITA_FRAUDE));
+    }
+
+    @ParameterizedTest(name = "legitima: {0}")
+    @DisplayName("Fraude - frases comuns sobre preco, datas e pagamento pela plataforma nao disparam")
+    @ValueSource(strings = {
+            "O valor da diária é R$ 350 e o pagamento é feito pela plataforma.", "Posso fazer o check-in às 14h do dia 10/12?",
+            "Qual o valor do depósito caução?", "A chave da casa fica na portaria.", "Aceitam pix na reserva pelo site?",
+            "O pagamento foi confirmado, obrigado!", "Tem desconto para 7 diárias?", "Fica fora do centro, mas perto da praia.",
+            "Posso pagar com cartão de crédito na plataforma?", "O sinal de wifi é bom?", "Vou chegar adiantado, pode ser?",
+            "Fiz a transferência da reserva pelo SmartRent", "O proprietário me chama quando chegar.", "Preciso do site do condomínio.",
+            "me chama aqui no chat quando chegar", "pagamento antecipado pela plataforma"})
+    void frasesLegitimasNaoDisparam(String texto) {
+        Resultado r = f(texto);
+        assertFalse(r.suspeitaFraude(), texto + " -> " + r.categorias());
+    }
+
+    @Test
+    @DisplayName("Fraude - nao mascara nem bloqueia: o texto segue como digitado e as ocorrencias nao mudam")
+    void fraudeNaoMascara() {
+        String texto = "Faz um pix direto que eu dou desconto por fora";
+        Resultado r = f(texto);
+        assertTrue(r.suspeitaFraude());
+        assertEquals(texto, r.texto());
+        assertEquals(0, r.ocorrencias());
+        assertFalse(r.alterado());
+        // junto de telefone: so o telefone e borrado; a fraude continua sinalizada
+        Resultado r2 = f("pagamento por fora no 48 99999-0000");
+        assertTrue(r2.suspeitaFraude());
+        assertTrue(r2.categorias().contains(Categoria.TELEFONE));
+        assertEquals(1, r2.ocorrencias());
+        assertTrue(r2.texto().contains("pagamento por fora"));
+    }
+
+    @Test
+    @DisplayName("Fraude - lista configuravel: arquivo proprio substitui; sem linhas de fraude, mantem a lista padrao")
+    void listaConfiguravel() throws java.io.IOException {
+        java.nio.file.Path arq = java.nio.file.Files.createTempFile("termos", ".txt");
+        java.nio.file.Files.writeString(arq, "SUSPEITA_FRAUDE|cripto direto\nOFENSA|bobalhao\n");
+        ChatProperties props = new ChatProperties(java.util.List.of("smartrent.com.br"), arq.toString(), false, 1000, 20, 10, 300, "", false);
+        MessageFilterService custom = new MessageFilterService(props);
+        assertTrue(custom.filtrar("aceito cripto direto").suspeitaFraude());
+        assertFalse(custom.filtrar("pix direto").suspeitaFraude(), "o arquivo proprio substitui a lista");
+
+        java.nio.file.Files.writeString(arq, "OFENSA|bobalhao\n");
+        MessageFilterService semFraude = new MessageFilterService(props);
+        assertTrue(semFraude.filtrar("pix direto").suspeitaFraude(), "sem linhas da categoria, vale a lista padrao");
+    }
+
     @Test
     @DisplayName("CT436 - Desempenho: 1000 caracteres de texto adversarial sao filtrados em poucos milissegundos")
     void desempenho() {

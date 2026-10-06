@@ -21,7 +21,6 @@ import java.util.stream.Collectors;
  */
 @RestController
 @RequestMapping("/api/imoveis")
-@CrossOrigin(origins = "*")
 public class ImovelController {
 
     private final ImovelRepository imovelRepository;

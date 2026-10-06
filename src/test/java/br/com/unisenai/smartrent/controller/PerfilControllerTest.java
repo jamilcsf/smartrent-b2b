@@ -44,6 +44,7 @@ class PerfilControllerTest {
     @MockBean private FotoPerfilService fotoPerfilService;
     @MockBean private SenhaService senhaService;
     @MockBean private TrocaEmailService trocaEmailService;
+    @MockBean private br.com.unisenai.smartrent.service.VerificacaoEmailService verificacaoEmailService;
     @MockBean private ExclusaoDadosService exclusaoDadosService;
     @MockBean private JwtService jwtService;
     @MockBean private UsuarioRepository usuarioRepository;
@@ -136,7 +137,7 @@ class PerfilControllerTest {
     void soNomeEFotoParaOutrosUsuarios() {
         var campos = java.util.Arrays.stream(br.com.unisenai.smartrent.dto.SmartChatDtos.Interlocutor.class.getRecordComponents())
                 .map(c -> c.getName()).toList();
-        assertEquals(java.util.List.of("nome", "iniciais", "papel", "fotoUrl"), campos);
+        assertEquals(java.util.List.of("nome", "iniciais", "papel", "fotoUrl", "verificado"), campos); // verificado = selo "E-mail verificado" (so o sinal, nunca o endereco)
         assertFalse(campos.contains("email"));
         var mensagem = java.util.Arrays.stream(br.com.unisenai.smartrent.dto.SmartChatDtos.Mensagem.class.getRecordComponents())
                 .map(c -> c.getName()).toList();

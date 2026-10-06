@@ -28,6 +28,8 @@ import br.com.unisenai.smartrent.repository.SmartChatMensagemRepository;
 import br.com.unisenai.smartrent.repository.UsuarioRepository;
 import br.com.unisenai.smartrent.service.MessageFilterService.Resultado;
 import br.com.unisenai.smartrent.service.erro.AcessoNegadoException;
+import br.com.unisenai.smartrent.service.erro.AcessoOcultoException;
+import br.com.unisenai.smartrent.service.erro.EmailNaoVerificadoException;
 import br.com.unisenai.smartrent.service.erro.LimiteExcedidoException;
 import br.com.unisenai.smartrent.service.erro.RecursoNaoEncontradoException;
 import br.com.unisenai.smartrent.service.erro.TransicaoInvalidaException;
@@ -81,6 +83,7 @@ public class SmartChatService {
     private final NotificadorEmail email;
     private final TextosPoliticas textos;
     private final LimitadorDeTaxa limitador;
+    private final AnaliseComportamentoChat analise;
     private final ChatProperties props;
     private final Clock clock;
 
@@ -92,7 +95,7 @@ public class SmartChatService {
                             DenunciaChatRepository denuncias, BloqueioUsuarioRepository bloqueios,
                             MessageFilterService filtro, ChatEventos eventos, NotificacaoService notificacoes,
                             NotificadorEmail email, TextosPoliticas textos, LimitadorDeTaxa limitador,
-                            ChatProperties props, Clock clock) {
+                            AnaliseComportamentoChat analise, ChatProperties props, Clock clock) {
         this.conversas = conversas;
         this.mensagens = mensagens;
         this.imoveis = imoveis;
@@ -106,6 +109,7 @@ public class SmartChatService {
         this.email = email;
         this.textos = textos;
         this.limitador = limitador;
+        this.analise = analise;
         this.props = props;
         this.clock = clock;
     }
@@ -121,11 +125,13 @@ public class SmartChatService {
         Imovel imovel = imoveis.findByIdParaAtualizar(imovelId)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Imóvel não encontrado."));
         if (!AnuncioGestorMapper.noCatalogo(imovel, Agora.de(clock))) {
-            throw new TransicaoInvalidaException("Este anúncio não está publicado no momento.");
+            // mesma resposta de id inexistente: nao revela que existe um anuncio nao publicado
+            throw new RecursoNaoEncontradoException("Imóvel não encontrado.");
         }
         if (imovel.getUsuario().getId().equals(cliente.getId())) {
             throw new AcessoNegadoException("Você não pode conversar consigo mesmo.");
         }
+        exigirEmailVerificadoParaIniciar(cliente, cliente, imovel);
         SmartChatConversa c = obter(cliente, imovel);
         liberarAba(cliente);
         return resposta(c, cliente);
@@ -139,17 +145,34 @@ public class SmartChatService {
         boolean ehCliente = r.getCliente() != null && r.getCliente().getId().equals(usuario.getId());
         boolean ehGestor = r.getImovel().getUsuario().getId().equals(usuario.getId());
         if (!ehCliente && !ehGestor) {
-            throw new AcessoNegadoException("Esta reserva não é sua.");
+            throw new AcessoOcultoException("Reserva não encontrada.");
         }
         if (r.getCliente() == null) {
             throw new TransicaoInvalidaException("Este hóspede não tem conta na plataforma, então não há conversa no SmartChat.");
         }
+        exigirEmailVerificadoParaIniciar(usuario, r.getCliente(), r.getImovel());
         SmartChatConversa c = obter(r.getCliente(), r.getImovel());
         c.getReservaIds().add(r.getId());
         if (ehCliente) {
             liberarAba(usuario);
         }
         return resposta(c, usuario);
+    }
+
+    /**
+     * Abrir uma conversa que ainda nao existe exige e-mail verificado de quem abre. A que ja existe continua
+     * abrindo (leitura). A criacao automatica depois da reserva ({@link #garantirConversaDaReserva}) nao passa
+     * por aqui e segue funcionando.
+     */
+    private void exigirEmailVerificadoParaIniciar(Usuario ator, Usuario cliente, Imovel imovel) {
+        if (ator.isEmailVerificado()) {
+            return;
+        }
+        boolean existe = conversas.findByClienteIdAndGestorIdAndImovelId(cliente.getId(),
+                imovel.getUsuario().getId(), imovel.getId()).isPresent();
+        if (!existe) {
+            throw new EmailNaoVerificadoException();
+        }
     }
 
     /** Procura ou cria, serializando pelo imovel (travado), para nunca criar duas conversas iguais. */
@@ -198,7 +221,7 @@ public class SmartChatService {
                 + " · " + r.getNumeroHospedes() + (r.getNumeroHospedes() == 1 ? " hóspede" : " hóspedes");
         boolean nova = gravarSistema(c, "reserva-confirmada:" + r.getId(), texto);
         if (nova) {
-            String link = "/smartchat.html?conversa=" + c.getId();
+            String link = "/smartchat.html?conversa=" + c.getCodigoPublico();
             avisar(r.getCliente(), r.getImovel().getId(), "Reserva confirmada", "Seu chat com o gestor está pronto. " + texto.split("\n")[1]
                     + ". A política de cancelamento da sua reserva está em /reserva.html?id=" + r.getId()
                     + " (texto provisório).", link);
@@ -260,14 +283,17 @@ public class SmartChatService {
     }
 
     @Transactional(readOnly = true)
-    public Conversa buscar(Usuario usuario, Long id) {
-        return resposta(participante(usuario, id), usuario);
+    public Conversa buscar(Usuario usuario, java.util.UUID codigo) {
+        return resposta(participante(usuario, codigo), usuario);
     }
 
     @Transactional(readOnly = true)
-    public List<Mensagem> listarMensagens(Usuario usuario, Long conversaId, Long depoisDe) {
+    public List<Mensagem> listarMensagens(Usuario usuario, java.util.UUID conversaId, java.util.UUID depoisDe) {
         SmartChatConversa c = participante(usuario, conversaId);
-        return mensagens.findDepoisDe(c.getId(), depoisDe == null ? 0L : depoisDe, PageRequest.of(0, 200)).stream()
+        // O cursor e o codigo publico; um codigo desconhecido ou de outra conversa volta ao inicio (nada vaza).
+        long cursor = depoisDe == null ? 0L
+                : mensagens.findByConversaIdAndCodigoPublico(c.getId(), depoisDe).map(SmartChatMensagem::getId).orElse(0L);
+        return mensagens.findDepoisDe(c.getId(), cursor, PageRequest.of(0, 200)).stream()
                 .map(m -> mensagem(m, usuario)).toList();
     }
 
@@ -277,7 +303,7 @@ public class SmartChatService {
     }
 
     @Transactional(readOnly = true)
-    public Perfil perfil(Usuario usuario, Long conversaId) {
+    public Perfil perfil(Usuario usuario, java.util.UUID conversaId) {
         SmartChatConversa c = participante(usuario, conversaId);
         return new Perfil(interlocutor(c, usuario), imovelResumo(c.getImovel()), reservaResumo(c));
     }
@@ -285,15 +311,21 @@ public class SmartChatService {
     // --------------------------------------------------------------- escrita
 
     @Transactional
-    public EnvioResposta enviar(Usuario usuario, Long conversaId, String texto) {
+    public EnvioResposta enviar(Usuario usuario, java.util.UUID conversaId, String texto) {
         SmartChatConversa c = participante(usuario, conversaId);
+        if (!usuario.isEmailVerificado()) { // regra no backend; o front so mostra o motivo
+            throw new EmailNaoVerificadoException();
+        }
         if (texto == null || texto.isBlank()) {
             throw new IllegalArgumentException("Escreva uma mensagem.");
         }
         if (texto.length() > props.maxCaracteres()) {
             throw new IllegalArgumentException("A mensagem pode ter no máximo " + props.maxCaracteres() + " caracteres.");
         }
-        if (!limitador.permitir("chat:" + usuario.getId(), props.mensagensPorMinuto(), Duration.ofMinutes(1))) {
+        // Depois de um alerta de envio em massa o limite fica mais restrito por um tempo (a conta nao e suspensa).
+        int limite = analise.limiteRestrito(usuario.getId())
+                ? Math.min(props.mensagensPorMinuto(), analise.limiteRestritoPorMinuto()) : props.mensagensPorMinuto();
+        if (!limitador.permitir("chat:" + usuario.getId(), limite, Duration.ofMinutes(1))) {
             throw new LimiteExcedidoException("Você está enviando mensagens rápido demais. Aguarde um instante.");
         }
         exigirSemBloqueio(c);
@@ -309,9 +341,12 @@ public class SmartChatService {
         m.setTextoFiltrado(resultado.texto());
         m.setTextoOriginal(limpo.length() > 2000 ? limpo.substring(0, 2000) : limpo); // restrito ao backend
         m.setOcorrencias(resultado.ocorrencias());
+        String resumo = analise.resumoDe(limpo);
+        m.setTextoHmac(resumo);
         m.setCategorias(resultado.categorias().stream().map(Enum::name).collect(Collectors.joining(",")));
         m.setCriadaEm(agora);
         mensagens.save(m);
+        analise.aposEnvio(usuario, resumo, resultado.suspeitaFraude());
 
         c.setUltimaMensagemEm(agora);
         conversas.save(c);
@@ -330,11 +365,11 @@ public class SmartChatService {
     }
 
     @Transactional
-    public void marcarLidas(Usuario usuario, Long conversaId) {
+    public void marcarLidas(Usuario usuario, java.util.UUID conversaId) {
         SmartChatConversa c = participante(usuario, conversaId);
         int n = mensagens.marcarLidas(c.getId(), usuario.getId(), clock.instant());
         if (n > 0) {
-            eventos.publicar(c.outroLado(usuario).getId(), "lida", Map.of("conversaId", c.getId()));
+            eventos.publicar(c.outroLado(usuario).getId(), "lida", Map.of("conversa", c.getCodigoPublico().toString()));
         }
     }
 
@@ -345,7 +380,7 @@ public class SmartChatService {
      * funcional: nada e bloqueado nem avisado ao denunciado.
      */
     @Transactional
-    public Confirmacao denunciar(Usuario usuario, Long conversaId, DenunciaPedido p) {
+    public Confirmacao denunciar(Usuario usuario, java.util.UUID conversaId, DenunciaPedido p) {
         SmartChatConversa c = participante(usuario, conversaId);
         Usuario denunciado = c.outroLado(usuario);
         if (denunciado.getId().equals(usuario.getId())) {
@@ -368,7 +403,7 @@ public class SmartChatService {
         d.setDescricao(descricao == null || descricao.isBlank() ? null
                 : (descricao.length() > 1000 ? descricao.substring(0, 1000) : descricao));
         if (p.mensagensIds() != null && !p.mensagensIds().isEmpty()) {
-            List<Long> validas = mensagens.findByConversaIdAndIdIn(c.getId(), p.mensagensIds()).stream()
+            List<Long> validas = mensagens.findByConversaIdAndCodigoPublicoIn(c.getId(), p.mensagensIds()).stream()
                     .map(SmartChatMensagem::getId).toList();
             d.setMensagensAnexadas(validas.stream().map(String::valueOf).collect(Collectors.joining(",")));
         }
@@ -384,7 +419,7 @@ public class SmartChatService {
      * de aplicacao futura e {@link #exigirSemBloqueio(SmartChatConversa)}.
      */
     @Transactional
-    public Confirmacao bloquear(Usuario usuario, Long conversaId) {
+    public Confirmacao bloquear(Usuario usuario, java.util.UUID conversaId) {
         SmartChatConversa c = participante(usuario, conversaId);
         Usuario bloqueado = c.outroLado(usuario);
         Instant agora = clock.instant();
@@ -416,20 +451,21 @@ public class SmartChatService {
 
     // ----------------------------------------------------------------- apoio
 
-    private SmartChatConversa participante(Usuario usuario, Long id) {
-        SmartChatConversa c = conversas.findById(id)
+    /**
+     * Conversa pelo UUID publico, SO para quem participa. Conversa inexistente e conversa de terceiros dao a MESMA
+     * resposta (404, mesma mensagem): nao ha como descobrir quais conversas existem.
+     */
+    private SmartChatConversa participante(Usuario usuario, java.util.UUID codigo) {
+        return conversas.findByCodigoPublico(codigo)
+                .filter(c -> c.participa(usuario))
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Conversa não encontrada."));
-        if (!c.participa(usuario)) {
-            throw new AcessoNegadoException("Você não participa desta conversa.");
-        }
-        return c;
     }
 
     private Conversa resposta(SmartChatConversa c, Usuario usuario) {
         SmartChatMensagem ultima = mensagens.findFirstByConversaIdOrderByIdDesc(c.getId()).orElse(null);
         String previa = ultima == null ? null : abreviar(MessageFilterService.semMarcadores(ultima.getTextoFiltrado()), 80);
         boolean publicado = AnuncioGestorMapper.noCatalogo(c.getImovel(), Agora.de(clock));
-        return new Conversa(c.getId(), imovelResumo(c.getImovel()), interlocutor(c, usuario), previa,
+        return new Conversa(c.getCodigoPublico(), imovelResumo(c.getImovel()), interlocutor(c, usuario), previa,
                 c.getUltimaMensagemEm(), mensagens.contarNaoLidas(c.getId(), usuario.getId()), reservaResumo(c), publicado,
                 c.getCliente().getId().equals(usuario.getId()) ? "CLIENTE" : "GESTOR");
     }
@@ -443,21 +479,25 @@ public class SmartChatService {
         String[] partes = outro.getNome().trim().split("\\s+");
         String iniciais = (partes[0].substring(0, 1) + (partes.length > 1 ? partes[partes.length - 1].substring(0, 1) : "")).toUpperCase();
         return new Interlocutor(outro.getNome(), iniciais, c.getGestor().getId().equals(outro.getId()) ? "Gestor" : "Cliente",
-                br.com.unisenai.smartrent.dto.UsuarioResponse.fotoUrl(outro));
+                br.com.unisenai.smartrent.dto.UsuarioResponse.fotoUrl(outro), outro.isEmailVerificado());
     }
 
     /** Reserva exibida no cabecalho: a ativa mais proxima, senao a mais recente do cliente naquele imovel. */
     private ReservaResumo reservaResumo(SmartChatConversa c) {
         List<Reserva> lista = reservas.findByClienteIdAndImovelIdOrderByDataCheckinDesc(c.getCliente().getId(), c.getImovel().getId());
         Reserva r = lista.stream().filter(x -> !x.getStatus().cancelada()).findFirst().orElse(lista.isEmpty() ? null : lista.get(0));
-        return r == null ? null : new ReservaResumo(r.getId(), r.getStatus(), r.getDataCheckin(), r.getDataCheckout(), r.getNumeroHospedes());
+        return r == null ? null : new ReservaResumo(r.getStatus(), r.getDataCheckin(), r.getDataCheckout(), r.getNumeroHospedes());
     }
 
     private static Mensagem mensagem(SmartChatMensagem m, Usuario usuario) {
         boolean sistema = m.getTipo() == TipoMensagem.SISTEMA;
-        return new Mensagem(m.getId(), m.getTipo().name(), !sistema && m.getAutor().getId().equals(usuario.getId()),
+        return new Mensagem(m.getCodigoPublico(), m.getTipo().name(), !sistema && m.getAutor().getId().equals(usuario.getId()),
                 sistema ? "SmartRent" : m.getAutor().getNome(), m.getTextoFiltrado(), m.getOcorrencias(), m.getCriadaEm(),
-                m.getLidaEm() != null);
+                m.getLidaEm() != null, !sistema && !m.getAutor().getId().equals(usuario.getId()) && sinalizada(m));
+    }
+
+    private static boolean sinalizada(SmartChatMensagem m) {
+        return m.getCategorias() != null && m.getCategorias().contains(MessageFilterService.Categoria.SUSPEITA_FRAUDE.name());
     }
 
     private static String abreviar(String t, int max) {
@@ -473,7 +513,7 @@ public class SmartChatService {
             if (autor != null && u.getId().equals(autor.getId())) {
                 continue;
             }
-            eventos.publicar(u.getId(), "mensagem", Map.of("conversaId", c.getId(), "mensagemId", mensagemId));
+            eventos.publicar(u.getId(), "mensagem", Map.of("conversa", c.getCodigoPublico().toString())); // so o UUID: nenhum id numerico
         }
     }
 
@@ -491,14 +531,19 @@ public class SmartChatService {
         ultimaNotificacao.put(chave, agora);
         // sempre o texto filtrado: o borrao vira "[ocultado]"
         String previa = abreviar(MessageFilterService.semMarcadores(textoFiltrado), 80);
+        // O e-mail (hoje so log) nao leva o texto: texto de mensagem nunca vai a log (ADR-006).
         avisar(destino, c.getImovel().getId(), "Nova mensagem de " + autor.getNome(), previa,
-                "/smartchat.html?conversa=" + c.getId());
+                "Você recebeu uma nova mensagem no SmartChat.", "/smartchat.html?conversa=" + c.getCodigoPublico());
     }
 
     private void avisar(Usuario destino, Long imovelId, String titulo, String mensagem, String link) {
+        avisar(destino, imovelId, titulo, mensagem, mensagem, link);
+    }
+
+    private void avisar(Usuario destino, Long imovelId, String titulo, String mensagem, String corpoEmail, String link) {
         try {
             notificacoes.criar(destino, imovelId, titulo, mensagem, link);
-            email.enviar(destino, titulo, mensagem);
+            email.enviar(destino, titulo, corpoEmail);
         } catch (RuntimeException e) {
             log.warn("Falha ao avisar {} sobre o SmartChat", destino.getId(), e);
         }

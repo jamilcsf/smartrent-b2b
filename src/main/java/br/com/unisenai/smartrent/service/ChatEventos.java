@@ -12,6 +12,8 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import java.io.IOException;
 import java.time.Clock;
 import java.time.Instant;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -32,12 +34,15 @@ public class ChatEventos {
     private static final Logger log = LoggerFactory.getLogger(ChatEventos.class);
     private static final long TEMPO_LIMITE_MS = 30 * 60 * 1000L;
     private static final long VALIDADE_TICKET_SEG = 60;
+    /** Teto de conexoes SSE abertas e de tickets pendentes por usuario: a mais antiga cai (evita esgotar memoria/threads). */
+    static final int MAX_POR_USUARIO = 5;
 
-    private record Ticket(Long usuarioId, Instant expira) {
+    private record Ticket(Long usuarioId, Instant expira, long ordem) {
     }
 
     private final Map<Long, Set<SseEmitter>> porUsuario = new ConcurrentHashMap<>();
     private final Map<String, Ticket> tickets = new ConcurrentHashMap<>();
+    private final java.util.concurrent.atomic.AtomicLong sequencia = new java.util.concurrent.atomic.AtomicLong();
     private final Clock clock;
 
     public ChatEventos(Clock clock) {
@@ -46,8 +51,15 @@ public class ChatEventos {
 
     public String emitirTicket(Long usuarioId) {
         limparTickets();
+        List<Map.Entry<String, Ticket>> pendentes = tickets.entrySet().stream()
+                .filter(e -> e.getValue().usuarioId().equals(usuarioId))
+                .sorted(Comparator.comparingLong(e -> e.getValue().ordem()))
+                .toList();
+        for (int i = 0; i <= pendentes.size() - MAX_POR_USUARIO; i++) { // abre espaco para o novo
+            tickets.remove(pendentes.get(i).getKey());
+        }
         String t = UUID.randomUUID().toString();
-        tickets.put(t, new Ticket(usuarioId, clock.instant().plusSeconds(VALIDADE_TICKET_SEG)));
+        tickets.put(t, new Ticket(usuarioId, clock.instant().plusSeconds(VALIDADE_TICKET_SEG), sequencia.incrementAndGet()));
         return t;
     }
 
@@ -59,6 +71,15 @@ public class ChatEventos {
         }
         SseEmitter emitter = new SseEmitter(TEMPO_LIMITE_MS);
         Set<SseEmitter> lista = porUsuario.computeIfAbsent(t.usuarioId(), k -> new CopyOnWriteArraySet<>());
+        while (lista.size() >= MAX_POR_USUARIO) { // a conexao mais antiga cai (o navegador reconecta com novo ticket)
+            SseEmitter antigo = lista.iterator().next();
+            lista.remove(antigo);
+            try {
+                antigo.complete();
+            } catch (RuntimeException e) {
+                // ja encerrada
+            }
+        }
         lista.add(emitter);
         Runnable remover = () -> lista.remove(emitter);
         emitter.onCompletion(remover);
@@ -70,6 +91,15 @@ public class ChatEventos {
             remover.run();
         }
         return emitter;
+    }
+
+    int conexoesAbertas(Long usuarioId) {
+        Set<SseEmitter> s = porUsuario.get(usuarioId);
+        return s == null ? 0 : s.size();
+    }
+
+    int ticketsPendentes(Long usuarioId) {
+        return (int) tickets.values().stream().filter(t -> t.usuarioId().equals(usuarioId)).count();
     }
 
     public boolean conectado(Long usuarioId) {

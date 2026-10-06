@@ -12,6 +12,7 @@ import br.com.unisenai.smartrent.service.RefundPolicyService.Contexto;
 import br.com.unisenai.smartrent.service.RefundPolicyService.Decisao;
 import br.com.unisenai.smartrent.service.RefundPolicyService.Quem;
 import br.com.unisenai.smartrent.service.erro.AcessoNegadoException;
+import br.com.unisenai.smartrent.service.erro.AcessoOcultoException;
 import br.com.unisenai.smartrent.service.erro.RecursoNaoEncontradoException;
 import br.com.unisenai.smartrent.service.erro.TransicaoInvalidaException;
 import org.slf4j.Logger;
@@ -112,6 +113,8 @@ public class CancelamentoService {
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Reserva não encontrada."));
         try {
             acesso.conferir(gestor, r.getImovel());
+        } catch (AcessoOcultoException e) {
+            throw new AcessoOcultoException("Reserva não encontrada.");
         } catch (AcessoNegadoException e) {
             throw new AcessoNegadoException("Você não tem permissão sobre esta reserva.");
         }
@@ -212,7 +215,7 @@ public class CancelamentoService {
         Reserva r = (travar ? reservaRepository.findByIdParaAtualizar(id) : reservaRepository.findById(id))
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Reserva não encontrada."));
         if (cliente == null || r.getCliente() == null || !r.getCliente().getId().equals(cliente.getId())) {
-            throw new AcessoNegadoException("Esta reserva não é sua.");
+            throw new AcessoOcultoException("Reserva não encontrada.");
         }
         return r;
     }

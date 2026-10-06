@@ -20,13 +20,16 @@ public class AuthService {
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final VerificacaoEmailService verificacao;
 
     public AuthService(UsuarioRepository usuarioRepository,
                        PasswordEncoder passwordEncoder,
-                       JwtService jwtService) {
+                       JwtService jwtService,
+                       VerificacaoEmailService verificacao) {
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.verificacao = verificacao;
     }
 
     @Transactional
@@ -46,7 +49,10 @@ public class AuthService {
         usuario.setPapel(papelDoPerfil(req.perfil()));
         usuario.setAtivo(true);
 
-        return responder(usuarioRepository.save(usuario));
+        Usuario salvo = usuarioRepository.save(usuario);
+        // Conta por senha nasce sem e-mail verificado: recebe o link (so o remetente do e-mail prova que e dono dele).
+        verificacao.enviarLink(salvo, null);
+        return responder(salvo);
     }
 
     public AuthResponse autenticar(LoginRequest req) {
@@ -81,6 +87,11 @@ public class AuthService {
         if (!usuario.isAtivo()) {
             throw new CredenciaisInvalidasException("Esta conta está inativa.");
         }
+        // O Google so entrega o e-mail se ele estiver verificado la (GoogleTokenVerifier): conta como verificado.
+        if (!usuario.isEmailVerificado()) {
+            verificacao.marcarVerificado(usuario);
+            usuarioRepository.save(usuario);
+        }
         return responder(usuario);
     }
 
@@ -96,6 +107,7 @@ public class AuthService {
         // senha aleatória que ninguém conhece: só entra pelo Google.
         usuario.setSenhaHash(passwordEncoder.encode(UUID.randomUUID().toString()));
         usuario.setSenhaDefinida(false);
+        verificacao.marcarVerificado(usuario); // o Google so entrega e-mail ja verificado
         usuario.setPapel(papelDoPerfil(perfil));
         usuario.setAtivo(true);
         return usuario;

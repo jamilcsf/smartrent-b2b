@@ -5,6 +5,7 @@ import br.com.unisenai.smartrent.repository.ImovelMidiaRepository;
 import br.com.unisenai.smartrent.service.MidiaStorage;
 import org.springframework.core.io.Resource;
 import org.springframework.http.CacheControl;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.net.URI;
 import java.time.Duration;
 
 /**
@@ -72,12 +74,20 @@ public class MidiaPublicaController {
     @GetMapping("/{chave}/miniatura")
     public ResponseEntity<Resource> miniatura(@PathVariable String chave) {
         return midiaRepository.findByChave(chave)
+                .filter(ImovelMidia::visivelAoPublico)
                 .filter(m -> m.getMiniatura() != null)
                 .map((ImovelMidia m) -> entregar(m.getMiniatura(), "image/jpeg"))
                 .orElse(ResponseEntity.notFound().build());
     }
 
     private ResponseEntity<Resource> entregar(String nome, String mime) {
+        String direta = storage.urlPublica(nome);
+        if (direta != null) { // CDN do bucket: os bytes nao passam pela aplicacao
+            return ResponseEntity.status(HttpStatus.FOUND)
+                    .location(URI.create(direta))
+                    .cacheControl(CacheControl.maxAge(Duration.ofDays(1)).cachePublic())
+                    .build();
+        }
         Resource recurso = storage.abrir(nome);
         if (!recurso.exists()) {
             return ResponseEntity.notFound().build();

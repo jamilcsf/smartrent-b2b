@@ -108,6 +108,8 @@ set "DATABASE_URL=jdbc:postgresql://localhost:%PGPORTA%/postgres"
 set "DATABASE_USERNAME=postgres"
 set "DATABASE_PASSWORD=postgres"
 if not defined JWT_SECRET set "JWT_SECRET=chave-de-desenvolvimento-local-trocar-em-producao-32b"
+REM Perfil dev: dispensa SMARTCHAT_CRYPTO_KEY (usa uma chave publica de desenvolvimento; nunca em producao).
+if not defined SPRING_PROFILES_ACTIVE set "SPRING_PROFILES_ACTIVE=dev"
 
 echo [3/5] Compilando e iniciando a aplicacao...
 echo   (a primeira execucao baixa as dependencias e pode demorar)

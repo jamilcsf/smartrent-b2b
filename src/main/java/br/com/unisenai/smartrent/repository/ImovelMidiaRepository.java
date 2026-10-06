@@ -25,6 +25,13 @@ public interface ImovelMidiaRepository extends JpaRepository<ImovelMidia, Long> 
     List<ImovelMidia> findParaProcessar(@org.springframework.data.repository.query.Param("agora") java.time.Instant agora,
                                         org.springframework.data.domain.Pageable pagina);
 
+    /** Imagens ainda nao reprocessadas sem metadados (job de saneamento), em ordem de id. */
+    @org.springframework.data.jpa.repository.Query("SELECT m FROM ImovelMidia m WHERE m.metadadosRemovidos = false "
+            + "AND m.tipo IN (br.com.unisenai.smartrent.model.enums.TipoMidia.FOTO, "
+            + "br.com.unisenai.smartrent.model.enums.TipoMidia.FOTO_360) AND m.id > :depoisDe ORDER BY m.id")
+    List<ImovelMidia> findImagensParaSanear(@org.springframework.data.repository.query.Param("depoisDe") Long depoisDe,
+                                            org.springframework.data.domain.Pageable pagina);
+
     /** Envios iniciados e nunca concluidos (orfaos) sem atividade desde o limite. */
     List<ImovelMidia> findByStatusProcessamentoAndAtualizadoEmBefore(
             br.com.unisenai.smartrent.model.enums.StatusVideo status, java.time.Instant limite);

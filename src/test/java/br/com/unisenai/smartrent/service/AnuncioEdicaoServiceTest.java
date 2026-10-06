@@ -218,7 +218,7 @@ class AnuncioEdicaoServiceTest {
         iniciar();
         service.salvarRascunho(gestor, 1L, dadosValidos("<script>x</script>Casa"));
 
-        assertEquals("xCasa", rascunhoAtual().titulo());
+        assertEquals("Casa", rascunhoAtual().titulo()); // o conteudo do script some junto com a tag
     }
 
     @Test

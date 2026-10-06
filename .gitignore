@@ -7,8 +7,18 @@ target/
 
 # Variáveis de ambiente / segredos
 .env
-.env.local
+.env.*
+!.env.example
 *.pem
+*.key
+*.jks
+*.p12
+*.pfx
+secrets/
+application-local*.properties
+application-local*.yml
+application-prod*.properties
+application-prod*.yml
 
 # IntelliJ IDEA
 .idea/
@@ -50,3 +60,12 @@ __pycache__/
 
 # Midias enviadas em desenvolvimento (smartrent.midia.diretorio)
 dados/
+
+# Preferencias pessoais do assistente de IA (as diretrizes do projeto ficam no CLAUDE.md, versionado)
+CLAUDE.local.md
+.claude/settings.local.json
+.claude/worktrees/
+
+# Binarios de entrega: gerados pelo build, nunca versionados (podem embutir configuracao)
+*.jar
+!.mvn/wrapper/*.jar

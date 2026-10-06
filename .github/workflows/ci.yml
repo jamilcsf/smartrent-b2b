@@ -6,27 +6,44 @@ on:
   pull_request:
     branches: [ "main" ]
 
+# Token do workflow so le o repositorio; o upload de artefato usa o proprio servico do Actions.
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
 
     steps:
+    # Actions fixadas por SHA do commit (o comentario indica a tag); o Dependabot propoe as atualizacoes.
     - name: Checar codigo do repositorio
-      uses: actions/checkout@v4
+      uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+    - name: Verificar segredos acidentais no codigo versionado
+      run: |
+        padroes='AKIA[0-9A-Z]{16}|gsk_[A-Za-z0-9]{20,}|-----BEGIN ([A-Z]+ )?PRIVATE KEY-----|postgres(ql)?://[^ :@/]+:[^ @/]+@|jdbc:postgresql://[^ ]*[?&]password='
+        if git grep -nIE "$padroes" -- . ':!*.pdf' ':!*.docx'; then
+          echo "::error::Possivel segredo versionado (acima). Remova, rotacione a credencial e use variavel de ambiente."
+          exit 1
+        fi
 
     - name: Configurar JDK 17
-      uses: actions/setup-java@v5
+      uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
       with:
         java-version: '17'
         distribution: 'temurin'
         cache: maven
 
     - name: Executar Build e Suíte de Testes (JUnit 5)
-      run: mvn clean test
+      run: mvn -B clean test
 
     - name: Publicar Relatorio de Testes (Evidencias)
       if: always()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
       with:
         name: evidencias-testes-junit
         path: target/surefire-reports/

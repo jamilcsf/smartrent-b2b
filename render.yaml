@@ -1,0 +1,64 @@
+# Blueprint do Render para o SmartRent B2B (Runtime Docker, ver Dockerfile).
+# NENHUM valor secreto fica neste arquivo: as variaveis "sync: false" sao digitadas no painel do Render
+# (RNF03) e as "generateValue: true" sao geradas pelo Render uma unica vez (valor aleatorio de 256 bits em Base64).
+services:
+  - type: web
+    name: smartrent-b2b
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free              # 512 MB / 0,1 CPU: apertado para Java e imagens grandes; prefira um plano pago em uso real
+    healthCheckPath: /api/config/agora
+    envVars:
+      # --- Banco (Supabase) ---
+      - key: DATABASE_URL        # jdbc:postgresql://<host-supabase>:5432/postgres?sslmode=require
+        sync: false
+      - key: DATABASE_USERNAME
+        sync: false
+      - key: DATABASE_PASSWORD
+        sync: false
+
+      # --- Segredos gerados pelo Render ---
+      # SMARTCHAT_CRYPTO_KEY: perder o valor torna as mensagens irrecuperaveis. Depois do primeiro deploy,
+      # copie-a (icone de olho no painel) para um cofre de senhas, com backup separado do banco.
+      - key: JWT_SECRET
+        generateValue: true
+      - key: SMARTCHAT_CRYPTO_KEY
+        generateValue: true
+      - key: SMARTCHAT_HMAC_KEY
+        generateValue: true
+
+      # --- Site e e-mail ---
+      - key: APP_BASE_URL        # endereco publico, ex.: https://smartrent-b2b.onrender.com
+        sync: false
+      - key: FORWARD_HEADERS_STRATEGY   # atras do proxy do Render: usa X-Forwarded-For para o IP
+        value: framework
+      - key: EMAIL_LOG_CORPO     # nunca registrar links com token em log
+        value: "false"
+      # E-mail de verdade pela API da Brevo (o plano gratuito do Render bloqueia SMTP). Sem BREVO_API_KEY, so log.
+      - key: BREVO_API_KEY
+        sync: false
+      - key: EMAIL_REMETENTE     # endereco verificado na conta da Brevo
+        sync: false
+
+      # --- Fotos no Cloudflare R2 (sem elas, as fotos ficam no disco, que e apagado a cada deploy no Render) ---
+      - key: R2_BUCKET
+        sync: false
+      - key: R2_ENDPOINT         # https://<ID_DA_CONTA>.r2.cloudflarestorage.com
+        sync: false
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
+      - key: R2_URL_PUBLICA      # opcional: dominio publico do bucket; as fotos passam a sair direto da CDN
+        sync: false
+
+      # --- Integracoes (opcionais) ---
+      - key: GROQ_API_KEY
+        sync: false
+      # reCAPTCHA v2: OBRIGATORIO. Com a chave de teste do Google a aplicacao nao sobe (aprovaria qualquer token).
+      - key: RECAPTCHA_SITE_KEY
+        sync: false
+      - key: RECAPTCHA_SECRET
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false

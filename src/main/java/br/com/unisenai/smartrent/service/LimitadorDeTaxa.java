@@ -18,6 +18,10 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 public class LimitadorDeTaxa {
 
+    /** Acima disto, chaves sem atividade ha mais de {@link #RETENCAO} sao descartadas (evita crescer sem limite). */
+    static final int LIMITE_PARA_VARRER = 10_000;
+    static final Duration RETENCAO = Duration.ofHours(24);
+
     private final Map<String, Deque<Instant>> janelas = new ConcurrentHashMap<>();
     private final Clock clock;
 
@@ -28,6 +32,7 @@ public class LimitadorDeTaxa {
     /** Registra uma tentativa e diz se ela cabe em {@code limite} por {@code janela}. */
     public boolean permitir(String chave, int limite, Duration janela) {
         Instant agora = clock.instant();
+        varrerSeNecessario(agora);
         Deque<Instant> fila = janelas.computeIfAbsent(chave, k -> new ArrayDeque<>());
         synchronized (fila) {
             Instant corte = agora.minus(janela);
@@ -59,6 +64,7 @@ public class LimitadorDeTaxa {
 
     /** Registra uma ocorrencia (por exemplo, uma senha errada) sem decidir nada. */
     public void registrar(String chave) {
+        varrerSeNecessario(clock.instant());
         Deque<Instant> fila = janelas.computeIfAbsent(chave, k -> new ArrayDeque<>());
         synchronized (fila) {
             fila.addLast(clock.instant());
@@ -68,5 +74,21 @@ public class LimitadorDeTaxa {
     /** Esquece as ocorrencias da chave (depois de um sucesso). */
     public void limpar(String chave) {
         janelas.remove(chave);
+    }
+
+    private void varrerSeNecessario(Instant agora) {
+        if (janelas.size() <= LIMITE_PARA_VARRER) {
+            return;
+        }
+        Instant corte = agora.minus(RETENCAO);
+        janelas.entrySet().removeIf(e -> {
+            synchronized (e.getValue()) {
+                return e.getValue().isEmpty() || e.getValue().peekLast().isBefore(corte);
+            }
+        });
+    }
+
+    int tamanho() {
+        return janelas.size();
     }
 }

@@ -3,6 +3,8 @@ package br.com.unisenai.smartrent.service;
 import br.com.unisenai.smartrent.config.ExclusaoDadosProperties;
 import br.com.unisenai.smartrent.model.enums.StatusAnuncio;
 import br.com.unisenai.smartrent.model.enums.StatusReserva;
+import br.com.unisenai.smartrent.model.enums.StatusAlertaInterno;
+import br.com.unisenai.smartrent.repository.AlertaInternoRepository;
 import br.com.unisenai.smartrent.repository.AuditoriaContaRepository;
 import br.com.unisenai.smartrent.repository.DenunciaChatRepository;
 import br.com.unisenai.smartrent.repository.ImovelRepository;
@@ -21,6 +23,8 @@ import java.util.List;
 /**
  * Sinais que ajudam a equipe a analisar um pedido de exclusao de dados (golpe, conta invadida,
  * tentativa de sumir depois de aplicar um golpe) e os impedimentos objetivos da aprovacao.
+ * Alertas internos de comportamento do SmartChat (envio em massa, suspeita de fraude) entram como contagem em
+ * {@code alertas_comportamento_abertos}, pelo mesmo caminho das denuncias; so sinalizam, nao viram impedimento.
  * Os sinais NAO bloqueiam o pedido; o texto guardado traz so sim/nao e contagens, nenhum dado
  * pessoal.
  */
@@ -36,17 +40,19 @@ public class SinaisDeRisco {
     private final ImovelRepository imoveis;
     private final ReembolsoRepository reembolsos;
     private final DenunciaChatRepository denuncias;
+    private final AlertaInternoRepository alertas;
     private final ExclusaoDadosProperties props;
     private final Clock clock;
 
     public SinaisDeRisco(AuditoriaContaRepository auditoria, ReservaRepository reservas, ImovelRepository imoveis,
                          ReembolsoRepository reembolsos, DenunciaChatRepository denuncias,
-                         ExclusaoDadosProperties props, Clock clock) {
+                         AlertaInternoRepository alertas, ExclusaoDadosProperties props, Clock clock) {
         this.auditoria = auditoria;
         this.reservas = reservas;
         this.imoveis = imoveis;
         this.reembolsos = reembolsos;
         this.denuncias = denuncias;
+        this.alertas = alertas;
         this.props = props;
         this.clock = clock;
     }
@@ -66,6 +72,7 @@ public class SinaisDeRisco {
                 + "; anuncios_ativos=" + imoveis.countByUsuarioIdAndStatusIn(usuarioId, ATIVOS)
                 + "; reembolsos_nao_concluidos=" + reembolsos.contarNaoConcluidosDoUsuario(usuarioId)
                 + "; denuncias_abertas_contra=" + denuncias.contarAbertasContra(usuarioId)
+                + "; alertas_comportamento_abertos=" + alertas.countByUsuarioIdAndStatus(usuarioId, StatusAlertaInterno.ABERTO)
                 + "; janela_dias=" + props.riscoDias();
     }
 

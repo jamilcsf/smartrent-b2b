@@ -46,6 +46,10 @@ public class ImovelMidia {
     @Column(name = "tamanho_bytes", nullable = false)
     private long tamanhoBytes;
 
+    /** Imagem reprocessada sem metadados (EXIF/GPS). Falso nas fotos antigas ate o job de saneamento. */
+    @Column(name = "metadados_removidos", nullable = false)
+    private boolean metadadosRemovidos;
+
     @Column(name = "largura")
     private Integer largura;
 
@@ -179,6 +183,8 @@ public class ImovelMidia {
         this.tamanhoBytes = tamanhoBytes;
     }
 
+    public boolean isMetadadosRemovidos() { return metadadosRemovidos; }
+    public void setMetadadosRemovidos(boolean v) { this.metadadosRemovidos = v; }
     public Integer getLargura() {
         return largura;
     }

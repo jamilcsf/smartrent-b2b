@@ -68,7 +68,14 @@ src/main/java/com/temporada/gestao
    export IA_API_KEY=<sua-chave-groq-ou-openai>
    export IA_API_URL=https://api.groq.com/openai/v1/chat/completions
    export IA_API_MODEL=llama-3.3-70b-versatile
+   export SMARTCHAT_CRYPTO_KEY=<base64-de-32-bytes>   # ver "Cifragem em repouso do SmartChat"
+   export SMARTCHAT_HMAC_KEY=<base64-de-pelo-menos-32-bytes>   # openssl rand -base64 32
+   export JWT_SECRET=<pelo-menos-32-bytes>                     # openssl rand -base64 32
+   export RECAPTCHA_SITE_KEY=<chave-do-site> RECAPTCHA_SECRET=<chave-secreta>
    ```
+
+   O modelo completo das variáveis está em [`.env.example`](.env.example) (sem valores reais). Fora do perfil `dev`/`test` a aplicação **não sobe**
+   sem `JWT_SECRET`, `SMARTCHAT_CRYPTO_KEY`, `SMARTCHAT_HMAC_KEY` e reCAPTCHA reais.
 
 3. Compile e execute os testes:
    ```bash
@@ -177,13 +184,22 @@ interação (flag no backend) e sempre para o gestor. Telefones, e-mails, links 
 **borrados no servidor** (o original nunca chega ao navegador); links de `SMARTCHAT_DOMINIOS_PERMITIDOS` passam.
 Denúncia e bloqueio de usuário são **protótipo**: persistem, sem efeito (`SMARTCHAT_BLOCK_ENFORCEMENT=false`).
 
+Reforço de segurança ([ADR-007](docs/adr/ADR-007-reforco-de-seguranca-do-smartchat-e-dos-uploads.md)): faixa fixa de aviso no topo das mensagens; mensagens que citam pagamento ou contato
+fora da plataforma (`SUSPEITA_FRAUDE`) **não são bloqueadas**, mas o destinatário vê um alerta e a equipe recebe um alerta interno; o mesmo
+texto enviado a várias conversas em pouco tempo gera um alerta interno e restringe o limite de envio (sem suspender a conta); só quem tem
+**e-mail verificado** envia mensagem ou inicia conversa (ler continua livre); conversas usam **UUID** nas rotas, nos eventos e nos links.
+Fotos de anúncio são recodificadas **sem EXIF/GPS** no envio e as já armazenadas são reprocessadas uma vez no boot (`MIDIA_SANEAR_AO_INICIAR`).
+
 | Método | Endpoint | Descrição |
 |---|---|---|
 | `GET` | `/api/smartchat/conversas?imovelId=` · `/nao-lidas` | Minhas conversas / contador |
-| `POST` | `/api/smartchat/conversas/por-imovel/{id}` · `/por-reserva/{id}` | Abre ou reutiliza a conversa |
-| `GET` \| `POST` | `/api/smartchat/conversas/{id}/mensagens` | Lê (texto já filtrado) / envia |
-| `POST` | `/api/smartchat/conversas/{id}/lidas` · `/denuncias` · `/bloqueio` | Leitura, denúncia, pedido de bloqueio |
-| `GET` | `/api/smartchat/conversas/{id}/perfil` | Perfil (sem e-mail nem telefone) |
+| `POST` | `/api/smartchat/conversas/por-imovel/{imovelId}` · `/por-reserva/{reservaId}` | Abre ou reutiliza a conversa (conversa **nova** exige e-mail verificado) |
+| `GET` | `/api/smartchat/conversas/{codigo}` | Uma conversa; `codigo` é o **UUID** público (o id sequencial não sai da API) |
+| `GET` \| `POST` | `/api/smartchat/conversas/{codigo}/mensagens` | Lê (texto já filtrado) / envia (exige e-mail verificado) |
+| `POST` | `/api/smartchat/conversas/{codigo}/lidas` · `/denuncias` · `/bloqueio` | Leitura, denúncia, pedido de bloqueio |
+| `GET` | `/api/smartchat/conversas/{codigo}/perfil` | Perfil (sem e-mail nem telefone; selo "E-mail verificado") |
+| `POST` | `/api/perfil/email/verificacao/reenviar` | Reenvia o link de verificação do e-mail (com limite de taxa) |
+| `POST` | `/api/perfil/email/verificar` | Confirma o link (público; o token de uso único é a prova) |
 | `POST` \| `GET` | `/api/smartchat/stream-ticket` · `/stream?ticket=` | Tempo quase real por SSE (ticket de uso único) |
 
 ## 🎬 Vídeos
@@ -203,11 +219,44 @@ sem fuso, prazos (24h, 2h, lembretes) como tempo decorrido.
 |---|---|
 | `APP_TIMEZONE` (`America/Sao_Paulo`) | Fuso oficial da plataforma |
 | `CANCEL_ANTECEDENCIA_HORAS` (48) · `CHECKIN_HORA_PADRAO` (14:00) · `CANCEL_REGRET_DAYS` (0) · `RESERVA_PENDENTE_EXPIRA_MINUTOS` (30) | Política de cancelamento e expiração de pendente |
+| `SMARTCHAT_CRYPTO_KEY` · `SMARTCHAT_CRYPTO_MIGRATE_ON_START` (true) | Chave AES-256 (Base64 de 32 bytes) da cifra em repouso e migração das linhas antigas; ver abaixo |
+| `SMARTCHAT_HMAC_KEY` | Chave (Base64, ≥ 32 bytes; `openssl rand -base64 32`) do HMAC que compara textos iguais sem guardá-los. **Obrigatória fora de `dev`/`test`**: sem ela a aplicação não sobe |
+| `SMARTCHAT_ENVIO_MASSA_CONVERSAS` (5) · `SMARTCHAT_ENVIO_MASSA_CONVERSAS_CONTA_NOVA` (3) · `SMARTCHAT_ENVIO_MASSA_MINUTOS` (10) · `SMARTCHAT_CONTA_NOVA_DIAS` (7) | Envio em massa: N conversas distintas com o mesmo texto em M minutos; conta com menos de X dias tem limiar menor |
+| `SMARTCHAT_LIMITE_RESTRITO_POR_MINUTO` (3) · `SMARTCHAT_LIMITE_RESTRITO_MINUTOS` (60) · `SMARTCHAT_ALERTA_JANELA_MINUTOS` (60) | Limite de envio após o alerta, por quanto tempo vale e janela sem repetir o mesmo alerta |
+| `PERFIL_EMAIL_VERIFICACAO_HORAS` (24) · `MIDIA_SANEAR_AO_INICIAR` (true) | Validade do link de verificação de e-mail; reprocessa as fotos de anúncio antigas sem EXIF/GPS |
 | `SMARTCHAT_DOMINIOS_PERMITIDOS` · `SMARTCHAT_TERMOS_ARQUIVO` · `SMARTCHAT_BLOCK_ENFORCEMENT` (false) · `SMARTCHAT_MENSAGENS_POR_MINUTO` (20) | Filtro de conteúdo, termos e limites do chat |
-| `VIDEO_FFMPEG_PATH` · `VIDEO_DURACAO_MAX_SEGUNDOS` (90) · `VIDEO_TAMANHO_MAX_MB` (500) · `VIDEO_APAGAR_ORIGINAL` (true) | Processamento e limites de vídeo |
+| `JWT_SECRET` | Segredo do token (≥ 32 bytes). **Obrigatório fora de `dev`/`test`**: sem ele, ou com o segredo público de desenvolvimento, a aplicação não sobe |
+| `RECAPTCHA_SITE_KEY` · `RECAPTCHA_SECRET` | reCAPTCHA v2 do login e do cadastro. **Obrigatórios fora de `dev`/`test`**: com a chave de teste do Google (aprova qualquer token) a aplicação não sobe |
+| `SMARTRENT_CORS_ORIGENS` (vazio) · `HTTP_JSON_MAX_BYTES` (1048576) | Origens externas liberadas no CORS (vazio = só a mesma origem) e teto do corpo JSON |
+| `MIDIA_MAX_PIXELS_IMAGEM` (30000000) | Teto de pixels da foto (a imagem é decodificada por inteiro) |
+| `VIDEO_FFMPEG_PATH` · `VIDEO_DURACAO_MAX_SEGUNDOS` (90) · `VIDEO_TAMANHO_MAX_MB` (500) · `VIDEO_APAGAR_ORIGINAL` (true) | Processamento e limites de vídeo. **Sem FFmpeg, fora de `dev`/`test`, os vídeos são recusados** (o modo básico não remove metadados nem GPS) |
 
 Contas de demonstração (`scripts/dados-demonstracao.sql`, senha `senhaSegura123`): `ana@smartrent.dev` (gestora) e
 `cliente@smartrent.dev` (cliente). Decisões, suposições e pendências jurídicas: [ADR-004](docs/adr/ADR-004-calendario-smartchat-cancelamento-video-e-fuso.md).
+
+### 🔐 Cifragem em repouso do SmartChat
+
+O texto das mensagens (`texto_filtrado`, `texto_original`), a descrição das denúncias e a prévia das notificações são gravados **cifrados** com
+AES-256-GCM pela aplicação (formato `v2:` + Base64, com a coluna autenticada; `v1:` dos dados antigos continua legível). Isto protege contra vazamento do banco, de backups e contra acesso
+direto ao Supabase. **Não é cifragem entre os usuários**: o servidor continua lendo o texto, pois o filtro de conteúdo e
+as denúncias dependem disso, e quem tiver a chave e o banco ao mesmo tempo lê tudo. Detalhes: [ADR-006](docs/adr/ADR-006-cifragem-em-repouso-do-smartchat.md).
+
+- **Gerar a chave** (32 bytes em Base64) e exportá-la como variável de ambiente:
+  ```bash
+  openssl rand -base64 32
+  export SMARTCHAT_CRYPTO_KEY="<saida-do-comando>"
+  ```
+- **Fora dos perfis `dev` e `test` a aplicação não sobe** sem a chave, ou com chave que não decodifica para 32 bytes.
+  Para desenvolvimento local, `SPRING_PROFILES_ACTIVE=dev` (o `executar.bat` já define) usa uma chave pública de
+  desenvolvimento, que **não protege nada**.
+- ⚠️ **Perder a chave torna as mensagens irrecuperáveis.** Guarde-a em um cofre de segredos, com backup separado do banco.
+  Não a coloque no repositório nem em log, e não a troque sem um plano de rotação (a versão `v1` do formato existe para isso).
+- Ao subir, a aplicação cifra as linhas antigas em texto puro (idempotente, só registra contagens). Depois de concluída,
+  pode desligar com `SMARTCHAT_CRYPTO_MIGRATE_ON_START=false`.
+- Não filtre nem ordene por essas colunas em queries: o banco só enxerga texto cifrado.
+- **Trânsito:** em produção, `DATABASE_URL` deve exigir TLS, por exemplo
+  `jdbc:postgresql://<host-supabase>:5432/postgres?sslmode=require`.
+- Os logs do chat não registram o texto das mensagens.
 
 ## 👤 Meu perfil, segurança da conta e exclusão de dados
 
@@ -237,6 +286,8 @@ troca de senha, SmartChat, reservas confirmadas, cancelamentos e reembolsos, des
 | `PERFIL_SENHA_MINIMA` (10) · `PERFIL_SENHAS_COMUNS_ARQUIVO` | Política da nova senha e lista local de senhas comuns |
 | `PERFIL_SENHA_TENTATIVAS` (5) · `PERFIL_SENHA_JANELA_MINUTOS` (15) · `PERFIL_EMAIL_PEDIDOS_POR_HORA` (3) · `PERFIL_FOTO_UPLOADS_POR_HORA` (10) | Limites de tentativas |
 | `PERFIL_EMAIL_TOKEN_MINUTOS` (60) · `APP_BASE_URL` | Validade e endereço dos links enviados por e-mail |
+| `BREVO_API_KEY` · `EMAIL_REMETENTE` · `EMAIL_REMETENTE_NOME` (SmartRent) | E-mail de verdade pela API HTTPS da Brevo (o Render gratuito bloqueia SMTP). Sem a chave, os e-mails ficam só em log. `EMAIL_REMETENTE` deve ser um endereço verificado na conta |
+| `R2_BUCKET` · `R2_ENDPOINT` · `R2_ACCESS_KEY_ID` · `R2_SECRET_ACCESS_KEY` · `R2_URL_PUBLICA` | Fotos (anúncio, miniaturas, perfil) no Cloudflare R2. Só ligam com bucket e endpoint (`https://<conta>.r2.cloudflarestorage.com`); `R2_URL_PUBLICA` (domínio do bucket) faz o site redirecionar para a CDN. Vídeos continuam no disco |
 | `EMAIL_LOG_CORPO` (true) | Enquanto o e-mail é só log: `false` em produção, para links e tokens não irem ao log |
 | `DATA_DELETION_MIN_REVIEW_HOURS` (48) · `DATA_DELETION_RISK_DAYS` (30) · `DATA_DELETION_NOTIFY_EMAIL` · `DATA_DELETION_RESTRICTIONS_ENABLED` (true) · `DATA_DELETION_REQUESTS_PER_DAY` (3) | Pedido de exclusão: análise mínima, sinais de risco, aviso à equipe e restrições |
 
@@ -260,6 +311,17 @@ A cada `push` na branch `main`, o GitHub Actions executa build e testes automati
 - **Backend:** Render, com variáveis de ambiente configuradas no painel do serviço
 - **Frontend:** Vercel, com deploy automático a partir do repositório
 - **Banco de Dados:** Supabase (PostgreSQL gerenciado)
+
+### 🧭 Render (online) e ambiente local
+
+O site no Render e o `localhost` são independentes: o Render roda o código da `main` do GitHub, então mexer nos arquivos locais não o altera até haver `push` e `merge`.
+
+- **Banco:** o Render usa o Supabase. No ambiente local use o PostgreSQL do Docker (porta 55432); nunca aponte `DATABASE_URL` do terminal ou do `.env` para o Supabase, ou os testes alteram os dados da demonstração.
+- **Chaves:** não copie `SMARTCHAT_CRYPTO_KEY`/`SMARTCHAT_HMAC_KEY` do Render para o ambiente local, que usa a chave pública de desenvolvimento. Mensagens cifradas com uma chave não abrem com a outra.
+- **Segredos:** nunca versione arquivos com `BREVO_API_KEY`, `RECAPTCHA_SECRET`, `R2_*`, senhas do banco ou chaves de cifragem.
+- **Fotos no Render:** sem as variáveis `R2_*`, as fotos ficam no disco do Render, apagado a cada deploy ou reinício. Cadastre os anúncios com fotos pouco antes de usar o site.
+- **Deploys:** com o auto-deploy ligado, todo `push` na `main` refaz o deploy e apaga essas fotos. Antes de uma demonstração, adie o `merge` ou desligue o auto-deploy (Settings → Build & Deploy).
+- **Hibernação:** o plano gratuito hiberna o serviço; a primeira visita leva cerca de 3 minutos. Abra o site uns 5 minutos antes de apresentá-lo.
 
 ## 🗺️ Roadmap (V2)
 

@@ -16,6 +16,7 @@ import br.com.unisenai.smartrent.repository.ImovelRepository;
 import br.com.unisenai.smartrent.repository.PagamentoRepository;
 import br.com.unisenai.smartrent.repository.ReservaRepository;
 import br.com.unisenai.smartrent.service.erro.AcessoNegadoException;
+import br.com.unisenai.smartrent.service.erro.AcessoOcultoException;
 import br.com.unisenai.smartrent.service.erro.ConflitoComDetalhesException;
 import br.com.unisenai.smartrent.service.erro.PagamentoRecusadoException;
 import br.com.unisenai.smartrent.service.erro.RecursoNaoEncontradoException;
@@ -139,7 +140,7 @@ public class ReservaClienteService {
         Reserva r = reservaRepository.findByIdParaAtualizar(id)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Reserva não encontrada."));
         if (r.getCliente() == null || !r.getCliente().getId().equals(cliente.getId())) {
-            throw new AcessoNegadoException("Esta reserva não é sua.");
+            throw new AcessoOcultoException("Reserva não encontrada.");
         }
         if (r.getStatus() == StatusReserva.CONFIRMADA || r.getStatus() == StatusReserva.CONCLUIDA) {
             return mapper.resposta(r); // ja paga: nada a cobrar de novo
@@ -195,7 +196,7 @@ public class ReservaClienteService {
         Reserva r = reservaRepository.findById(id)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Reserva não encontrada."));
         if (r.getCliente() == null || !r.getCliente().getId().equals(cliente.getId())) {
-            throw new AcessoNegadoException("Esta reserva não é sua.");
+            throw new AcessoOcultoException("Reserva não encontrada.");
         }
         return mapper.resposta(r);
     }

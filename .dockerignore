@@ -1,0 +1,10 @@
+target/
+.git/
+.claude/
+.idea/
+dados/
+docs/
+entrega-isi/
+*.md
+.env
+.env.*
