@@ -144,6 +144,19 @@
   .hb i.low{background:var(--amber)}
   @media (prefers-reduced-motion:reduce){.d.bad,.caret{animation:none}.donut .fg,.hb i,.node,.meter i{transition:none}}
 
+  .ods{background:#fff;border-radius:8px;box-shadow:0 1px 6px rgba(10,37,64,.09);overflow:hidden}
+  .ods-head{display:flex;align-items:center;gap:14px;padding:12px 16px;background:linear-gradient(90deg,#8f1838,#b3294e);color:#fff}
+  .ods-head b{display:block;font-size:clamp(15px,1.6vw,20px)}.ods-head small{opacity:.9;font-size:12px}
+  .ods-badge{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:8px;background:#fff;
+    color:#8f1838;font-size:28px;font-weight:800;flex:none}
+  .ods-table{margin:0}.ods-table th{background:var(--navy)}.ods-table td{vertical-align:top}
+  .ods-table td:first-child{width:26%}.ods-table b{color:#8f1838}
+  .slide.active .ods-table tr+tr{animation:odsrow .5s ease both}
+  .slide.active .ods-table tr:nth-child(2){animation-delay:.2s}.slide.active .ods-table tr:nth-child(3){animation-delay:.6s}
+  .slide.active .ods-table tr:nth-child(4){animation-delay:1s}
+  @keyframes odsrow{from{opacity:0;transform:translateX(-14px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){.slide.active .ods-table tr+tr{animation:none}}
+
   /* navegação */
   #nav{position:fixed;right:14px;bottom:12px;display:flex;align-items:center;gap:10px;z-index:9}
   #nav button{background:none;border:0;cursor:pointer;color:var(--blue);font-size:34px;line-height:1;
@@ -384,25 +397,21 @@
 
 <!-- 15 · Valor -->
 <section class="slide">
-  <div class="head"><span class="tag t-neg">Negócio</span><h2 class="title">Proposta de valor e impacto</h2></div>
-  <div class="cols">
-    <div>
-      <h3>A dor</h3>
-      <p>Anfitriões e pequenos gestores definem a diária por intuição, sem considerar sazonalidade, dia da semana ou localização, e perdem tempo com reserva e disponibilidade manuais.</p>
-      <h3>O benefício</h3>
-      <p>Cadastro, reservas, calendário e atendimento num só lugar, com preço sugerido por IA que o gestor aprova, tirando o achismo da decisão.</p>
-    </div>
-    <div>
-      <h3>Impacto que gera valor</h3>
-      <ul>
-        <li><b>Receita:</b> preço alinhado à alta e à baixa temporada (abril a outubro)</li>
-        <li><b>Tempo:</b> menos trabalho operacional por reserva</li>
-        <li><b>Confiança:</b> chat que bloqueia contato por fora e alerta suspeita de golpe</li>
-        <li><b>Transparência:</b> preço e política gravados na reserva, sem surpresa</li>
-        <li><b>ODS 8:</b> trabalho decente e crescimento (metas 8.2, 8.3 e 8.9)</li>
-      </ul>
-    </div>
+  <div class="head"><span class="tag t-neg">Negócio</span><h2 class="title">Proposta de valor e alinhamento com a ODS 8</h2></div>
+  <div class="grid g2" style="margin-bottom:10px">
+    <div class="card warm"><h3>A dor</h3><p>Anfitriões e pequenos gestores definem a diária por intuição, sem considerar sazonalidade ou localização, e perdem tempo com reserva e disponibilidade manuais.</p></div>
+    <div class="card warm"><h3>O benefício</h3><p>Cadastro, reservas, calendário e atendimento num só lugar, com preço sugerido por IA que o gestor aprova, tirando o achismo da decisão.</p></div>
   </div>
+  <div class="ods">
+    <div class="ods-head"><span class="ods-badge">8</span><div><b>ODS 8 · Trabalho decente e crescimento econômico</b><small>Agenda 2030 (ONU), três metas atendidas pelo projeto</small></div></div>
+    <table class="ods-table">
+      <tr><th>Meta</th><th>Contribuição do SmartRent</th><th>Onde está no produto</th></tr>
+      <tr><td><b>8.2</b> Modernização tecnológica e inovação</td><td>Leva ao microempreendedor de temporada uma precificação orientada a dados, hoje restrita a redes hoteleiras maiores.</td><td>Sugestão de preço por IA e Dashboard</td></tr>
+      <tr><td><b>8.3</b> Apoio a micro e pequenas empresas</td><td>Troca planilha e mensagens soltas por um registro único de anúncios, reservas e indicadores, aproximando o anfitrião de uma gestão profissional.</td><td>Painel do Gestor, calendário e reservas</td></tr>
+      <tr><td><b>8.9</b> Turismo sustentável, emprego e cultura local</td><td>Preço sensível à sazonalidade distribui melhor a ocupação ao longo do ano e reduz a ociosidade da baixa temporada no litoral catarinense.</td><td>Preço sazonal e anúncios da Grande Florianópolis</td></tr>
+    </table>
+  </div>
+  <p class="note">Alinhamento conceitual, definido no relatório do projeto. O efeito real sobre renda e ocupação ainda não foi medido: depende da validação em campo.</p>
 </section>
 
 <!-- 16 · Modelo -->
