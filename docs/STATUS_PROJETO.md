@@ -132,7 +132,7 @@ Decisões e limites na [ADR-009](adr/ADR-009-painel-admin-e-telemetria-de-uso.md
 - **Mudança de segurança consciente:** CSP `frame-ancestors 'self'` e `X-Frame-Options: SAMEORIGIN` (antes `'none'`/`DENY`), necessário para o iframe do mapa.
 - **Pendente:** revisão jurídica (aviso/consentimento, política de privacidade, prazo de retenção definitivo); funil ordenado por sessão; rollup/partição
   da tabela quando o volume crescer; `data-track` nos botões principais; ação sobre pedidos de exclusão e gestão de papéis no painel. Os 6 PDFs
-  de `docs/relatorios-fonte/` **não** foram regenerados nesta entrega (V21 e os testes CT1103–CT1123 ainda não constam neles).
+  de `docs/relatorios-fonte/` foram regenerados em 2026-10-08 (RF46–RF54, RNF14–RNF15, casos de uso e diagrama com o administrador, tabelas V20–V22, riscos R32–R38, casos CT1103–CT1152 e rastreabilidade).
 
 ## 🚨 Moderação no painel de admin (2026-10-08)
 
@@ -144,7 +144,7 @@ Decisões e limites na [ADR-010](adr/ADR-010-moderacao-denuncias-decisoes-automa
   segurança), lidas em `/comunicados.html`. Suspender tira os anúncios do gestor do catálogo. O liga/desliga simples da ADR-009 foi substituído por esse fluxo.
 - **A confirmar com o usuário:** "demais níveis de gerência" foi lido como o nível remetente do aviso; não há hierarquia de permissões entre admins.
 - **Pendente:** textos provisórios dos avisos e decisões automatizadas (jurídico/LGPD art. 20), suspensão temporária com data de fim, resposta do usuário ao aviso,
-  níveis de acesso entre admins. Os 6 PDFs de `docs/relatorios-fonte/` não foram regenerados (V21, V22 e CT1103–CT1138 ainda não constam neles).
+  níveis de acesso entre admins. Os 6 PDFs de `docs/relatorios-fonte/` foram regenerados em 2026-10-08 e já refletem a V21, a V22 e os testes CT1103–CT1152.
 
 ### Qualidade e apresentação depois do painel de admin e da moderação (2026-10-08)
 

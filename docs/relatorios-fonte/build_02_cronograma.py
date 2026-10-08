@@ -66,6 +66,16 @@ story.append(Paragraph(
     "estão registradas na ADR-002.",
     styles["Body"]))
 
+story.append(Paragraph(
+    "Depois do plano macro, o desenvolvimento seguiu em rodadas curtas, cada uma com decisões "
+    "registradas em ADR própria: fluxo de anúncios, calendário, SmartChat e cancelamento, perfil e "
+    "exclusão de dados, auditoria de segurança do chat e dos uploads e, em 8 de outubro de 2026, o "
+    "painel de administração com telemetria de uso e mapas de calor (ADR-009) e a área de moderação "
+    "com denúncias, decisões automáticas, suspensão de contas e avisos aos usuários (ADR-010). Essas "
+    "rodadas ultrapassaram o escopo original de 30 dias e não alteram as datas do quadro acima; "
+    "permanecem como pendências a revisão jurídica dos textos e da privacidade da telemetria, o "
+    "gateway de pagamento real e a validação em campo com um anfitrião.", styles["Body"]))
+
 doc = new_doc(os.path.join(BASE, "out", "02_CRONOGRAMA.pdf"), "Cronograma do Projeto")
 hf = make_header_footer_simples(start_page=2)
 doc.build(story, onFirstPage=hf, onLaterPages=hf)

@@ -123,6 +123,26 @@ riscos = [
      "Aplicação não sobe com JWT_SECRET ausente/público nem com a chave de teste do reCAPTCHA; limites por e-mail e por IP (rate limit em memória, uma instância)."),
     ("R31", "Dependências desatualizadas com vulnerabilidades conhecidas.", "Média", "Médio", "Média",
      "Spring Boot atualizado para 3.5.16 e Dependabot semanal (Maven, Docker, Actions). Scan completo de CVE no CI fica para a V2."),
+    ("R32", "A telemetria de uso ser tratada como dado pessoal sem base legal ou sem transparência para o usuário.", "Média", "Alto", "Alta",
+     "Anônima por desenho (sem usuário, IP, texto digitado nem cookies), respeita Do Not Track e Global Privacy Control, retenção de 180 dias e "
+     "coleta desligável. Aviso, consentimento e prazo definitivo aguardam o setor jurídico (ADR-009)."),
+    ("R33", "Administrador abusar do poder de suspender contas e ler denúncias, ou uma conta de administrador ser comprometida.", "Baixa", "Alto", "Média",
+     "Justificativa obrigatória e trilha imutável de cada ação, evidências limitadas às mensagens anexadas (abrir é registrado), proibição de "
+     "alterar a própria conta ou outro administrador. Aprovação em duas pessoas e níveis de acesso entre administradores ficam para a V2 (ADR-010)."),
+    ("R34", "Suspensão indevida por falso positivo de uma decisão automatizada ou de uma denúncia maliciosa.", "Média", "Alto", "Alta",
+     "O sistema nunca suspende sozinho: alertas só sinalizam e limitam o envio; quem suspende é uma pessoa, com motivo. Alerta descartado remove a "
+     "restrição, a conta é reativável e o usuário é avisado com o motivo. Prazo de contestação e tratamento jurídico (LGPD, art. 20) pendentes."),
+    ("R35", "O endpoint público de coleta ser usado para poluir os dados ou sobrecarregar o servidor.", "Média", "Baixo", "Baixa",
+     "Lote de até 50 eventos, limite por origem, validação e normalização de cada campo, hora e papel definidos pelo servidor, descarte silencioso "
+     "do inválido. O limite é em memória (uma instância); distribuído na V2."),
+    ("R36", "Injeção de fórmula em planilha por um alvo de clique manipulado na exportação CSV.", "Baixa", "Médio", "Baixa",
+     "O alvo só aceita caracteres estruturais, nunca começa por =, +, - ou @, e a exportação escapa vírgulas e aspas."),
+    ("R37", "Permitir enquadramento em iframe (necessário ao mapa de calor) abrir espaço para clickjacking.", "Baixa", "Médio", "Baixa",
+     "A política passou a permitir apenas a própria origem (frame-ancestors 'self' e SAMEORIGIN); nenhum outro site consegue emoldurar; o iframe do "
+     "mapa não aceita interação e o teste de cabeçalhos foi atualizado."),
+    ("R38", "A tabela de eventos de uso crescer além do que o banco transacional comporta.", "Média", "Médio", "Média",
+     "Retenção diária, índices só para as consultas do painel, agregação no banco, exportação em lotes por chave. Rollup e particionamento "
+     "mensal ficam para a V2."),
 ]
 rdata = [[Paragraph("ID", styles["CellHeader"]), Paragraph("Risco", styles["CellHeader"]),
           Paragraph("Prob.", styles["CellHeaderCenter"]), Paragraph("Impacto", styles["CellHeaderCenter"]),
@@ -141,7 +161,7 @@ story.extend(quadro(styles, "Registro de riscos do projeto", quadro_table(
     header_align_center=[2, 3, 4])))
 
 story.append(Paragraph(
-    "Os riscos R04, R07, R08 e R11 concentram a maior severidade combinada. Recomenda-se revisão "
+    "Os riscos R04, R07, R08, R11, R32 e R34 concentram a maior severidade combinada. Recomenda-se revisão "
     "semanal deste documento pela equipe, com o registro explícito de qualquer risco novo "
     "identificado ao longo do desenvolvimento.", styles["Body"]))
 
