@@ -211,7 +211,7 @@ class LembreteEdicaoTest {
         assertNull(imovel.getRepublicarEm());
         verify(imovelRepository, never()).save(any());
         verify(imovelRepository, never()).saveAndFlush(any());
-        verify(imovelRepository, never()).delete(any());
+        verify(imovelRepository, never()).delete(any(br.com.unisenai.smartrent.model.Imovel.class));
     }
 
     // -------------------------------------------------------------- falhas

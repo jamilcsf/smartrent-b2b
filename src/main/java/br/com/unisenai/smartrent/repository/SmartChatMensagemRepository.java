@@ -1,5 +1,7 @@
 package br.com.unisenai.smartrent.repository;
 
+import br.com.unisenai.smartrent.dto.AdminDtos.DiaTotal;
+import br.com.unisenai.smartrent.dto.ModeracaoDtos.AutorFiltrado;
 import br.com.unisenai.smartrent.model.SmartChatMensagem;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -56,4 +58,27 @@ public interface SmartChatMensagemRepository extends JpaRepository<SmartChatMens
     long contarSinalizadasComoFraude(@Param("autorId") Long autorId, @Param("desde") Instant desde);
 
     List<SmartChatMensagem> findByConversaIdAndIdIn(Long conversaId, Collection<Long> ids);
+
+    // ---- Decisoes automaticas do filtro (painel de admin): so contagens, nunca o texto ----
+
+    String NORMAL = "m.tipo = br.com.unisenai.smartrent.model.enums.TipoMensagem.NORMAL and m.criadaEm >= :desde";
+    String FILTRADA = " and m.categorias is not null and m.categorias <> ''";
+
+    @Query("select count(m) from SmartChatMensagem m where " + NORMAL)
+    long contarNormaisDesde(@Param("desde") Instant desde);
+
+    @Query("select count(m) from SmartChatMensagem m where " + NORMAL + FILTRADA)
+    long contarFiltradasDesde(@Param("desde") Instant desde);
+
+    @Query("select count(m) from SmartChatMensagem m where " + NORMAL + " and m.categorias like :padrao")
+    long contarComCategoriaDesde(@Param("desde") Instant desde, @Param("padrao") String padrao);
+
+    @Query("select new br.com.unisenai.smartrent.dto.ModeracaoDtos$AutorFiltrado(m.autor.id, m.autor.nome, count(m)) "
+            + "from SmartChatMensagem m where " + NORMAL + FILTRADA + " group by m.autor.id, m.autor.nome order by count(m) desc")
+    List<AutorFiltrado> autoresMaisFiltrados(@Param("desde") Instant desde, Pageable limite);
+
+    @Query("select new br.com.unisenai.smartrent.dto.AdminDtos$DiaTotal(cast(m.criadaEm as LocalDate), count(m)) "
+            + "from SmartChatMensagem m where " + NORMAL + FILTRADA
+            + " group by cast(m.criadaEm as LocalDate) order by cast(m.criadaEm as LocalDate)")
+    List<DiaTotal> filtradasPorDia(@Param("desde") Instant desde);
 }

@@ -57,7 +57,9 @@ public class AnaliseComportamentoChat {
     /** O usuario esta com o limite de envio restrito? (houve alerta de envio em massa dentro do tempo configurado) */
     public boolean limiteRestrito(Long usuarioId) {
         Instant desde = clock.instant().minus(Duration.ofMinutes(props.limiteRestritoMinutos()));
-        return alertas.existsByUsuarioIdAndTipoAndCriadoEmAfter(usuarioId, TipoAlertaInterno.ENVIO_EM_MASSA, desde);
+        // Alerta descartado por um admin (falso positivo) nao restringe mais o envio.
+        return alertas.existsByUsuarioIdAndTipoAndCriadoEmAfterAndStatusNot(usuarioId, TipoAlertaInterno.ENVIO_EM_MASSA, desde,
+                br.com.unisenai.smartrent.model.enums.StatusAlertaInterno.DESCARTADO);
     }
 
     /** Chamar DEPOIS de gravar a mensagem. {@code resumo} e o devolvido por {@link #resumoDe}. */

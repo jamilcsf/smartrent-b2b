@@ -1,6 +1,8 @@
 package br.com.unisenai.smartrent.repository;
 
 import br.com.unisenai.smartrent.model.DenunciaChat;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -22,4 +24,14 @@ public interface DenunciaChatRepository extends JpaRepository<DenunciaChat, Long
     @Query("SELECT COUNT(DISTINCT d.conversa.id) FROM DenunciaChat d WHERE d.status = 'PENDENTE' "
          + "AND (d.conversa.cliente.id = :usuarioId OR d.conversa.gestor.id = :usuarioId)")
     long contarConversasEmDisputa(@Param("usuarioId") Long usuarioId);
+
+    long countByStatus(String status);
+
+    Page<DenunciaChat> findAllByOrderByIdDesc(Pageable pagina);
+
+    Page<DenunciaChat> findByStatusOrderByIdDesc(String status, Pageable pagina);
+
+    long countByDenunciadoId(Long denunciadoId);
+
+    long countByDenunciadoIdAndStatus(Long denunciadoId, String status);
 }

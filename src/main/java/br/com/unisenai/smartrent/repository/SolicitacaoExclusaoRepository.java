@@ -32,4 +32,6 @@ public interface SolicitacaoExclusaoRepository extends JpaRepository<Solicitacao
     Optional<SolicitacaoExclusao> findByIdParaAtualizar(@Param("id") Long id);
 
     List<SolicitacaoExclusao> findByUsuarioIdOrderByIdDesc(Long usuarioId);
+
+    long countByEstadoIn(Collection<EstadoExclusao> estados);
 }

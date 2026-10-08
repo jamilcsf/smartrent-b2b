@@ -63,6 +63,12 @@ public class DataDeletionReviewService {
     }
 
     /** Impedimentos atuais da aprovacao (vazio = nada impede). */
+    /** Quantas solicitacoes estao em andamento (pendentes, em analise ou aprovadas e nao executadas): indicador do painel de admin. */
+    @Transactional(readOnly = true)
+    public long contarEmAndamento() {
+        return repository.countByEstadoIn(EstadoExclusao.estadosEmAndamento());
+    }
+
     @Transactional(readOnly = true)
     public List<String> impedimentos(Long solicitacaoId) {
         return sinais.impedimentos(buscar(solicitacaoId).getUsuarioId());

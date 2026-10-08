@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>SmartRent B2B - Moderação</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/mobile.css">
+  <link rel="icon" type="image/svg+xml" href="/img/favicon.svg">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col antialiased">
+
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="bg-slate-900 text-white p-2 rounded-xl shadow-md">
+          <i data-lucide="gavel" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <h1 class="text-base font-bold text-slate-900 tracking-tight">
+            SmartRent <span class="text-blue-600 font-semibold">B2B</span>
+          </h1>
+          <p class="text-[10px] text-slate-500 font-medium">Moderação da plataforma</p>
+        </div>
+      </div>
+      <nav id="navPrincipal" class="flex items-center space-x-1 sm:space-x-2"></nav>
+      <div id="areaAuth" class="flex items-center ml-4"></div>
+    </div>
+  </header>
+
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+
+    <div id="semAcesso" class="hidden p-6 rounded-2xl bg-white border border-slate-200 text-center space-y-3">
+      <p class="text-sm font-semibold text-slate-800">Esta área é exclusiva de administradores.</p>
+      <a id="linkEntrar" href="/login.html?redirectTo=%2Fmoderacao.html" class="inline-block text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">Entrar</a>
+    </div>
+
+    <div id="painel" class="hidden space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+        <div>
+          <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Moderação</h2>
+          <p class="text-xs text-slate-500 mt-1 max-w-3xl">Denúncias do SmartChat, decisões automáticas do sistema (e como revertê-las), suspensão e reativação de contas e mensagens diretas aos usuários. Toda ação exige justificativa e fica registrada no histórico. Para ver as evidências de uma denúncia é preciso abri-la, e isso também é registrado.</p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <button id="btnMensagem" type="button" class="flex items-center gap-1.5 text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"><i data-lucide="send" class="w-4 h-4"></i> Enviar mensagem</button>
+          <button id="btnSuspender" type="button" class="flex items-center gap-1.5 text-xs font-bold border border-rose-300 text-rose-700 hover:bg-rose-50 px-4 py-2 rounded-lg"><i data-lucide="user-x" class="w-4 h-4"></i> Suspender conta</button>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto border-b border-slate-200">
+        <div id="abas" role="tablist" aria-label="Seções da moderação" class="flex gap-1 min-w-max"></div>
+      </div>
+
+      <p id="erroPagina" class="hidden p-4 rounded-xl bg-rose-50 border border-rose-200 text-sm font-semibold text-rose-700"></p>
+
+      <!-- Denúncias -->
+      <section id="aba-denuncias" role="tabpanel" class="hidden space-y-4">
+        <label class="text-xs font-semibold text-slate-600">Situação
+          <select id="filtroDenuncia" class="ml-2 bg-white border border-slate-300 rounded-lg p-2 text-xs">
+            <option value="PENDENTE">Pendentes</option><option value="PROCEDENTE">Procedentes</option>
+            <option value="IMPROCEDENTE">Improcedentes</option><option value="">Todas</option>
+          </select>
+        </label>
+        <div id="tabDenuncias" class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-x-auto"></div>
+        <div id="pagDenuncias" class="flex items-center justify-between text-xs text-slate-600"></div>
+      </section>
+
+      <!-- Decisões automáticas -->
+      <section id="aba-auto" role="tabpanel" class="hidden space-y-6">
+        <div class="bg-blue-50 border border-blue-200 rounded-2xl p-4 text-xs text-blue-900 leading-relaxed">
+          <b>O que o sistema decide sozinho no SmartChat:</b> (1) <b>oculta</b> telefones, e-mails, links, contatos externos e conteúdo impróprio nas mensagens;
+          (2) <b>reduz o limite de envio</b> de quem manda o mesmo texto a várias conversas em pouco tempo; (3) <b>sinaliza</b> menções a pagamento ou contato fora da plataforma.
+          Nada disso suspende conta. Aqui você vê essas decisões, confirma ou <b>descarta um alerta como falso positivo</b> (o que remove a restrição de envio) e pode agir sobre a conta.
+        </div>
+        <div id="kpisAuto" class="grid grid-cols-2 lg:grid-cols-4 gap-4"></div>
+        <div class="flex flex-wrap items-end gap-3">
+          <label class="text-xs font-semibold text-slate-600">Alertas
+            <select id="filtroAlerta" class="ml-2 bg-white border border-slate-300 rounded-lg p-2 text-xs">
+              <option value="ABERTO">Em aberto</option><option value="REVISADO">Confirmados</option>
+              <option value="DESCARTADO">Descartados</option><option value="">Todos</option>
+            </select>
+          </label>
+          <label class="text-xs font-semibold text-slate-600">Filtro de mensagens, período
+            <select id="diasAuto" class="ml-2 bg-white border border-slate-300 rounded-lg p-2 text-xs">
+              <option value="7">7 dias</option><option value="30" selected>30 dias</option><option value="90">90 dias</option>
+            </select>
+          </label>
+        </div>
+        <div id="tabAlertas" class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-x-auto"></div>
+        <div id="pagAlertas" class="flex items-center justify-between text-xs text-slate-600"></div>
+        <div class="grid lg:grid-cols-2 gap-6">
+          <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+            <h3 class="text-sm font-bold text-slate-900 mb-1">Mensagens tratadas pelo filtro, por dia</h3>
+            <p class="text-[11px] text-slate-500 mb-3">Mensagens com algum trecho ocultado ou sinalizado. Só contagens: o texto não aparece aqui.</p>
+            <div class="relative h-56"><canvas id="grFiltroDia" role="img" aria-label="Mensagens tratadas pelo filtro por dia"></canvas></div>
+          </div>
+          <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-5">
+            <div>
+              <h3 class="text-sm font-bold text-slate-900 mb-3">Por tipo de ocorrência</h3>
+              <div id="barrasCategorias" class="space-y-1.5"></div>
+            </div>
+            <div>
+              <h3 class="text-sm font-bold text-slate-900 mb-2">Quem mais teve mensagens tratadas</h3>
+              <div id="tabAutores"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Contas -->
+      <section id="aba-contas" role="tabpanel" class="hidden space-y-4">
+        <div id="tabContas" class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-x-auto"></div>
+        <div id="pagContas" class="flex items-center justify-between text-xs text-slate-600"></div>
+      </section>
+
+      <!-- Avisos enviados -->
+      <section id="aba-avisos" role="tabpanel" class="hidden space-y-4">
+        <div id="tabAvisos" class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-x-auto"></div>
+        <div id="pagAvisos" class="flex items-center justify-between text-xs text-slate-600"></div>
+      </section>
+
+      <!-- Histórico -->
+      <section id="aba-historico" role="tabpanel" class="hidden space-y-4">
+        <div id="tabHistorico" class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-x-auto"></div>
+        <div id="pagHistorico" class="flex items-center justify-between text-xs text-slate-600"></div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500 mt-auto">
+    <p>SmartRent B2B © 2026 • Operação Canasvieiras • Projeto Acadêmico</p>
+  </footer>
+
+  <script src="/js/auth.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/header-auth.js"></script>
+  <script src="/js/navegacao.js"></script>
+  <script src="/js/ui.js"></script>
+  <script src="/js/moderacao-acoes.js"></script>
+  <script src="/js/moderacao.js"></script>
+  <script>lucide.createIcons();</script>
+</body>
+
+</html>

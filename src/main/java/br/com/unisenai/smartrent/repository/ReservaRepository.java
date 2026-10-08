@@ -2,19 +2,40 @@ package br.com.unisenai.smartrent.repository;
 
 import br.com.unisenai.smartrent.model.Reserva;
 import jakarta.persistence.LockModeType;
+import br.com.unisenai.smartrent.dto.AdminDtos.DiaTotal;
+import br.com.unisenai.smartrent.dto.TelemetriaDtos.ContagemRotulo;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface ReservaRepository extends JpaRepository<Reserva, Long> {
+public interface ReservaRepository extends JpaRepository<Reserva, Long>, JpaSpecificationExecutor<Reserva> {
+
+    // ---- Painel de admin (somente leitura) ----
+
+    @Query("select new br.com.unisenai.smartrent.dto.TelemetriaDtos$ContagemRotulo(str(r.status), count(r)) from Reserva r group by r.status")
+    List<ContagemRotulo> contagemPorStatus();
+
+    long countByDataCriacaoGreaterThanEqual(LocalDateTime desde);
+
+    /** Valor movimentado (confirmadas e concluidas) das reservas criadas desde o instante. */
+    @Query("select coalesce(sum(r.totalSnapshot), 0) from Reserva r where r.dataCriacao >= :desde and r.status in "
+            + "(br.com.unisenai.smartrent.model.enums.StatusReserva.CONFIRMADA, br.com.unisenai.smartrent.model.enums.StatusReserva.CONCLUIDA)")
+    BigDecimal valorMovimentadoDesde(@Param("desde") LocalDateTime desde);
+
+    @Query("select new br.com.unisenai.smartrent.dto.AdminDtos$DiaTotal(cast(r.dataCriacao as LocalDate), count(r)) from Reserva r "
+            + "where r.dataCriacao >= :desde group by cast(r.dataCriacao as LocalDate) order by cast(r.dataCriacao as LocalDate)")
+    List<DiaTotal> reservasPorDia(@Param("desde") LocalDateTime desde);
+
 
     /** Estados de cancelamento: a reserva cancelada libera as datas na hora. */
     String ATIVA = "r.status NOT IN (br.com.unisenai.smartrent.model.enums.StatusReserva.CANCELADA_COM_REEMBOLSO, "

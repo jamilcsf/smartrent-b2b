@@ -232,7 +232,7 @@ sem fuso, prazos (24h, 2h, lembretes) como tempo decorrido.
 | `VIDEO_FFMPEG_PATH` · `VIDEO_DURACAO_MAX_SEGUNDOS` (90) · `VIDEO_TAMANHO_MAX_MB` (500) · `VIDEO_APAGAR_ORIGINAL` (true) | Processamento e limites de vídeo. **Sem FFmpeg, fora de `dev`/`test`, os vídeos são recusados** (o modo básico não remove metadados nem GPS) |
 
 Contas de demonstração (`scripts/dados-demonstracao.sql`, senha `senhaSegura123`): `ana@smartrent.dev` (gestora) e
-`cliente@smartrent.dev` (cliente). Decisões, suposições e pendências jurídicas: [ADR-004](docs/adr/ADR-004-calendario-smartchat-cancelamento-video-e-fuso.md).
+`cliente@smartrent.dev` (cliente) e `admin@smartrent.dev` (administrador). Decisões, suposições e pendências jurídicas: [ADR-004](docs/adr/ADR-004-calendario-smartchat-cancelamento-video-e-fuso.md).
 
 ### 🔐 Cifragem em repouso do SmartChat
 
@@ -295,6 +295,51 @@ Como testar à mão: entre como `cliente@smartrent.dev`, clique no nome no cabe�
 está na lista de senhas comuns: ela vale como senha **atual**, mas não como nova), e-mail (o link aparece no log do servidor, `[e-mail simulado]`) e
 "Solicitar exclusão de dados" (o link "Não fui eu" também sai no log). Textos de e-mail, modal e avisos são **provisórios** e ficam em
 `src/main/resources/textos-pendentes-juridico.properties`, pendentes de revisão do setor responsável.
+
+## 🛡️ Painel de administração e mapas de calor
+
+`/admin.html` (papel **ADMIN**; gestor e cliente recebem 403): visão geral da plataforma, **uso do site**, **mapas de calor**, listas de
+usuários/imóveis/reservas e exportação dos eventos de uso. O mapa de calor é desenhado **sobre a própria página** (iframe do mesmo site),
+por dispositivo, e vem com os elementos mais clicados e até onde as pessoas rolam. A coleta é **anônima** (sem usuário, IP, texto digitado
+nem cookies; respeita Do Not Track/GPC). Decisões, privacidade e pendências jurídicas: [ADR-009](docs/adr/ADR-009-painel-admin-e-telemetria-de-uso.md).
+
+| Método | Endpoint | Descrição |
+|---|---|---|
+| `POST` | `/api/telemetria/eventos` | Coleta pública, em lote (até 50 eventos), validada e limitada por IP; sempre `202` |
+| `GET` | `/api/admin/visao-geral?dias=` | KPIs, cadastros e reservas por dia, situações e conversão aproximada |
+| `GET` | `/api/admin/usuarios` · `/imoveis` · `/reservas` | Listas com `busca`, filtro (`papel`/`status`), `pagina` e `tamanho` (máx. 100) |
+| `GET` | `/api/admin/uso/resumo?dias=` · `/uso/paginas` | Visualizações, sessões, cliques, páginas e elementos mais usados, horários de pico, dispositivos |
+| `GET` | `/api/admin/uso/mapa-de-calor?pagina=&dispositivo=&dias=` | Grade de cliques (50 colunas × 25 px), elementos e profundidade de rolagem da página |
+| `GET` | `/api/admin/uso/exportar?formato=csv\|ndjson&dias=` | Eventos brutos em fluxo, para BI/Spark/DuckDB (big data) |
+
+- **Virar admin:** o cadastro público nunca cria ADMIN. Promova por SQL: `update usuarios set papel = 'ADMIN' where email = 'voce@exemplo.com';`.
+  A demonstração tem `admin@smartrent.dev` (senha `senhaSegura123`, em `scripts/dados-demonstracao.sql`).
+- **Dados de demonstração do mapa de calor** (sintéticos, só cliques de desktop): `scripts/dados-telemetria-demo.sql`
+  (`docker exec -i smartrent-pg psql -U postgres -d smartrent_demo < scripts/dados-telemetria-demo.sql`).
+- `TELEMETRIA_HABILITADA` (true) · `TELEMETRIA_RETENCAO_DIAS` (180) · `TELEMETRIA_LOTES_POR_MINUTO` (60): liga/desliga a coleta, prazo de retenção
+  (job diário apaga o que passar) e o limite de lotes por minuto por IP. Atrás de proxy, use `FORWARD_HEADERS_STRATEGY=framework` para o limite enxergar o IP real.
+- Para o iframe do mapa, a CSP agora é `frame-ancestors 'self'` e `X-Frame-Options: SAMEORIGIN` (antes `'none'`/`DENY`): só o próprio site pode emoldurar o site.
+
+### 🚨 Moderação: denúncias, decisões automáticas, suspensão e avisos
+
+`/moderacao.html` (só **ADMIN**): **Denúncias** (evidência = só as mensagens anexadas; abrir fica registrado; decisão procedente/improcedente com
+justificativa, suspensão opcional e avisos), **Decisões automáticas** (alertas do sistema com o efeito aplicado, resumo do filtro de mensagens e revisão:
+confirmar ou **descartar como falso positivo**, o que remove a restrição de envio), **Contas suspensas** (reativar), **Avisos enviados** e **Histórico**
+(trilha imutável). O admin envia mensagens a qualquer usuário **em nome de um nível** (Administração, Moderação, Suporte, Segurança e privacidade); o
+usuário lê em **Avisos** (`/comunicados.html`, contador no menu). Suspender tira os anúncios do gestor do catálogo. Decisões e pendências: [ADR-010](docs/adr/ADR-010-moderacao-denuncias-decisoes-automaticas-e-avisos.md).
+
+| Método | Endpoint | Descrição |
+|---|---|---|
+| `GET` | `/api/admin/moderacao/denuncias?status=` · `/denuncias/{id}` | Lista · detalhe com evidências anexadas (registra a abertura) |
+| `POST` | `/api/admin/moderacao/denuncias/{id}/decisao` | `{decisao, nota, suspenderDenunciado, avisarDenunciante, avisarDenunciado}` (uma vez só) |
+| `GET` | `/api/admin/moderacao/automatizadas?status=&dias=` | Alertas com efeito aplicado + resumo do filtro (só contagens) |
+| `POST` | `/api/admin/moderacao/alertas/{id}/revisao` | `{decisao: REVISADO\|DESCARTADO, nota}` |
+| `POST` | `/api/admin/moderacao/usuarios/{id}/suspensao` · `/reativacao` | `{motivo}` obrigatório; avisa o usuário (aviso + e-mail) |
+| `POST` | `/api/admin/moderacao/usuarios/{id}/mensagens` | `{nivel, assunto, texto, copiarPorEmail}` (30/h por admin) |
+| `GET` | `/api/admin/moderacao/contas-suspensas` · `/acoes` · `/comunicados` · `/niveis` | Listas e histórico |
+| `GET` · `POST` | `/api/comunicados` · `/nao-lidos` · `/{id}/lido` | Os avisos do próprio usuário logado (qualquer papel) |
+
+Demo: `python scripts/dados-moderacao-demo.py` (cria conversa, mensagens filtradas e 3 denúncias pela API; instruções do alerta de envio em massa no cabeçalho do script).
 
 ## 🧪 Testes
 
