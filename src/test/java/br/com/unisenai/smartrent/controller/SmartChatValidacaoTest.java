@@ -99,17 +99,17 @@ class SmartChatValidacaoTest {
     }
 
     @Test
-    @DisplayName("CT1083 - Cabecalhos de seguranca: CSP restritiva, nosniff, frame DENY, Referrer-Policy e Permissions-Policy")
+    @DisplayName("CT1083 - Cabecalhos de seguranca: CSP restritiva, nosniff, frame SAMEORIGIN, Referrer-Policy e Permissions-Policy")
     void cabecalhos() throws Exception {
         mockMvc.perform(get("/api/smartchat/nao-lidas").header("Authorization", "Bearer tk"))
                 .andExpect(header().string("Content-Security-Policy",
                         org.hamcrest.Matchers.allOf(
                                 org.hamcrest.Matchers.containsString("object-src 'none'"),
-                                org.hamcrest.Matchers.containsString("frame-ancestors 'none'"),
+                                org.hamcrest.Matchers.containsString("frame-ancestors 'self'"),
                                 org.hamcrest.Matchers.containsString("base-uri 'self'"),
                                 org.hamcrest.Matchers.containsString("form-action 'self'"))))
                 .andExpect(header().string("X-Content-Type-Options", "nosniff"))
-                .andExpect(header().string("X-Frame-Options", "DENY"))
+                .andExpect(header().string("X-Frame-Options", "SAMEORIGIN"))
                 .andExpect(header().string("Referrer-Policy", "strict-origin-when-cross-origin"))
                 .andExpect(header().string("Permissions-Policy", org.hamcrest.Matchers.containsString("geolocation=()")));
     }

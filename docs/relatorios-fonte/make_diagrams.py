@@ -132,7 +132,7 @@ plt.close()
 # ---------------------------------------------------------------
 # 2) DIAGRAMA DE CASOS DE USO
 # ---------------------------------------------------------------
-fig, ax = new_fig(13, 9)
+fig, ax = new_fig(13, 12.1)
 
 
 def actor(ax, x, y, label):
@@ -154,7 +154,7 @@ def usecase(ax, x, y, w, h, label):
 
 
 # fronteira do sistema
-sys_box = FancyBboxPatch((150, 48), 620, 700, boxstyle="round,pad=0.4,rounding_size=4",
+sys_box = FancyBboxPatch((150, 48), 620, 960, boxstyle="round,pad=0.4,rounding_size=4",
                           linewidth=1.6, edgecolor=TEAL, facecolor="#FBFEFE", linestyle="--", zorder=1)
 ax.add_patch(sys_box)
 ax.text(150 + 310, 64, "SmartRent B2B", ha="center", fontsize=11, fontweight="bold", color=TEAL_DARK)
@@ -189,9 +189,23 @@ ax.plot([a2[0] - 14, uc_sugestao[0] + uc_sugestao[2] / 2], [a2[1] + 10, uc_suges
 ax.plot([a2[0] - 14, uc_fallback[0] + uc_fallback[2] / 2], [a2[1] + 30, uc_fallback[1]], color=SLATE, linewidth=0.9, zorder=2)
 ax.plot([a3[0] - 14, uc_cad_res[0] + uc_cad_res[2] / 2], [a3[1] + 10, uc_cad_res[1] + 10], color=SLATE, linewidth=0.9, zorder=2)
 
+# Faixa do administrador da plataforma: casos de uso em fileira e o ator logo abaixo, com as linhas em leque
+ax.plot([160, 760], [722, 722], color="#94A3B8", linewidth=0.8, linestyle=(0, (2, 3)), zorder=1)
+ax.text(165, 716, "Administração da plataforma (somente papel ADMIN)", fontsize=7.6, color=SLATE, style="italic")
+a4 = actor(ax, 460, 905, "Administrador\nda Plataforma")
+admin_ucs = [
+    usecase(ax, 222, 800, 128, 74, "Moderar\nDenúncias"),
+    usecase(ax, 341, 800, 108, 74, "Suspender e\nReativar Contas"),
+    usecase(ax, 460, 800, 112, 74, "Revisar Decisões\nAutomáticas"),
+    usecase(ax, 579, 800, 108, 74, "Mapas de Calor\ne Uso do Site"),
+    usecase(ax, 698, 800, 112, 74, "Enviar Avisos\nda Plataforma"),
+]
+for uc in admin_ucs:
+    ax.plot([a4[0], uc[0]], [a4[1] - 13, uc[1] + uc[3] / 2], color=SLATE, linewidth=0.9, zorder=2)
+
 ax.text(20, 12, "Diagrama de Casos de Uso — SmartRent B2B", fontsize=10, color=TEAL_DARK, fontweight="bold")
 ax.set_xlim(0, 900)
-ax.set_ylim(760, -30)
+ax.set_ylim(1040, -30)
 plt.savefig(f"{OUT}/diagrama_casos_de_uso.png", facecolor="white")
 plt.close()
 

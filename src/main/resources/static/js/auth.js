@@ -80,9 +80,14 @@
       return !!estado.token && (papel === 'ANFITRIAO' || papel === 'ADMIN');
     },
 
-    /** Para onde mandar quem acabou de entrar: gestor no painel, os demais no catálogo. */
+    /** Administrador da plataforma (painel /admin.html). Só interface: o servidor responde 403 a quem não é. */
+    isAdmin: function () {
+      return !!estado.token && !!estado.usuario && estado.usuario.papel === 'ADMIN';
+    },
+
+    /** Para onde mandar quem acabou de entrar: admin no painel dele, gestor no painel do gestor, os demais no catálogo. */
     destinoPadrao: function () {
-      return Auth.isGestor() ? '/dashboard.html' : '/imoveis.html';
+      return Auth.isAdmin() ? '/admin.html' : (Auth.isGestor() ? '/dashboard.html' : '/imoveis.html');
     },
 
     getToken: function () {

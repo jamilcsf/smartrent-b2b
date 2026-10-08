@@ -48,11 +48,14 @@ select setval(pg_get_serial_sequence('reservas', 'id'), 1, false);
 select setval(pg_get_serial_sequence('sugestoes_preco', 'id'), 1, false);
 
 -- Senha de todos: "senhaSegura123" (hash BCrypt).
--- ana@smartrent.dev e gestora (ANFITRIAO); cliente@smartrent.dev e usuario comum (CLIENTE).
+-- ana@smartrent.dev e gestora (ANFITRIAO); cliente@smartrent.dev e usuario comum (CLIENTE);
+-- admin@smartrent.dev e o administrador (ADMIN), que acessa /admin.html (painel e mapas de calor).
 insert into usuarios (ativo, data_criacao, email_verificado_em, email, nome, papel, senha_hash) values
   (true, now(), now(), 'ana@smartrent.dev', 'Ana Beatriz Rocha', 'ANFITRIAO',
    '$2a$10$IGtVQ5X8CUmd3/v6eljUGeCeD6R751CNhvx7QKtwJ6G1HkD3ICA5S'),
   (true, now(), now(), 'cliente@smartrent.dev', 'Cliente de Teste', 'CLIENTE',
+   '$2a$10$IGtVQ5X8CUmd3/v6eljUGeCeD6R751CNhvx7QKtwJ6G1HkD3ICA5S'),
+  (true, now(), now(), 'admin@smartrent.dev', 'Administrador da Plataforma', 'ADMIN',
    '$2a$10$IGtVQ5X8CUmd3/v6eljUGeCeD6R751CNhvx7QKtwJ6G1HkD3ICA5S');
 
 insert into imoveis

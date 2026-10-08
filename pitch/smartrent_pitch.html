@@ -157,6 +157,30 @@
   @keyframes odsrow{from{opacity:0;transform:translateX(-14px)}to{opacity:1;transform:none}}
   @media (prefers-reduced-motion:reduce){.slide.active .ods-table tr+tr{animation:none}}
 
+  /* demo: painel de admin e moderação */
+  .mock{position:relative;width:100%;max-width:560px;aspect-ratio:560/320;background:#fff;border:1px solid var(--line);
+    border-radius:8px;overflow:hidden;box-shadow:0 1px 6px rgba(10,37,64,.09)}
+  .mock .mh{position:absolute;left:0;right:0;top:0;height:9%;background:#eaf2fb;border-bottom:1px solid var(--line);
+    font-size:9px;color:var(--navy-2);font-weight:700}
+  .mock .mh span{position:absolute;top:50%;transform:translate(-50%,-50%);white-space:nowrap}
+  .mock .mf{position:absolute;left:3%;width:21%;background:#f3f7fc;border:1px solid var(--line);border-radius:4px;
+    font-size:8px;color:#6a7078;padding:3px 5px}
+  .mock .mc{position:absolute;width:22%;height:38%;background:#fff;border:1px solid var(--line);border-radius:4px;
+    box-shadow:0 1px 3px rgba(10,37,64,.08);overflow:hidden}
+  .mock .mc:before{content:"";display:block;height:52%;background:linear-gradient(135deg,#dfe9f6,#c5d8ee)}
+  .mock .mc i{display:block;height:5px;margin:5px 6px 0;background:#e3ebf5;border-radius:3px}
+  .mock canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+  .heatbar{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:11px;color:#6a7078}
+  .heatbar i{display:block;height:8px;width:140px;border-radius:5px;background:linear-gradient(90deg,#2563eb,#16a34a,#eab308,#dc2626)}
+  #heat-bars .hb i{transition:width .25s}
+  .kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+  .kpi{background:#fff;border-radius:8px;padding:10px 12px;box-shadow:0 1px 6px rgba(10,37,64,.09);border-left:4px solid var(--blue);
+    transition:border-color .4s,background .4s}
+  .kpi small{display:block;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#6a7078;font-weight:700}
+  .kpi b{display:block;font-size:clamp(18px,2.2vw,28px);color:var(--navy);margin-top:2px}
+  .kpi.bad{border-left-color:var(--red);background:#fdf1f0}.kpi.bad b{color:var(--red)}
+  .kpi.ok{border-left-color:var(--green)}.kpi.warn{border-left-color:var(--amber);background:var(--amber-bg)}
+
   /* navegação */
   #nav{position:fixed;right:14px;bottom:12px;display:flex;align-items:center;gap:10px;z-index:9}
   #nav button{background:none;border:0;cursor:pointer;color:var(--blue);font-size:34px;line-height:1;
@@ -185,10 +209,10 @@
 <section class="slide">
   <div class="head"><span class="tag">Roteiro</span><h2 class="title">O que vamos apresentar</h2></div>
   <div class="grid g3">
-    <div class="card"><h3>1 · Produto</h3><p>Protótipo construído no semestre.</p></div>
+    <div class="card"><h3>1 · Produto</h3><p>Protótipo, painel de admin e moderação.</p></div>
     <div class="card"><h3>2 · Testes</h3><p>Casos, resultados e aprendizados.</p></div>
     <div class="card alt"><h3>3 · Arquitetura</h3><p>Implementação e ambiente.</p></div>
-    <div class="card"><h3>4 · Dados</h3><p>Analytics e IA hoje, Big Data no futuro.</p></div>
+    <div class="card"><h3>4 · Dados</h3><p>Analytics, IA e telemetria de uso hoje; Big Data como evolução.</p></div>
     <div class="card warm"><h3>5 · Negócio</h3><p>Proposta de valor e modelo.</p></div>
     <div class="card warm"><h3>6 · Go-to-Market</h3><p>Vendas, canais e monetização.</p></div>
   </div>
@@ -211,8 +235,11 @@
     <div class="card alt"><h3>Reservas e calendário</h3><p>Três meses por imóvel, bloqueio de datas, conflito recusado no servidor, snapshot imutável do preço.</p></div>
     <div class="card alt"><h3>SmartChat</h3><p>Canal único cliente–gestor, contatos externos borrados no servidor, cifrado em repouso (AES-256-GCM).</p></div>
     <div class="card alt"><h3>Dashboard</h3><p>Estatísticas dos imóveis do gestor com Chart.js; cancelamento com reembolso e política calculada no servidor.</p></div>
+    <div class="card warm"><h3>Painel de administração</h3><p>Só para o papel ADMIN: visão da plataforma, usuários, imóveis, reservas e exportação de dados de uso.</p></div>
+    <div class="card warm"><h3>Mapas de calor</h3><p>Telemetria anônima de cliques, rolagem e tempo na página, desenhada sobre a própria tela por dispositivo.</p></div>
+    <div class="card warm"><h3>Moderação e avisos</h3><p>Denúncias, decisões automáticas revisáveis, suspensão de conta e mensagens da plataforma ao usuário.</p></div>
   </div>
-  <p class="note">15 telas no frontend · 20 controladores REST · banco PostgreSQL com 25 tabelas e 20 migrations versionadas.</p>
+  <p class="note">18 telas no frontend · 24 controladores REST · banco PostgreSQL com 28 tabelas e 22 migrations versionadas.</p>
 </section>
 
 <!-- 5 · Telas -->
@@ -225,6 +252,9 @@
     <div class="card alt"><h3>Painel do Gestor</h3><p>Criar anúncio, pré-publicação, preço por IA, anúncios e calendário.</p></div>
     <div class="card alt"><h3>Dashboard</h3><p>Receita, ocupação e imóveis por situação, com gráficos.</p></div>
     <div class="card alt"><h3>SmartChat e Perfil</h3><p>Conversas em tempo quase real (SSE), perfil e privacidade.</p></div>
+    <div class="card warm"><h3>Admin e Mapas de calor</h3><p>Visão geral, uso do site, mapa de calor sobre a página real e exportação.</p></div>
+    <div class="card warm"><h3>Moderação</h3><p>Denúncias, alertas automáticos, contas suspensas e histórico de ações.</p></div>
+    <div class="card warm"><h3>Avisos</h3><p>Caixa de mensagens da administração, para qualquer papel, com contador no menu.</p></div>
   </div>
   <p class="note">Ciclo do anúncio: sem preço → aguardando 24 h → pronto → publicado → em edição → republicação agendada (2 h). Na banca: demonstrar ao vivo (<code>executar.bat</code>) ou pelo Render, aberto 5 min antes (hibernação).</p>
 </section>
@@ -279,6 +309,59 @@
   <div class="demo-bar"><button class="replay" data-replay>↻ Repetir</button></div>
 </section>
 
+<!-- 10 · Demo: painel de admin e mapa de calor -->
+<section class="slide" data-demo="heat">
+  <div class="head"><span class="tag t-demo">Demo animada</span><h2 class="title">Painel de admin: onde as pessoas mais usam</h2></div>
+  <div class="cols">
+    <div>
+      <div class="mock" id="heat-mock" role="img" aria-label="Tela do catálogo com cliques simulados virando um mapa de calor">
+        <div class="mh"><span style="left:12%">SmartRent</span><span style="left:77%">Entrar</span><span style="left:91%">Criar conta</span></div>
+        <div class="mf" style="top:15%;height:11%">Buscar local</div>
+        <div class="mf" style="top:30%;height:26%">Tipo de imóvel</div>
+        <div class="mf" style="top:60%;height:13%">Faixa de preço</div>
+        <div class="mf" style="top:77%;height:14%">Quartos e vagas</div>
+        <div class="mc" style="left:29%;top:14%"><i></i><i style="width:60%"></i></div>
+        <div class="mc" style="left:52%;top:14%"><i></i><i style="width:60%"></i></div>
+        <div class="mc" style="left:76%;top:14%"><i></i><i style="width:60%"></i></div>
+        <div class="mc" style="left:29%;top:56%"><i></i><i style="width:60%"></i></div>
+        <div class="mc" style="left:52%;top:56%"><i></i><i style="width:60%"></i></div>
+        <div class="mc" style="left:76%;top:56%"><i></i><i style="width:60%"></i></div>
+        <canvas id="heat-cv" width="560" height="320" aria-hidden="true"></canvas>
+      </div>
+      <div class="heatbar"><span>Menos cliques</span><i></i><span>Mais cliques</span></div>
+    </div>
+    <div>
+      <h3>Partes mais usadas <small id="heat-n" style="font-weight:400;color:#6a7078"></small></h3>
+      <div class="hbars" id="heat-bars"></div>
+    </div>
+  </div>
+  <p class="cap" id="heat-cap" aria-live="polite"></p>
+  <div class="callout"><b>Anônimo por desenho:</b> o coletor guarda só a posição do clique e um identificador da peça (#id ou link), a página sem parâmetros e o tipo de tela. <b>Nunca</b> usuário, IP, texto digitado ou cookie, e respeita “Do Not Track”. Os eventos podem ser exportados em CSV/NDJSON para análise externa.</div>
+  <div class="demo-bar"><button class="replay" data-replay>↻ Repetir</button><span class="note">Simulação com cliques fictícios; no produto o mapa vem dos eventos reais, separados por celular, tablet e computador.</span></div>
+</section>
+
+<!-- 11 · Demo: moderacao -->
+<section class="slide" data-demo="mod">
+  <div class="head"><span class="tag t-demo">Demo animada</span><h2 class="title">Moderação: da denúncia à decisão</h2></div>
+  <div class="track" id="mod-track">
+    <div class="node">Filtro automático</div><div class="node">Denúncia</div><div class="node">Admin analisa</div>
+    <div class="node">Decisão</div><div class="node">Efeitos</div><div class="node">Revisão</div>
+  </div>
+  <div class="cols">
+    <div><h3>O que acontece</h3><ul class="log" id="mod-log" aria-live="polite"></ul></div>
+    <div><h3>Estado no sistema</h3>
+      <div class="kpis">
+        <div class="kpi" id="mod-k1"><small>Conta da gestora</small><b id="mod-conta">Ativa</b></div>
+        <div class="kpi" id="mod-k2"><small>Anúncios no catálogo</small><b id="mod-cat">8</b></div>
+        <div class="kpi" id="mod-k3"><small>Avisos entregues</small><b id="mod-av">0</b></div>
+        <div class="kpi" id="mod-k4"><small>Alerta automático</small><b id="mod-al">—</b></div>
+      </div>
+    </div>
+  </div>
+  <p class="note">Toda decisão exige justificativa e vai para um histórico que não pode ser alterado. Abrir as evidências também é registrado. Quem decide é uma pessoa: o sistema só filtra, sinaliza e aplica limites temporários.</p>
+  <div class="demo-bar"><button class="replay" data-replay>↻ Repetir</button><span class="note">Nomes e números de exemplo; o fluxo é o do sistema, coberto por testes automatizados.</span></div>
+</section>
+
 <!-- 10 · Casos de teste -->
 <section class="slide">
   <div class="head"><span class="tag t-test">Testes</span><h2 class="title">Casos de teste do protótipo</h2></div>
@@ -290,6 +373,8 @@
     <tr><td>ConcorrenciaBloqueioReservaTest</td><td>Reservas e bloqueios simultâneos na mesma data</td><td>Só um vence; conflito recusado</td><td><span class="pill p-crit">Crítica</span></td></tr>
     <tr><td>AreaDoGestorAutorizacaoTest</td><td>Gestor acessa imóvel de outro gestor</td><td>Operação negada (403/404 uniforme)</td><td><span class="pill p-crit">Crítica</span></td></tr>
     <tr><td>JwtConfigTest</td><td>Subir fora de dev sem <code>JWT_SECRET</code> real</td><td>Aplicação não inicia</td><td><span class="pill p-crit">Crítica</span></td></tr>
+    <tr><td>AdminControllerTest CT1115/CT1116</td><td>Cliente ou gestor chamam rotas do painel de admin e da moderação</td><td>Visitante 401, demais 403; o serviço nem é chamado</td><td><span class="pill p-crit">Crítica</span></td></tr>
+    <tr><td>ModeracaoServiceTest CT1129/CT1131</td><td>Denúncia procedente com suspensão; alerta descartado como falso positivo</td><td>Conta suspensa, avisos entregues; restrição de envio removida</td><td><span class="pill p-alta">Alta</span></td></tr>
     <tr><td>RefundPolicyServiceTest</td><td>Cancelar antes e depois de 48 h do check-in</td><td>Reembolso integral / nenhum</td><td><span class="pill p-alta">Alta</span></td></tr>
   </table>
   <p class="note">Casos combinam cenários positivos, negativos, limites e autorização, derivados das regras reais do código.</p>
@@ -299,12 +384,12 @@
 <section class="slide">
   <div class="head"><span class="tag t-test">Testes</span><h2 class="title">Resultados: o que funcionou</h2></div>
   <div class="stats">
-    <div class="stat"><b>671</b><span>testes aprovados</span></div>
+    <div class="stat"><b>720</b><span>testes aprovados</span></div>
     <div class="stat"><b>0</b><span>falhas / erros</span></div>
     <div class="stat"><b>21</b><span>achados de segurança corrigidos</span></div>
-    <div class="stat"><b>84%</b><span>cobertura de linhas</span></div>
+    <div class="stat"><b>85%</b><span>cobertura de linhas</span></div>
   </div>
-  <p class="lead"><b>Status da suíte:</b> 671 testes, medição do JaCoCo em 06/10/2026 (84,0% de linhas no total; componentes novos entre 86% e 100%). Revisão mobile em 18 telas e 7 larguras: 0 rolagem horizontal, 0 erro de JavaScript. O front ainda não tem teste automatizado de interface.</p>
+  <p class="lead"><b>Status da suíte:</b> 720 testes, medição do JaCoCo em 08/10/2026 (85,3% de linhas no total; componentes novos entre 86% e 100%, incluindo o painel de admin e a moderação). Revisão mobile em 18 telas e 7 larguras: 0 rolagem horizontal, 0 erro de JavaScript. O front ainda não tem teste automatizado de interface.</p>
 </section>
 
 <!-- Gráficos de qualidade -->
@@ -312,12 +397,12 @@
   <div class="head"><span class="tag t-test">Testes</span><h2 class="title">Qualidade em números</h2></div>
   <div class="grid g3 charts">
     <div class="card chart"><h3>Cobertura de linhas</h3>
-      <svg viewBox="0 0 140 140" class="donut" role="img" aria-label="Cobertura de linhas de 84 por cento"><circle cx="70" cy="70" r="52" class="bg"/><circle cx="70" cy="70" r="52" class="fg" id="q-donut" transform="rotate(-90 70 70)"/><text x="70" y="76" text-anchor="middle" id="q-pct">0%</text></svg>
+      <svg viewBox="0 0 140 140" class="donut" role="img" aria-label="Cobertura de linhas de 85 por cento"><circle cx="70" cy="70" r="52" class="bg"/><circle cx="70" cy="70" r="52" class="fg" id="q-donut" transform="rotate(-90 70 70)"/><text x="70" y="76" text-anchor="middle" id="q-pct">0%</text></svg>
       <p><b id="q-tests">0</b> testes aprovados</p></div>
     <div class="card chart"><h3>Achados da auditoria (21)</h3><div class="hbars" id="q-sev"></div></div>
     <div class="card chart"><h3>Cobertura dos componentes novos</h3><div class="hbars" id="q-comp"></div></div>
   </div>
-  <p class="note">Fontes: JaCoCo (06/10/2026) e ADR-008. ChatEventos e VideoConfig têm trechos de borda sem teste. <button class="replay" data-replay>↻ Repetir</button></p>
+  <p class="note">Fontes: JaCoCo (08/10/2026) e ADR-008. ChatEventos e VideoConfig têm trechos de borda sem teste. <button class="replay" data-replay>↻ Repetir</button></p>
 </section>
 
 <!-- 13 · Falhas -->
@@ -356,7 +441,7 @@
   <table>
     <tr><th>Camada</th><th>Onde roda</th><th>Observação</th></tr>
     <tr><td>Backend + frontend</td><td>Render (contêiner Docker, plano gratuito)</td><td>Spring Boot empacotado, HTTPS, páginas servidas pelo próprio JAR</td></tr>
-    <tr><td>Banco de dados</td><td>PostgreSQL gerenciado no Supabase</td><td>Migrations V1 a V20 via Flyway; conexão exige TLS (sslmode=require)</td></tr>
+    <tr><td>Banco de dados</td><td>PostgreSQL gerenciado no Supabase</td><td>Migrations V1 a V22 via Flyway; conexão exige TLS (sslmode=require)</td></tr>
     <tr><td>Serviços externos</td><td>Groq (IA), Brevo (e-mail), R2 (fotos)</td><td>Chaves só em variáveis de ambiente; sem a IA, preço manual</td></tr>
     <tr><td>Desenvolvimento</td><td>Localhost:8080 + PostgreSQL em Docker</td><td><code>executar.bat</code> sobe tudo com um clique; H2 nos testes</td></tr>
   </table>
@@ -368,12 +453,12 @@
   <div class="head"><span class="tag t-dados">Dados</span><h2 class="title">Camada de dados e analytics</h2></div>
   <p class="lead">O valor do SmartRent vem de transformar reservas, preços e conversas em decisões. Hoje esse processamento é analítico, sobre dados estruturados, mais uma chamada de IA para o preço.</p>
   <div class="flow">
-    <div class="box"><b>Coleta</b>Anúncios, reservas, preços e mensagens, via API REST</div><div class="arr">→</div>
-    <div class="box"><b>Armazenamento</b>PostgreSQL com histórico de preço e sugestões por imóvel</div><div class="arr">→</div>
+    <div class="box"><b>Coleta</b>Anúncios, reservas, preços e mensagens via API REST, mais eventos anônimos de uso (cliques, rolagem, tempo)</div><div class="arr">→</div>
+    <div class="box"><b>Armazenamento</b>PostgreSQL com histórico de preço, sugestões e uma tabela de eventos de uso (append-only, com retenção)</div><div class="arr">→</div>
     <div class="box"><b>Processamento</b>Agregações de receita e ocupação; prompt de sazonalidade enviado à Groq</div><div class="arr">→</div>
-    <div class="box"><b>Visualização</b>Dashboard do gestor e calendário (Chart.js)</div>
+    <div class="box"><b>Visualização</b>Dashboard do gestor, calendário, painel de admin e mapas de calor (Chart.js e canvas)</div>
   </div>
-  <div class="callout"><b>Transparência técnica:</b> na escala atual (gestores com poucos imóveis na Grande Florianópolis), o volume é tratável por banco relacional. <b>Não usamos ferramentas de Big Data hoje</b> — seria sobre-engenharia. O próximo slide mostra quando e como elas entram.</div>
+  <div class="callout"><b>Transparência técnica:</b> já <b>coletamos</b> dados de uso em formato próprio para análise (telemetria anônima, agregações no banco e exportação em CSV/NDJSON). Na escala atual, porém, o volume é tratável por banco relacional, e <b>não usamos ferramentas de processamento de Big Data hoje</b> (Spark, data warehouse): seria sobre-engenharia. O próximo slide mostra quando e como elas entram.</div>
 </section>
 
 <!-- 13 · Big Data -->
@@ -382,12 +467,13 @@
   <p class="lead">À medida que a base cresce e entram feeds de plataformas (iCal/OTAs), preço e ocupação viram um fluxo contínuo, o cenário em que dados em escala geram valor real.</p>
   <table>
     <tr><th>Ferramenta</th><th>Papel na solução</th><th>Por que (justificativa)</th></tr>
+    <tr><td>Telemetria de uso <span class="pill p-ok">Implementado</span></td><td>Eventos anônimos de clique, rolagem e tempo, com exportação CSV/NDJSON e retenção de 180 dias</td><td>Base de dados pronta para BI, DuckDB ou Spark; já alimenta os mapas de calor</td></tr>
     <tr><td>Integração iCal com OTAs</td><td>Ingestão de disponibilidade de Airbnb e Booking</td><td>Elimina a atualização manual em várias plataformas</td></tr>
     <tr><td>Data warehouse</td><td>Série histórica de preço, ocupação e sazonalidade</td><td>Volume que extrapola o banco transacional</td></tr>
     <tr><td>Processamento em lote (Spark)</td><td>Agregações e padrões por bairro e temporada</td><td>Análise sobre milhões de registros</td></tr>
     <tr><td>Modelos preditivos (IA)</td><td>Comparar sugestão da IA com o preço praticado; detectar fraude no chat</td><td>Refinar o prompt e antecipar abusos</td></tr>
   </table>
-  <p class="note">Coerente com o roadmap V2 do projeto. Apresentado como visão de escala — não como implementação atual.</p>
+  <p class="note">A coleta e a exportação existem hoje; as demais linhas são visão de escala (roadmap V2), não implementação atual. A privacidade dos eventos aguarda revisão jurídica.</p>
 </section>
 
 <!-- 14 · Bloco 3 -->
@@ -455,12 +541,12 @@
     <tr><td>Demonstração do protótipo</td><td><span class="pill p-ok">Coberto</span></td></tr>
     <tr><td>Casos e resultados de teste (o que funcionou/falhou)</td><td><span class="pill p-ok">Coberto</span></td></tr>
     <tr><td>Ambiente de implementação</td><td><span class="pill p-ok">Coberto</span></td></tr>
-    <tr><td>Ferramentas de dados / Big Data + justificativa</td><td><span class="pill p-ok">Coberto (atual + roadmap)</span></td></tr>
+    <tr><td>Ferramentas de dados / Big Data + justificativa</td><td><span class="pill p-ok">Coberto (telemetria atual + roadmap)</span></td></tr>
     <tr><td>Proposta de valor, modelo e público-alvo</td><td><span class="pill p-ok">Coberto</span></td></tr>
     <tr><td>Vendas, atração de clientes e monetização</td><td><span class="pill p-ok">Coberto (hipótese)</span></td></tr>
     <tr><td>Validação em campo com anfitrião real</td><td><span class="pill p-pend">Pendente</span></td></tr>
   </table>
-  <p class="note">Pendências do produto: revisão jurídica dos textos, gateway de pagamento real, rotação da credencial do banco e testes automatizados do front.</p>
+  <p class="note">Pendências do produto: revisão jurídica dos textos (inclusive telemetria, avisos e decisões automatizadas), gateway de pagamento real, rotação da credencial do banco e testes automatizados do front.</p>
 </section>
 
 <!-- 20 · Obrigado -->
@@ -474,7 +560,7 @@
 <div id="nav">
   <button id="prev" aria-label="Slide anterior">&#8249;</button>
   <button id="next" aria-label="Próximo slide">&#8250;</button>
-  <span id="count" aria-live="polite">1 / 20</span>
+  <span id="count" aria-live="polite">1 / 27</span>
 </div>
 <div id="bar"></div>
 
@@ -555,6 +641,59 @@
       for(var i=0;i<pts.length;i++){await sleep(200);if(!alive())return;pts[i].setAttribute('r',5)}
       await sleep(500);if(!alive())return;$('ann').style.transition='opacity .6s';$('ann').style.opacity=1;
     },
+    heat:async function(alive){
+      var cv=$('heat-cv'),W=560,H=320,ctx=cv.getContext('2d'),tmp=document.createElement('canvas');
+      tmp.width=W;tmp.height=H;var t=tmp.getContext('2d');
+      var HS=[['Card do 2º imóvel',63,33,24],['Card do 1º imóvel',40,33,14],['Card do 3º imóvel',87,33,10],['Buscar local',14,21,12],
+        ['Tipo de imóvel',14,45,9],['Card do 5º imóvel',63,75,10],['Entrar',86,4,9],['Faixa de preço',14,66,5],['Criar conta',94,4,6]];
+      var tot=HS.reduce(function(a,h){return a+h[3]},0),cnt=HS.map(function(){return 0}),n=0;
+      var lut=(function(){var c=document.createElement('canvas');c.width=256;c.height=1;var g=c.getContext('2d'),gr=g.createLinearGradient(0,0,256,0);
+        gr.addColorStop(0,'#2563eb');gr.addColorStop(.4,'#16a34a');gr.addColorStop(.7,'#eab308');gr.addColorStop(1,'#dc2626');
+        g.fillStyle=gr;g.fillRect(0,0,256,1);return g.getImageData(0,0,256,1).data})();
+      var cap=$('heat-cap');
+      ctx.clearRect(0,0,W,H);t.clearRect(0,0,W,H);
+      function bars(){var ord=HS.map(function(h,i){return[h[0],cnt[i]]}).sort(function(a,b){return b[1]-a[1]}).slice(0,6),mx=Math.max(1,ord[0][1]);
+        $('heat-bars').innerHTML=ord.map(function(r){return '<div class="hb">'+r[0]+' <b>'+r[1]+'</b><div><i style="width:'+(r[1]/mx*100)+'%"></i></div></div>'}).join('');
+        $('heat-n').textContent='· '+n+' cliques coletados'}
+      function pick(){var r=Math.random()*tot,i=0;for(;i<HS.length-1;i++){r-=HS[i][3];if(r<=0)break}return i}
+      function paint(){var im=t.getImageData(0,0,W,H),d=im.data;
+        for(var k=0;k<d.length;k+=4){var a=d[k+3];if(a){d[k]=lut[a*4];d[k+1]=lut[a*4+1];d[k+2]=lut[a*4+2];d[k+3]=Math.min(200,24+a*1.3)}}
+        ctx.putImageData(im,0,0)}
+      bars();cap.textContent='Cada clique de quem usa o site vira um ponto de dados anônimo.';
+      await sleep(700);
+      var TOTAL=240,STEP=6;
+      for(var c=0;c<TOTAL;c+=STEP){
+        if(!alive())return;
+        for(var j=0;j<STEP;j++){var i=pick(),h=HS[i];cnt[i]++;n++;
+          var x=h[1]/100*W+(Math.random()+Math.random()-1)*18,y=h[2]/100*H+(Math.random()+Math.random()-1)*14;
+          var g=t.createRadialGradient(x,y,0,x,y,34);g.addColorStop(0,'rgba(0,0,0,.10)');g.addColorStop(1,'rgba(0,0,0,0)');t.fillStyle=g;t.fillRect(x-34,y-34,68,68)}
+        paint();bars();
+        if(c===60)cap.textContent='As regiões mais usadas esquentam: do azul (pouco) ao vermelho (muito).';
+        if(c===150)cap.textContent='Ao lado, a lista das partes mais clicadas é montada pelo identificador de cada elemento.';
+        await sleep(70)}
+      if(!alive())return;
+      cap.textContent='Resultado: o card central e a busca por local concentram o uso. Decisão de produto baseada em dado, não em intuição.';
+    },
+    mod:async function(alive){
+      var nodes=[].slice.call($('mod-track').children),log=$('mod-log');
+      var conta=$('mod-conta'),cat=$('mod-cat'),av=$('mod-av'),al=$('mod-al');
+      function k(id,c){$(id).className='kpi'+(c?' '+c:'')}
+      function reset(){log.innerHTML='';conta.textContent='Ativa';cat.textContent='8';av.textContent='0';al.textContent='—';['mod-k1','mod-k2','mod-k3','mod-k4'].forEach(function(i){k(i,'')})}
+      function mark(i){nodes.forEach(function(x,q){x.className='node'+(q===i?' on':(q<i?' done':''))})}
+      function say(t,c){var li=document.createElement('li');li.className=c||'';li.textContent=t;log.appendChild(li)}
+      reset();mark(-1);await sleep(500);if(!alive())return;
+      mark(0);say('A gestora escreve “fecha por fora no pix?”. O servidor oculta o contato e abre um alerta de suspeita de fraude (só sinaliza).');
+      al.textContent='Aberto';k('mod-k4','warn');await sleep(2600);if(!alive())return;
+      mark(1);say('O cliente denuncia como “tentativa de golpe” e anexa as mensagens.');await sleep(2300);if(!alive())return;
+      mark(2);say('O admin abre a denúncia (a abertura fica registrada) e lê só as mensagens anexadas, com trechos ocultados.');await sleep(2600);if(!alive())return;
+      mark(3);say('Decisão: procedente, com justificativa obrigatória. Marca suspender a conta e avisar as duas partes.','ok');await sleep(2400);if(!alive())return;
+      mark(4);conta.textContent='Suspensa';k('mod-k1','bad');say('A conta cai na hora, inclusive as sessões abertas, e os anúncios dela saem do catálogo.','no');
+      for(var c=8;c>=0;c--){if(!alive())return;cat.textContent=String(c);if(c<8)k('mod-k2','bad');await sleep(110)}
+      av.textContent='2';k('mod-k3','ok');say('Denunciante e denunciado recebem um aviso na caixa “Avisos”; o denunciante não é informado da sanção.');await sleep(2600);if(!alive())return;
+      mark(5);say('Se foi engano: o admin reativa com motivo (tudo volta) ou descarta o alerta como falso positivo, e a restrição some.','ok');
+      conta.textContent='Ativa';k('mod-k1','ok');cat.textContent='8';k('mod-k2','ok');al.textContent='Descartado';k('mod-k4','ok');
+      await sleep(500);if(!alive())return;say('Tudo fica no histórico imutável de moderação.');
+    },
     quality:async function(alive){
       var C=2*Math.PI*52,dn=$('q-donut'),pct=$('q-pct'),t=$('q-tests');
       dn.style.strokeDasharray='0 '+C;pct.textContent='0%';t.textContent='0';
@@ -562,12 +701,13 @@
         return '<div class="hb">'+r[0]+' <b>'+r[1]+r[3]+'</b><div><i class="'+r[4]+'" data-w="'+r[2]+'"></i></div></div>'}).join('')}
       bars('q-sev',[['Crítico',1,1/9*100,'','c1'],['Alto',5,5/9*100,'','c2'],['Médio',9,100,'','c3'],['Baixo',6,6/9*100,'','c4']]);
       bars('q-comp',[['JwtConfig',86,86,'%',''],['CifraCampo',93,93,'%',''],['MessageFilterService',96,96,'%',''],
-        ['LimitesDeAutenticacao',100,100,'%',''],['Sanitizador',100,100,'%',''],['ChatEventos',65,65,'%','low'],['VideoConfig',61,61,'%','low']]);
+        ['LimitesDeAutenticacao',100,100,'%',''],['Sanitizador',100,100,'%',''],['AdminService',99,99,'%',''],['ModeracaoService',94,94,'%',''],
+        ['TelemetriaService',89,89,'%',''],['ChatEventos',65,65,'%','low'],['VideoConfig',61,61,'%','low']]);
       await sleep(400);if(!alive())return;
-      dn.style.strokeDasharray=(C*.84)+' '+C;
+      dn.style.strokeDasharray=(C*.853)+' '+C;
       document.querySelectorAll('.hb i').forEach(function(e){e.style.width=e.dataset.w+'%'});
       var steps=RM?1:40;
-      for(var k=1;k<=steps;k++){if(!alive())return;pct.textContent=Math.round(84*k/steps)+'%';t.textContent=Math.round(671*k/steps);await sleep(40)}
+      for(var k=1;k<=steps;k++){if(!alive())return;pct.textContent=Math.round(85*k/steps)+'%';t.textContent=Math.round(720*k/steps);await sleep(40)}
     }
   };
   function startDemo(sl){var my=tok,f=demos[sl.dataset.demo];if(f)f(function(){return my===tok})}

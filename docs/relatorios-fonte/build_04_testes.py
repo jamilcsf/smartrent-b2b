@@ -159,6 +159,23 @@ casos = [
                     "letras espaçadas, números mistos e mensageiros, sem mascarar preço, data, CEP e hóspedes; 404 idêntico para recurso alheio; "
                     "teto de pixels e vídeo sem FFmpeg recusado; cifra v2 com contexto (coluna trocada, v1 legado, valor ilegível); sanitização OWASP; "
                     "validação do chat, CSP e CORS fechado; teto de corpo JSON; teto de SSE", "RNF13", "Unitário, @WebMvcTest e banco (H2)", "Crítica", "Implementado"),
+    ("CT1103–CT1109, CT1121–CT1122", "Telemetria de uso: evento válido grava grade, dia, hora e papel no fuso da plataforma; página normalizada "
+                    "(sem parâmetros, id vira {id}, API e áreas de admin ignoradas); alvo só estrutural e sem início de fórmula; "
+                    "inválidos descartados sem derrubar o lote; sessão inválida, coleta desligada, lote acima de 50 e limite por origem; "
+                    "coletor respeita Do Not Track, não roda em iframe e não lê texto, valor digitado, cookie nem parâmetros", "RF47, RNF14", "Unitário e estático", "Crítica", "Implementado"),
+    ("CT1110–CT1114, CT1141–CT1146", "Análise de uso: células do mapa por página e dispositivo, janela de período, páginas mais vistas, série diária, "
+                    "horários de pico, permanência média, leitura por chave para exportação, retenção que apaga só o antigo; resumo, mapa "
+                    "validado e exportação CSV e NDJSON com escape", "RF48, RF49", "Banco (H2) e unitário", "Alta", "Implementado"),
+    ("CT1115–CT1117, CT1120, CT1124–CT1125, CT1152", "Autorização do painel e da moderação: visitante 401, cliente e gestor 403, só o administrador chega ao "
+                    "serviço, inclusive na exportação; coleta pública com papel do token e sem gravar com DNT ou GPC; avisos só do próprio usuário; "
+                    "busca das listagens sem curinga; visão geral limitada a 1–365 dias", "RF46, RF47, RF53", "@WebMvcTest e unitário", "Crítica", "Implementado"),
+    ("CT1126–CT1134, CT1139–CT1140", "Moderação: suspender exige motivo e recusa a própria conta, outro administrador e conta já suspensa; reativar; denúncia "
+                    "procedente com suspensão e avisos (o denunciante não sabe da sanção); improcedente não suspende nem avisa o denunciado; "
+                    "decisão uma só vez; revisão de alerta; mensagem em nome de um nível, sem HTML, com limite por hora; falha de e-mail não desfaz; "
+                    "avisos só do dono", "RF50–RF54", "Unitário (simulado)", "Crítica", "Implementado"),
+    ("CT1135–CT1138, CT1147–CT1151", "Moderação com banco e SmartChat reais: alerta descartado deixa de restringir o envio; denúncia lista, detalhe com "
+                    "evidências ocultadas e abertura registrada; resumo do filtro por categoria, dia e autor; suspensão tira o anúncio do catálogo e "
+                    "reativar devolve; avisos entregues; listas do painel filtradas; visão geral com valor movimentado; textos escapados no front", "RF50–RF54, RNF15", "Banco (H2), integração e estático", "Crítica", "Implementado"),
 ]
 cdata = [[Paragraph("ID", styles["CellHeader"]), Paragraph("Caso de teste", styles["CellHeader"]),
           Paragraph("RF", styles["CellHeaderCenter"]), Paragraph("Nível", styles["CellHeader"]),
@@ -176,9 +193,9 @@ story.extend(quadro(styles, "Matriz de casos de teste", quadro_table(
     header_align_center=[2, 4, 5])))
 
 story.append(Paragraph(
-    "A suíte automatizada executa hoje 671 testes a cada integração; as faixas de "
+    "A suíte automatizada executa hoje 720 testes a cada integração, com 85,3% de cobertura de linhas medida pelo JaCoCo em 8 de outubro de 2026; as faixas de "
     "identificadores acrescentadas ao quadro (CT50 em diante) agrupam os casos do fluxo de "
-    "anúncios, do calendário, do cancelamento, do SmartChat, dos vídeos, do fuso horário e do perfil do usuário. Nenhum deles depende de rede ou de um PostgreSQL externo: as consultas são "
+    "anúncios, do calendário, do cancelamento, do SmartChat, dos vídeos, do fuso horário, do perfil do usuário, da telemetria de uso e da moderação. Nenhum deles depende de rede ou de um PostgreSQL externo: as consultas são "
     "exercitadas em banco H2 em memória e as chamadas externas são simuladas, de modo que a "
     "esteira de integração contínua executa a suíte completa sem infraestrutura auxiliar, "
     "conforme o RNF04. As migrations, por sua vez, foram validadas manualmente contra "

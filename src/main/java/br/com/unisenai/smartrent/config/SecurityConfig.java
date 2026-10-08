@@ -39,8 +39,9 @@ import java.util.Map;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    /** Diretivas seguras com o front atual: sem plugins, sem <base> trocado, sem embutir em iframe, formularios so para o proprio site. */
-    static final String CSP = "object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'";
+    /** Diretivas seguras com o front atual: sem plugins, sem <base> trocado, embutir em iframe so pelo proprio site (o mapa de calor do admin
+     *  mostra as paginas do site por baixo; nenhuma outra origem pode emoldurar), formularios so para o proprio site. */
+    static final String CSP = "object-src 'none'; base-uri 'self'; frame-ancestors 'self'; form-action 'self'";
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
@@ -57,6 +58,7 @@ public class SecurityConfig {
                 // as diretivas que NAO quebram as paginas atuais (Tailwind/Chart.js por CDN e scripts inline exigem
                 // 'unsafe-inline'): a CSP completa, com nonce, e Visao Futura (V2), ver ADR-008.
                 .headers(h -> h
+                        .frameOptions(f -> f.sameOrigin())
                         .contentSecurityPolicy(csp -> csp.policyDirectives(CSP))
                         .referrerPolicy(r -> r.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
                         .permissionsPolicy(p -> p.policy("camera=(), microphone=(), geolocation=(), payment=()")))
@@ -66,13 +68,15 @@ public class SecurityConfig {
                         // Autorizacao real fica aqui, no servidor: esconder
                         // botao no front nao protege endpoint nenhum. Alem do
                         // papel, cada servico confere que o imovel e do gestor.
+                        // Painel de admin e mapas de calor: so ADMIN (o gestor tambem recebe 403).
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/gestor/**", "/api/reservas/**", "/api/precificacao/**")
                                 .hasAnyRole("ANFITRIAO", "ADMIN")
                         // Reserva do cliente e SmartChat: qualquer usuario autenticado; a
                         // propriedade (so as proprias reservas e conversas) e conferida nos servicos.
                         // O fluxo SSE usa ticket de uso unico (EventSource nao envia Authorization).
                         .requestMatchers("/api/smartchat/stream").permitAll()
-                        .requestMatchers("/api/cliente/**", "/api/smartchat/**").authenticated()
+                        .requestMatchers("/api/cliente/**", "/api/smartchat/**", "/api/comunicados/**").authenticated()
                         // Foto de perfil e exibida a outros usuarios (nome de arquivo imprevisivel);
                         // o resto do perfil e sempre do proprio usuario autenticado.
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/perfil/foto/*").permitAll()

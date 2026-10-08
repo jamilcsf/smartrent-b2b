@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>SmartRent B2B - Administração</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/css/mobile.css">
+  <link rel="icon" type="image/svg+xml" href="/img/favicon.svg">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col antialiased">
+
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="bg-slate-900 text-white p-2 rounded-xl shadow-md">
+          <i data-lucide="shield-check" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <h1 class="text-base font-bold text-slate-900 tracking-tight">
+            SmartRent <span class="text-blue-600 font-semibold">B2B</span>
+          </h1>
+          <p class="text-[10px] text-slate-500 font-medium">Administração da plataforma</p>
+        </div>
+      </div>
+      <nav id="navPrincipal" class="flex items-center space-x-1 sm:space-x-2"></nav>
+      <div id="areaAuth" class="flex items-center ml-4"></div>
+    </div>
+  </header>
+
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+
+    <div id="semAcesso" class="hidden p-6 rounded-2xl bg-white border border-slate-200 text-center space-y-3">
+      <p class="text-sm font-semibold text-slate-800">Esta área é exclusiva de administradores.</p>
+      <a id="linkEntrar" href="/login.html?redirectTo=%2Fadmin.html" class="inline-block text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">Entrar</a>
+    </div>
+
+    <div id="painel" class="hidden space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+        <div>
+          <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Painel de administração</h2>
+          <p class="text-xs text-slate-500 mt-1">Visão da plataforma inteira e do uso do site. Denúncias, decisões automáticas e suspensões ficam em <a class="text-blue-700 font-semibold underline" href="/moderacao.html">Moderação</a>. Datas em horário de Brasília. Os dados de uso são anônimos (sem pessoa, IP ou texto digitado).</p>
+        </div>
+        <label class="text-xs font-semibold text-slate-600">Período
+          <select id="selDias" class="ml-2 bg-white border border-slate-300 rounded-lg p-2 text-xs">
+            <option value="7">Últimos 7 dias</option>
+            <option value="30" selected>Últimos 30 dias</option>
+            <option value="90">Últimos 90 dias</option>
+            <option value="365">Últimos 12 meses</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="overflow-x-auto border-b border-slate-200">
+        <div id="abas" role="tablist" aria-label="Seções do painel" class="flex gap-1 min-w-max"></div>
+      </div>
+
+      <p id="erroPagina" class="hidden p-4 rounded-xl bg-rose-50 border border-rose-200 text-sm font-semibold text-rose-700"></p>
+
+      <!-- Visão geral -->
+      <section id="aba-visao" role="tabpanel" class="hidden space-y-6">
+        <div id="kpisVisao" class="grid grid-cols-2 lg:grid-cols-4 gap-4"></div>
+        <div class="grid lg:grid-cols-2 gap-6">
+          <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+            <h3 class="text-sm font-bold text-slate-900 mb-3">Novos cadastros por dia</h3>
+            <div class="relative h-60"><canvas id="grCadastros" role="img" aria-label="Novos cadastros por dia"></canvas></div>
+          </div>
+          <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+            <h3 class="text-sm font-bold text-slate-900 mb-3">Reservas criadas por dia</h3>
+            <div class="relative h-60"><canvas id="grReservasDia" role="img" aria-label="Reservas criadas por dia"></canvas></div>
+          </div>
+          <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+            <h3 class="text-sm font-bold text-slate-900 mb-3">Imóveis por situação</h3>
+            <ul id="listaImoveisStatus" class="text-xs divide-y divide-slate-100"></ul>
+          </div>
+          <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+            <h3 class="text-sm font-bold text-slate-900 mb-3">Reservas por situação e usuários por papel</h3>
+            <ul id="listaReservasStatus" class="text-xs divide-y divide-slate-100"></ul>
+            <ul id="listaPapeis" class="text-xs divide-y divide-slate-100 mt-3 border-t border-slate-200 pt-2"></ul>
+          </div>
+        </div>
+        <p class="text-[11px] text-slate-500">Valor movimentado = soma das reservas criadas no período que estão confirmadas ou concluídas. Conversão = reservas criadas ÷ sessões que abriram a página de um anúncio no período (indicador aproximado, pois a telemetria é anônima).</p>
+      </section>
+
+      <!-- Uso do site -->
+      <section id="aba-uso" role="tabpanel" class="hidden space-y-6">
+        <div id="kpisUso" class="grid grid-cols-2 lg:grid-cols-4 gap-4"></div>
+        <div class="grid lg:grid-cols-2 gap-6">
+          <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 lg:col-span-2">
+            <h3 class="text-sm font-bold text-slate-900 mb-3">Visualizações e sessões por dia</h3>
+            <div class="relative h-64"><canvas id="grUsoDia" role="img" aria-label="Visualizações e sessões por dia"></canvas></div>
+          </div>
+          <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+            <h3 class="text-sm font-bold text-slate-900 mb-1">Páginas mais usadas</h3>
+            <p class="text-[11px] text-slate-500 mb-3">Visualizações e sessões distintas.</p>
+            <div id="tabPaginas" class="overflow-x-auto"></div>
+          </div>
+          <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+            <h3 class="text-sm font-bold text-slate-900 mb-1">Partes mais clicadas</h3>
+            <p class="text-[11px] text-slate-500 mb-3">Botões, links e campos, em todo o site.</p>
+            <div id="tabElementos" class="overflow-x-auto"></div>
+          </div>
+          <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 lg:col-span-2">
+            <h3 class="text-sm font-bold text-slate-900 mb-1">Horários de maior atividade</h3>
+            <p class="text-[11px] text-slate-500 mb-3">Visualizações + cliques por dia da semana e hora (Brasília). Quanto mais escuro, mais uso.</p>
+            <div id="gradeHoras" class="overflow-x-auto"></div>
+          </div>
+          <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+            <h3 class="text-sm font-bold text-slate-900 mb-3">Sessões por dispositivo</h3>
+            <div class="relative h-56"><canvas id="grDispositivos" role="img" aria-label="Sessões por dispositivo"></canvas></div>
+          </div>
+          <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+            <h3 class="text-sm font-bold text-slate-900 mb-1">Tempo médio na página</h3>
+            <p class="text-[11px] text-slate-500 mb-3">Tempo ativo (aba visível), por página.</p>
+            <div id="tabPermanencia" class="overflow-x-auto"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Mapas de calor -->
+      <section id="aba-calor" role="tabpanel" class="hidden space-y-4">
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 flex flex-wrap items-end gap-3">
+          <label class="text-xs font-semibold text-slate-600">Página
+            <select id="selPagina" class="mt-1 block bg-white border border-slate-300 rounded-lg p-2 text-xs min-w-[12rem]"></select>
+          </label>
+          <label class="text-xs font-semibold text-slate-600">Dispositivo
+            <select id="selDispositivo" class="mt-1 block bg-white border border-slate-300 rounded-lg p-2 text-xs">
+              <option value="DESKTOP">Computador</option>
+              <option value="TABLET">Tablet</option>
+              <option value="MOBILE">Celular</option>
+            </select>
+          </label>
+          <label class="text-xs font-semibold text-slate-600 flex items-center gap-2 pb-2">
+            <input id="chkCalor" type="checkbox" checked class="rounded border-slate-300"> Mostrar calor
+          </label>
+          <label class="text-xs font-semibold text-slate-600">Intensidade
+            <input id="opacidadeCalor" type="range" min="20" max="100" value="80" class="mt-2 block w-32 accent-blue-600">
+          </label>
+          <button id="btnCalor" type="button" class="text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">Atualizar</button>
+        </div>
+        <p id="resumoCalor" class="text-xs text-slate-600"></p>
+        <div class="grid xl:grid-cols-[minmax(0,1fr)_20rem] gap-6 items-start">
+          <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-3">
+            <div id="palcoCalor" class="overflow-auto max-h-[75vh] rounded-lg border border-slate-200 bg-slate-100">
+              <div id="caixaCalor" class="relative mx-auto origin-top-left">
+                <iframe id="quadroCalor" title="Página do site com o mapa de calor por cima" class="block bg-white border-0 pointer-events-none" scrolling="no" sandbox="allow-same-origin allow-scripts"></iframe>
+                <canvas id="telaCalor" class="absolute inset-0 pointer-events-none" style="opacity:.8" aria-hidden="true"></canvas>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 mt-3 text-[11px] text-slate-500" aria-hidden="true">
+              <span>Menos cliques</span>
+              <span class="h-2 flex-1 max-w-[12rem] rounded-full" style="background:linear-gradient(90deg,#2563eb,#16a34a,#eab308,#dc2626)"></span>
+              <span>Mais cliques</span>
+            </div>
+          </div>
+          <div class="space-y-6">
+            <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+              <h3 class="text-sm font-bold text-slate-900 mb-3">Elementos mais clicados nesta página</h3>
+              <div id="tabElementosPagina"></div>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+              <h3 class="text-sm font-bold text-slate-900 mb-1">Até onde as pessoas rolam</h3>
+              <p class="text-[11px] text-slate-500 mb-3">Parcela das visitas que chegou a cada ponto da página.</p>
+              <div id="barrasRolagem" class="space-y-1.5"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Listas -->
+      <section id="aba-usuarios" role="tabpanel" class="hidden space-y-4">
+        <div class="flex flex-wrap items-end gap-3">
+          <label class="text-xs font-semibold text-slate-600">Buscar
+            <input id="buscaUsuarios" type="search" maxlength="80" placeholder="Nome ou e-mail" class="mt-1 block bg-white border border-slate-300 rounded-lg p-2 text-xs w-56">
+          </label>
+          <label class="text-xs font-semibold text-slate-600">Papel
+            <select id="filtroPapel" class="mt-1 block bg-white border border-slate-300 rounded-lg p-2 text-xs">
+              <option value="">Todos</option><option value="CLIENTE">Cliente</option>
+              <option value="ANFITRIAO">Anfitrião</option><option value="ADMIN">Admin</option>
+            </select>
+          </label>
+        </div>
+        <div id="tabUsuarios" class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-x-auto"></div>
+        <div id="pagUsuarios" class="flex items-center justify-between text-xs text-slate-600"></div>
+      </section>
+
+      <section id="aba-imoveis" role="tabpanel" class="hidden space-y-4">
+        <div class="flex flex-wrap items-end gap-3">
+          <label class="text-xs font-semibold text-slate-600">Buscar
+            <input id="buscaImoveis" type="search" maxlength="80" placeholder="Título do imóvel" class="mt-1 block bg-white border border-slate-300 rounded-lg p-2 text-xs w-56">
+          </label>
+          <label class="text-xs font-semibold text-slate-600">Situação
+            <select id="filtroStatusImovel" class="mt-1 block bg-white border border-slate-300 rounded-lg p-2 text-xs">
+              <option value="">Todas</option>
+              <option value="PUBLICADO">Publicado</option><option value="PRE_PUBLICACAO_SEM_PRECO">Pré-publicação (sem preço)</option>
+              <option value="PRE_PUBLICACAO_AGUARDANDO">Pré-publicação (aguardando)</option><option value="PRONTO_PARA_PUBLICAR">Pronto para publicar</option>
+              <option value="EM_EDICAO">Em edição</option><option value="REPUBLICACAO_AGENDADA">Republicação agendada</option>
+            </select>
+          </label>
+        </div>
+        <div id="tabImoveis" class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-x-auto"></div>
+        <div id="pagImoveis" class="flex items-center justify-between text-xs text-slate-600"></div>
+      </section>
+
+      <section id="aba-reservas" role="tabpanel" class="hidden space-y-4">
+        <div class="flex flex-wrap items-end gap-3">
+          <label class="text-xs font-semibold text-slate-600">Buscar
+            <input id="buscaReservas" type="search" maxlength="80" placeholder="Imóvel ou hóspede" class="mt-1 block bg-white border border-slate-300 rounded-lg p-2 text-xs w-56">
+          </label>
+          <label class="text-xs font-semibold text-slate-600">Situação
+            <select id="filtroStatusReserva" class="mt-1 block bg-white border border-slate-300 rounded-lg p-2 text-xs">
+              <option value="">Todas</option>
+              <option value="PENDENTE">Pendente</option><option value="CONFIRMADA">Confirmada</option><option value="CONCLUIDA">Concluída</option>
+              <option value="CANCELADA_COM_REEMBOLSO">Cancelada (com reembolso)</option><option value="CANCELADA_SEM_REEMBOLSO">Cancelada (sem reembolso)</option>
+              <option value="CANCELADA_PELO_GESTOR">Cancelada pelo gestor</option>
+            </select>
+          </label>
+        </div>
+        <div id="tabReservas" class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-x-auto"></div>
+        <div id="pagReservas" class="flex items-center justify-between text-xs text-slate-600"></div>
+      </section>
+
+      <!-- Dados / big data -->
+      <section id="aba-dados" role="tabpanel" class="hidden space-y-6">
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-3">
+          <h3 class="text-sm font-bold text-slate-900">Exportar eventos de uso (big data)</h3>
+          <p class="text-xs text-slate-600 leading-relaxed">Cada clique, visualização, rolagem e tempo de permanência fica gravado como um evento anônimo e imutável. Exporte o período escolhido acima para analisar fora do sistema (Power BI, Metabase, DuckDB, Spark, pandas...). O arquivo sai em fluxo, em lotes, sem sobrecarregar o servidor.</p>
+          <div class="flex flex-wrap gap-2">
+            <button id="btnExportCsv" type="button" class="text-xs font-bold bg-slate-900 hover:bg-slate-700 text-white px-4 py-2 rounded-lg">Baixar CSV</button>
+            <button id="btnExportNdjson" type="button" class="text-xs font-bold border border-slate-300 text-slate-700 hover:bg-slate-50 px-4 py-2 rounded-lg">Baixar NDJSON</button>
+          </div>
+          <p id="infoArmazenados" class="text-[11px] text-slate-500"></p>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-2">
+          <h3 class="text-sm font-bold text-slate-900">Dicionário de colunas</h3>
+          <div class="overflow-x-auto">
+            <table class="w-full text-xs">
+              <thead><tr class="text-left text-slate-500"><th class="py-1 pr-4">Coluna</th><th class="py-1">Significado</th></tr></thead>
+              <tbody class="divide-y divide-slate-100 text-slate-700">
+                <tr><td class="py-1 pr-4 font-mono">tipo</td><td>VISUALIZACAO, CLIQUE, ROLAGEM ou PERMANENCIA</td></tr>
+                <tr><td class="py-1 pr-4 font-mono">pagina</td><td>Caminho normalizado (ex.: /imoveis/{id}), sem query</td></tr>
+                <tr><td class="py-1 pr-4 font-mono">alvo</td><td>Elemento clicado: #id, [data-track=...] ou tag[href=...]; nunca o texto</td></tr>
+                <tr><td class="py-1 pr-4 font-mono">sessao_id</td><td>Sorteio do navegador, vale por aba; não identifica pessoa</td></tr>
+                <tr><td class="py-1 pr-4 font-mono">papel / dispositivo</td><td>VISITANTE, CLIENTE, ANFITRIAO ou ADMIN / MOBILE, TABLET ou DESKTOP</td></tr>
+                <tr><td class="py-1 pr-4 font-mono">x_pm, y_px, doc_altura</td><td>Posição do clique: milésimos da largura, pixels desde o topo, altura do documento</td></tr>
+                <tr><td class="py-1 pr-4 font-mono">x_celula, y_celula</td><td>Grade do mapa de calor (50 colunas × 25 px)</td></tr>
+                <tr><td class="py-1 pr-4 font-mono">valor</td><td>ROLAGEM: % máxima vista; PERMANENCIA: segundos ativos</td></tr>
+                <tr><td class="py-1 pr-4 font-mono">dia, hora, dia_semana, ocorrido_em</td><td>Horário de Brasília (dia_semana: 1 = segunda ... 7 = domingo) e instante UTC</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500 mt-auto">
+    <p>SmartRent B2B © 2026 • Operação Canasvieiras • Projeto Acadêmico</p>
+  </footer>
+
+  <script src="/js/auth.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/header-auth.js"></script>
+  <script src="/js/navegacao.js"></script>
+  <script src="/js/ui.js"></script>
+  <script src="/js/moderacao-acoes.js"></script>
+  <script src="/js/admin.js"></script>
+  <script>lucide.createIcons();</script>
+</body>
+
+</html>

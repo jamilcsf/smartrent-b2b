@@ -21,12 +21,15 @@ class InventarioDeRotasTest {
 
     private static final String PUBLICA = "PUBLICA (por desenho)";
     private static final String GESTOR = "GESTOR/ADMIN (SecurityConfig)";
+    private static final String ADMIN = "ADMIN (SecurityConfig: /api/admin/**)";
     private static final String AUTENTICADA = "AUTENTICADA (SecurityConfig + posse no servico)";
     private static final String MISTA = "MISTA (rotas publicas e autenticadas, ver SecurityConfig)";
 
     private static final Map<String, String> ESPERADO = Map.ofEntries(
+            Map.entry("AdminController", ADMIN),                   // painel de admin e mapas de calor
             Map.entry("AuthController", MISTA),                    // login/cadastro publicos, /me autenticado
             Map.entry("CalendarioController", GESTOR),             // /api/gestor/**
+            Map.entry("ComunicadoController", AUTENTICADA),        // avisos da administracao: so os proprios
             Map.entry("ConfigController", PUBLICA),                // hora do servidor
             Map.entry("DisponibilidadeController", PUBLICA),       // datas indisponiveis do anuncio
             Map.entry("EstatisticasController", GESTOR),
@@ -34,6 +37,7 @@ class InventarioDeRotasTest {
             Map.entry("GestorImovelController", GESTOR),
             Map.entry("ImovelController", PUBLICA),                // catalogo
             Map.entry("MidiaPublicaController", PUBLICA),          // midias do catalogo (chave UUID)
+            Map.entry("ModeracaoController", ADMIN),               // denuncias, decisoes automaticas, suspensao, avisos
             Map.entry("NotificacaoController", GESTOR),
             Map.entry("PerfilController", MISTA),
             Map.entry("PoliticaController", PUBLICA),
@@ -42,6 +46,7 @@ class InventarioDeRotasTest {
             Map.entry("ReservaController", GESTOR),
             Map.entry("SmartChatController", AUTENTICADA),         // /stream usa ticket de uso unico
             Map.entry("SugestaoPrecoController", GESTOR),          // /api/precificacao/** (grava e consulta a IA)
+            Map.entry("TelemetriaController", PUBLICA),            // coleta anonima, limitada por IP; respeita DNT/GPC
             Map.entry("TermoController", PUBLICA),
             Map.entry("VideoGestorController", GESTOR));
 

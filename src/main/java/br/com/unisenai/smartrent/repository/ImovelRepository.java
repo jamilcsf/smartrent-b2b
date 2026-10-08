@@ -3,7 +3,9 @@ package br.com.unisenai.smartrent.repository;
 import br.com.unisenai.smartrent.model.Imovel;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.EntityGraph;
+import br.com.unisenai.smartrent.dto.TelemetriaDtos.ContagemRotulo;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -15,7 +17,11 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface ImovelRepository extends JpaRepository<Imovel, Long> {
+public interface ImovelRepository extends JpaRepository<Imovel, Long>, JpaSpecificationExecutor<Imovel> {
+
+    @Query("select new br.com.unisenai.smartrent.dto.TelemetriaDtos$ContagemRotulo(str(i.status), count(i)) from Imovel i group by i.status")
+    List<ContagemRotulo> contagemPorStatus();
+
 
     /*
      * As comodidades sao uma colecao LAZY e a aplicacao roda com
@@ -42,9 +48,10 @@ public interface ImovelRepository extends JpaRepository<Imovel, Long> {
     /**
      * Fonte unica da visibilidade publica. Alem de PUBLICADO, vale o
      * REPUBLICACAO_AGENDADA cujo horario ja chegou: assim um atraso ou falha do
-     * job de republicacao nao deixa o anuncio fora do ar alem do prazo.
+     * job de republicacao nao deixa o anuncio fora do ar alem do prazo. Anuncio de gestor com conta suspensa
+     * (moderacao, ADR-010) sai do catalogo junto com a conta.
      */
-    String VISIVEL = "i.ativo = true and (i.status = br.com.unisenai.smartrent.model.enums.StatusAnuncio.PUBLICADO "
+    String VISIVEL = "i.ativo = true and i.usuario.ativo = true and (i.status = br.com.unisenai.smartrent.model.enums.StatusAnuncio.PUBLICADO "
             + "or (i.status = br.com.unisenai.smartrent.model.enums.StatusAnuncio.REPUBLICACAO_AGENDADA "
             + "and i.republicarEm <= :agora))";
 

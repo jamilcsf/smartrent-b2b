@@ -73,7 +73,10 @@ story.append(Paragraph(
     "sempre que essa IA está indisponível, registrando qual dos dois caminhos gerou cada "
     "sugestão. Um <i>dashboard</i> reúne indicadores de ocupação e de evolução de preço para "
     "o anfitrião. A autenticação de usuários é reaproveitada do Projeto Aplicado III, evitando "
-    "retrabalho em um domínio já resolvido pela equipe em semestre anterior.", styles["Body"]))
+    "retrabalho em um domínio já resolvido pela equipe em semestre anterior. Em rodadas posteriores, o "
+    "sistema ganhou um painel de administração com telemetria de uso anônima e mapas de calor, que "
+    "mostram as partes mais usadas do próprio produto, e uma área de moderação para denúncias, decisões "
+    "automáticas do chat, suspensão de contas e avisos aos usuários.", styles["Body"]))
 
 story.append(Paragraph("1.3 Alinhamento com o Objetivo de Desenvolvimento Sustentável 8", styles["H2"]))
 story.append(Paragraph(
@@ -230,8 +233,8 @@ rf_list = [
              "idempotente na confirmação da reserva, tempo quase real e contador de não lidas.", "Must"),
     ("RF30", "As mensagens do SmartChat devem ter telefones, links externos, e-mails e conteúdo "
              "impróprio ocultados no servidor, preservando o original apenas em campo restrito; "
-             "denúncia e solicitação de bloqueio de usuário são registradas (protótipo, sem "
-             "efeito funcional).", "Must"),
+             "a denúncia é analisada na área de moderação (RF50) e a solicitação de bloqueio de "
+             "usuário é apenas registrada (protótipo, sem efeito funcional).", "Must"),
     ("RF31", "Vídeos do anúncio têm no máximo 1:30, são enviados em partes retomáveis, validados "
              "no servidor e processados de forma assíncrona (estados ENVIANDO, PROCESSANDO, "
              "PRONTO e FALHA); só vídeos prontos aparecem e a publicação os exige.", "Must"),
@@ -272,6 +275,39 @@ rf_list = [
              "continua livre e o perfil mostra o selo \"E-mail verificado\".", "Must"),
     ("RF45", "As conversas devem ser identificadas por UUID nas rotas, nos eventos e nos links; conversa "
              "inexistente e conversa de terceiros devem dar a mesma resposta.", "Must"),
+    ("RF46", "O sistema deve oferecer um painel de administração (página /admin.html e rotas "
+             "/api/admin/**) restrito ao papel ADMIN, com visão geral da plataforma e listas de "
+             "usuários, imóveis e reservas com busca, filtro e paginação de tamanho limitado; gestor e "
+             "cliente recebem 403 e visitante 401, decididos no servidor.", "Must"),
+    ("RF47", "O sistema deve coletar telemetria de uso anônima (visualização de página, clique com posição "
+             "e identificador estrutural do elemento, profundidade de rolagem e tempo na página), sem "
+             "usuário, IP, texto digitado, texto de elementos nem cookies, respeitando Do Not Track e "
+             "Global Privacy Control, por endpoint público validado e limitado por origem, com retenção "
+             "configurável e coleta desligável.", "Must"),
+    ("RF48", "O painel deve exibir mapas de calor de cliques desenhados sobre a própria página, por "
+             "dispositivo (computador, tablet e celular), com os elementos mais clicados, a profundidade de "
+             "rolagem, as páginas mais usadas, os horários de pico, os dispositivos e o tempo médio por "
+             "página.", "Should"),
+    ("RF49", "O painel deve exportar os eventos de uso brutos em CSV ou NDJSON, em fluxo e em lotes, para "
+             "análise externa, com proteção contra injeção de fórmula em planilhas.", "Should"),
+    ("RF50", "A administração deve analisar as denúncias do SmartChat, vendo apenas as mensagens que o "
+             "denunciante anexou (a abertura do detalhe é registrada) e decidindo como procedente ou "
+             "improcedente com justificativa obrigatória, com a opção de suspender o denunciado e de avisar "
+             "denunciante e denunciado.", "Must"),
+    ("RF51", "A administração deve ver as decisões automáticas do SmartChat (alertas de envio em massa e de "
+             "suspeita de fraude, com o efeito aplicado) e o resumo do filtro de mensagens, somente com "
+             "contagens, e poder confirmar um alerta ou descartá-lo como falso positivo, o que remove a "
+             "restrição de envio.", "Should"),
+    ("RF52", "A administração deve poder suspender e reativar contas, sempre com motivo: a suspensão "
+             "invalida o acesso na hora, tira do catálogo os anúncios do gestor suspenso e não vale para a "
+             "própria conta nem para outro administrador.", "Must"),
+    ("RF53", "A administração deve poder enviar mensagem direta a qualquer usuário em nome de um nível "
+             "(administração da plataforma, moderação, suporte ou segurança e privacidade), lida na caixa "
+             "Avisos, com contador de não lidos, cópia opcional por e-mail e limite de envios por "
+             "administrador.", "Must"),
+    ("RF54", "Toda ação de moderação (suspensão, reativação, mensagem, decisão de denúncia, revisão de "
+             "alerta e abertura de denúncia) deve gravar uma linha imutável com autor, alvo, justificativa e "
+             "referência, consultável em um histórico.", "Must"),
     ("RF22", "O sistema deve manter trilha de auditoria dos aceites do termo (usuário, imóvel, "
              "versão, data, hora e IP), das alterações de preço e das ações sobre o anúncio.",
      "Should"),
@@ -321,6 +357,13 @@ rnf_list = [
               "cadastro devem ter limite de tentativas; o conteúdo do chat deve passar por filtro de contatos com "
               "normalização Unicode e por sanitização no servidor; recursos de outra pessoa devem responder como "
               "inexistentes (404) e as mensagens do chat sair com identificador público (UUID).", "Segurança"),
+    ("RNF14", "Os dados de uso devem ser anônimos por desenho: nunca gravar identificador de pessoa, IP, texto "
+              "de elemento, texto digitado nem URL com parâmetros; apagar eventos acima do prazo de retenção "
+              "e permitir desligar a coleta.", "Privacidade"),
+    ("RNF15", "Ações administrativas devem exigir justificativa, deixar trilha imutável e nunca alterar a "
+              "própria conta nem a de outro administrador; todo texto de usuário exibido nas áreas de "
+              "administração deve ser escapado e a política de enquadramento em iframe deve permitir apenas a "
+              "própria origem.", "Segurança"),
 ]
 rnf_data = [[Paragraph("ID", styles["CellHeader"]), Paragraph("Descrição", styles["CellHeader"]),
              Paragraph("Categoria", styles["CellHeaderCenter"])]]
@@ -336,7 +379,7 @@ story.append(PageBreak())
 # ---------------------------------------------------------------------
 story.append(Paragraph("4 CASOS DE USO", styles["H1"]))
 story.append(figura(styles, f"{A}/diagrama_casos_de_uso.png",
-                     "diagrama de casos de uso do SmartRent B2B", 158, 1530 / 2210))
+                     "diagrama de casos de uso do SmartRent B2B", 158, 2057 / 2210))
 
 story.append(Paragraph("4.1 Gerenciar reservas e verificar conflito de datas", styles["H2"]))
 uc1 = [
@@ -399,8 +442,19 @@ resumo_list = [
                                      "restrições temporárias durante a análise e cancelamento a "
                                      "qualquer momento (RF38, RF39)."),
     ("Analisar solicitação de exclusão", "Aprovação, negativa ou conclusão pela equipe, com período "
-                                          "mínimo e trava por impedimentos; serviço pronto, sem tela "
-                                          "(depende do módulo de administração)."),
+                                          "mínimo e trava por impedimentos; serviço pronto, sem tela de "
+                                          "decisão (o painel de administração mostra só a contagem de pedidos em andamento)."),
+    ("Consultar uso do site e mapas de calor", "Administrador vê páginas, elementos e horários mais usados e o mapa "
+                                                "de calor sobre a própria página, por dispositivo, e exporta os "
+                                                "eventos em CSV ou NDJSON (RF46 a RF49)."),
+    ("Moderar denúncia", "Abertura do detalhe com evidências anexadas, decisão procedente ou improcedente com "
+                          "justificativa, suspensão opcional e avisos às partes (RF50, RF52 a RF54)."),
+    ("Revisar decisão automática", "Alerta de envio em massa ou de suspeita de fraude é confirmado ou descartado "
+                                    "como falso positivo; descartar remove a restrição de envio (RF51, RF54)."),
+    ("Suspender e reativar conta", "Motivo obrigatório; acesso cai na hora, anúncios do gestor saem do catálogo e "
+                                    "o usuário é avisado (RF52, RF54)."),
+    ("Enviar e ler avisos da plataforma", "Administrador escreve em nome de um nível; qualquer usuário lê na caixa "
+                                           "Avisos (RF53)."),
 ]
 rdata2 = [[Paragraph("Caso de uso", styles["CellHeader"]), Paragraph("Resumo", styles["CellHeader"])]]
 for uc, res in resumo_list:
@@ -444,7 +498,9 @@ story.append(Paragraph(
     "incorporado (endereço). Todos os relacionamentos entre as entidades principais são de um "
     "para muitos. O fluxo de anúncios acrescentou entidades de apoio (mídias, rascunho de "
     "edição, histórico de preço, aceites do termo, auditoria, lembretes e notificações), "
-    "descritas na Seção 6.2 e ainda não representadas no diagrama da Seção 5.1.", styles["Body"]))
+    "descritas na Seção 6.2 e ainda não representadas no diagrama da Seção 5.1. As rodadas de "
+    "administração acrescentaram os eventos de uso (telemetria), a trilha de ações de moderação e os "
+    "avisos da plataforma, também descritos na Seção 6.2.", styles["Body"]))
 
 story.append(Paragraph("6.2 Modelo físico", styles["H2"]))
 story.append(Paragraph(
@@ -590,7 +646,7 @@ tables_ddl = [
     ]),
     ("smartchat_denuncias e smartchat_bloqueios_usuario", [
         ("conversa_id, denunciante_id, denunciado_id", "bigint", "denúncia registrada (status PENDENTE)"),
-        ("motivo, descricao, mensagens_anexadas", "varchar", "dados para o futuro módulo de administração"),
+        ("motivo, descricao, mensagens_anexadas", "varchar", "analisados na área de moderação; status vira PROCEDENTE ou IMPROCEDENTE"),
         ("bloqueador_id, bloqueado_id, status", "bigint / varchar", "pedido de bloqueio, sem efeito funcional"),
     ]),
     ("auditoria_conta", [
@@ -618,6 +674,33 @@ tables_ddl = [
         ("estado_anterior, estado_novo", "varchar(30)", "de qual estado para qual"),
         ("ocorrida_em, autor_id, observacao", "timestamptz / bigint / varchar", "autor nulo quando é o usuário ou o sistema"),
     ]),
+    ("alertas_internos", [
+        ("id, usuario_id", "bigserial / bigint", "alerta de comportamento no SmartChat; sem conteúdo de mensagem"),
+        ("tipo, contagem", "varchar(30) / integer", "ENVIO_EM_MASSA ou SUSPEITA_FRAUDE e o que o disparou"),
+        ("janela_inicio, janela_fim, criado_em", "timestamptz", "janela observada"),
+        ("status", "varchar(15)", "ABERTO, REVISADO ou DESCARTADO; descartado não restringe mais o envio"),
+    ]),
+    ("eventos_uso", [
+        ("id", "bigserial", "chave primária; tabela só de inclusão"),
+        ("tipo", "varchar(12)", "VISUALIZACAO, CLIQUE, ROLAGEM ou PERMANENCIA"),
+        ("pagina, alvo", "varchar(80) / varchar(100)", "caminho normalizado; alvo é só #id, data-track ou tag e link, nunca texto"),
+        ("sessao_id, papel, dispositivo", "varchar", "sorteio do navegador por aba; papel (não a pessoa); MOBILE, TABLET ou DESKTOP"),
+        ("x_pm, y_px, doc_altura", "integer", "posição do clique: milésimos da largura, pixels e altura do documento"),
+        ("x_celula, y_celula, valor", "integer", "grade do mapa de calor (50 colunas por 25 px); rolagem em % ou permanência em segundos"),
+        ("dia, hora, dia_semana, ocorrido_em", "date / integer / timestamptz", "desnormalizados no fuso da plataforma para agregar sem funções de data"),
+    ]),
+    ("moderacao_acoes", [
+        ("id, usuario_id, admin_id", "bigserial / bigint", "conta que sofreu a ação e administrador que agiu"),
+        ("tipo", "varchar(30)", "SUSPENSAO, REATIVACAO, MENSAGEM, DENUNCIA_PROCEDENTE, DENUNCIA_IMPROCEDENTE, DENUNCIA_ABERTA, ALERTA_REVISADO ou ALERTA_DESCARTADO"),
+        ("motivo", "varchar(500)", "justificativa sanitizada; nunca conteúdo de mensagem do SmartChat"),
+        ("denuncia_id, alerta_id, criado_em", "bigint / timestamptz", "referências opcionais; linha imutável depois de gravada"),
+    ]),
+    ("comunicados", [
+        ("id, destinatario_id, remetente_admin_id", "bigserial / bigint", "aviso da administração para qualquer usuário; só o destinatário lê"),
+        ("remetente_nivel", "varchar(20)", "ADMINISTRACAO, MODERACAO, SUPORTE ou SEGURANCA"),
+        ("assunto, texto", "varchar(150) / text", "sanitizados no servidor"),
+        ("denuncia_id, criado_em, lido_em", "bigint / timestamptz", "lido_em nulo indica aviso não lido"),
+    ]),
     ("notificacoes", [
         ("id", "bigserial", "chave primária"), ("usuario_id", "bigint", "obrigatório"),
         ("imovel_id", "bigint", "opcional"), ("titulo, mensagem, link", "varchar", "obrigatório (link opcional)"),
@@ -640,7 +723,7 @@ story.append(Paragraph(
     "do usuário é garantida por restrição de unicidade na própria coluna, não por índice "
     "nomeado. O fluxo de anúncios acrescentou os índices idx_imoveis_status, "
     "idx_midias_imovel, idx_hist_preco_imovel, idx_aceites_imovel, idx_auditoria_imovel e "
-    "idx_notificacoes_usuario, além da restrição de unicidade uk_lembrete. As migrations V7 a V13 acrescentaram os campos comerciais e o snapshot da política, os pagamentos e reembolsos (com chaves de idempotência únicas), os bloqueios de datas, o SmartChat, o processamento de vídeo e o arquivamento seguido do descarte das colunas de WhatsApp. A migration V14 acrescentou a foto, a versão de sessão e o indicador de senha definida ao usuário, a auditoria de conta, os pedidos de troca de e-mail (com índice único parcial de um pedido pendente por usuário) e a solicitação de exclusão de dados com seu histórico (com índice único parcial de uma solicitação em andamento por usuário); nenhuma dessas tabelas guarda senha, hash em claro ou token, apenas o SHA-256 dos tokens de uso único. A migration V15 passou para TEXT as colunas de texto do SmartChat (mensagens, denúncias e a prévia das notificações), que agora guardam o valor cifrado no formato v1:Base64. As migrations V16 a V19 acrescentaram a marca de foto sem metadados, o HMAC do texto das mensagens e a tabela de alertas internos (sem conteúdo de mensagem), a verificação de e-mail (data na conta e links de uso único, só com o hash do token) e o código público (UUID) das conversas.", styles["Body"]))
+    "idx_notificacoes_usuario, além da restrição de unicidade uk_lembrete. As migrations V7 a V13 acrescentaram os campos comerciais e o snapshot da política, os pagamentos e reembolsos (com chaves de idempotência únicas), os bloqueios de datas, o SmartChat, o processamento de vídeo e o arquivamento seguido do descarte das colunas de WhatsApp. A migration V14 acrescentou a foto, a versão de sessão e o indicador de senha definida ao usuário, a auditoria de conta, os pedidos de troca de e-mail (com índice único parcial de um pedido pendente por usuário) e a solicitação de exclusão de dados com seu histórico (com índice único parcial de uma solicitação em andamento por usuário); nenhuma dessas tabelas guarda senha, hash em claro ou token, apenas o SHA-256 dos tokens de uso único. A migration V15 passou para TEXT as colunas de texto do SmartChat (mensagens, denúncias e a prévia das notificações), que agora guardam o valor cifrado no formato v1:Base64. As migrations V16 a V19 acrescentaram a marca de foto sem metadados, o HMAC do texto das mensagens e a tabela de alertas internos (sem conteúdo de mensagem), a verificação de e-mail (data na conta e links de uso único, só com o hash do token) e o código público (UUID) das conversas. As migrations V20 a V22 acrescentaram o código público (UUID) das mensagens, a tabela append-only de eventos de uso (com colunas desnormalizadas de dia, hora e grade do mapa de calor, e três índices voltados às consultas do painel) e as tabelas de trilha de moderação e de avisos da plataforma. Nenhuma delas guarda senha, token, IP, texto digitado nem conteúdo de mensagem do SmartChat.", styles["Body"]))
 story.append(PageBreak())
 
 # ---------------------------------------------------------------------
@@ -662,6 +745,11 @@ telas_list = [
                                   "justificativa da IA (RF08, RF09)."),
     ("Meu perfil", "Foto, nome de exibição, e-mail, senha e pedido de exclusão de dados, com o "
                     "aviso das restrições temporárias (RF33 a RF39)."),
+    ("Painel de administração", "Visão geral, uso do site, mapas de calor sobre a página real, listas de "
+                                 "usuários, imóveis e reservas e exportação dos eventos (RF46 a RF49)."),
+    ("Moderação", "Denúncias, decisões automáticas com revisão, contas suspensas, avisos enviados e "
+                   "histórico de ações (RF50 a RF54)."),
+    ("Avisos", "Caixa de mensagens da administração para qualquer usuário, com contador no menu (RF53)."),
 ]
 tel_data = [[Paragraph("Tela", styles["CellHeader"]), Paragraph("Propósito", styles["CellHeader"])]]
 for t, p in telas_list:

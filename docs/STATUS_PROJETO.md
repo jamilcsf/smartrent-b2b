@@ -116,9 +116,44 @@ contra a aplicação em execução.
 
 Pendente (depende de decisão ou de terceiros), além da lista anterior: **revisão jurídica** dos textos do pedido de exclusão e dos e-mails
 de segurança, do período mínimo de análise, dos prazos de retenção e do que anonimizar ou reter (`DataDeletionExecutor` é só uma interface:
-**concluir a exclusão não está implementado**); SMTP real (os links de e-mail só saem em log); tela de análise e perfil de administrador;
+**concluir a exclusão não está implementado**); SMTP real (os links de e-mail só saem em log); tela de análise de pedidos de exclusão no painel de administração (o painel de admin existe desde a ADR-009, mas só mostra contagens deles);
 recuperação de senha (contas criadas só pelo Google e anteriores à V14 não têm caminho para definir a primeira senha); foto em
 armazenamento de objetos; moderação do conteúdo da foto; rate limit distribuído; testes automatizados do front.
+
+## 🛡️ Painel de administração e mapas de calor (2026-10-08)
+
+Decisões e limites na [ADR-009](adr/ADR-009-painel-admin-e-telemetria-de-uso.md).
+
+- **Entregue:** `/admin.html` e `/api/admin/**` só para `ADMIN` (403 para gestor/cliente, testado); visão geral, uso do site, **mapas de calor
+  sobre a própria página** (por dispositivo), listas de usuários/imóveis/reservas e exportação CSV/NDJSON dos eventos. Única escrita:
+  ativar/desativar conta, com auditoria e proteção contra mexer na própria conta ou em outro admin.
+- **Telemetria anônima** (`eventos_uso`, migration V21; coletor `js/telemetria.js`): sem usuário, IP, texto ou cookies; respeita DNT/GPC;
+  endpoint público validado e limitado; retenção de 180 dias; desligável por `TELEMETRIA_HABILITADA=false`.
+- **Mudança de segurança consciente:** CSP `frame-ancestors 'self'` e `X-Frame-Options: SAMEORIGIN` (antes `'none'`/`DENY`), necessário para o iframe do mapa.
+- **Pendente:** revisão jurídica (aviso/consentimento, política de privacidade, prazo de retenção definitivo); funil ordenado por sessão; rollup/partição
+  da tabela quando o volume crescer; `data-track` nos botões principais; ação sobre pedidos de exclusão e gestão de papéis no painel. Os 6 PDFs
+  de `docs/relatorios-fonte/` foram regenerados em 2026-10-08 (RF46–RF54, RNF14–RNF15, casos de uso e diagrama com o administrador, tabelas V20–V22, riscos R32–R38, casos CT1103–CT1152 e rastreabilidade).
+
+## 🚨 Moderação no painel de admin (2026-10-08)
+
+Decisões e limites na [ADR-010](adr/ADR-010-moderacao-denuncias-decisoes-automaticas-e-avisos.md).
+
+- **Entregue:** `/moderacao.html` (só ADMIN) com denúncias (decisão com justificativa, suspensão e avisos opcionais; abrir evidência fica registrado),
+  decisões automáticas do SmartChat com o efeito aplicado e revisão (descartar alerta remove a restrição de envio), contas suspensas, avisos enviados e
+  histórico imutável (V22: `moderacao_acoes`, `comunicados`). Mensagens diretas a qualquer usuário em nome de um nível (administração, moderação, suporte,
+  segurança), lidas em `/comunicados.html`. Suspender tira os anúncios do gestor do catálogo. O liga/desliga simples da ADR-009 foi substituído por esse fluxo.
+- **A confirmar com o usuário:** "demais níveis de gerência" foi lido como o nível remetente do aviso; não há hierarquia de permissões entre admins.
+- **Pendente:** textos provisórios dos avisos e decisões automatizadas (jurídico/LGPD art. 20), suspensão temporária com data de fim, resposta do usuário ao aviso,
+  níveis de acesso entre admins. Os 6 PDFs de `docs/relatorios-fonte/` foram regenerados em 2026-10-08 e já refletem a V21, a V22 e os testes CT1103–CT1152.
+
+### Qualidade e apresentação depois do painel de admin e da moderação (2026-10-08)
+
+- **Suíte:** 720 testes, 0 falhas. **Cobertura de linhas (JaCoCo 0.8.12 como plugin avulso; não está no `pom.xml`): 85,3%** (era 84,0% na rodada de 06/10).
+  Uma primeira medição, antes dos testes de serviço, deu 81,3%: `TelemetriaAnaliseService`, `AdminService` e `ComunicadoService` estavam quase sem teste automatizado (só validados à mão).
+  Foram cobertos por testes de unidade, de controller e de integração com H2 e SmartChat real (`ModeracaoIntegracaoTest`). Agora: `AdminService` 99%, `TelemetriaAnaliseService` 98%,
+  `ModeracaoService` 94%, `TelemetriaService` 89%, controllers novos 86% a 100%. Segue sem teste automatizado de interface.
+- **Pitch (`pitch/`)**: 27 slides (eram 25). Novas demos animadas: painel de admin com mapa de calor (simulação) e moderação (da denúncia à decisão). Reescritos o slide de Dados (agora cita a telemetria
+  e a exportação) e o de Big Data (a coleta existe, o processamento distribuído continua roadmap), além de contagens (18 telas, 24 controladores, 28 tabelas, migrations V1–V22), casos de teste e checklist.
 
 ## 📱 Revisão mobile (2026-10-06)
 
