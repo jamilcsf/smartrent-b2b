@@ -13,13 +13,22 @@
   var siteKey = null;
   var opcoes = {};
 
-  function carregarScript(src, aoCarregar) {
+  function carregarScript(src, aoCarregar, aoFalhar) {
     var s = document.createElement('script');
     s.src = src;
     s.async = true;
     s.defer = true;
     if (aoCarregar) { s.onload = aoCarregar; }
+    if (aoFalhar) { s.onerror = aoFalhar; }
     document.head.appendChild(s);
+  }
+
+  // Sem aviso, o captcha que expira, dá erro ou nem chega a carregar deixa
+  // um espaço em branco e a pessoa não sabe o que fazer.
+  function avisarCaptcha(mensagem) {
+    var alvo = document.getElementById('erro-captcha');
+    alvo.innerText = mensagem;
+    alvo.classList.toggle('hidden', !mensagem);
   }
 
   // Chamado pelo próprio script do reCAPTCHA quando termina de carregar.
@@ -27,8 +36,14 @@
     widgetId = global.grecaptcha.render('captcha', {
       sitekey: siteKey,
       hl: 'pt-BR',
-      callback: function () {
-        document.getElementById('erro-captcha').classList.add('hidden');
+      callback: function () { avisarCaptcha(''); },
+      // O token vale cerca de 2 minutos: depois disso a caixa se desmarca sozinha.
+      'expired-callback': function () {
+        avisarCaptcha('A verificação expirou. Marque a caixa "Não sou um robô" novamente.');
+      },
+      // Queda de conexão: o próprio widget manda quem o usa avisar a pessoa.
+      'error-callback': function () {
+        avisarCaptcha('Erro de conexão na verificação de segurança. Confira a internet e tente de novo.');
       }
     });
   };
@@ -76,7 +91,12 @@
         var cfg = await global.Api.get('/api/auth/config');
         if (cfg.recaptchaSiteKey) {
           siteKey = cfg.recaptchaSiteKey;
-          carregarScript('https://www.google.com/recaptcha/api.js?onload=aoCarregarCaptcha&render=explicit&hl=pt-BR');
+          carregarScript('https://www.google.com/recaptcha/api.js?onload=aoCarregarCaptcha&render=explicit&hl=pt-BR',
+            null,
+            function () {
+              avisarCaptcha('Não foi possível carregar a verificação de segurança. '
+                + 'Confira a internet (redes públicas costumam bloquear) e recarregue a página.');
+            });
         }
         iniciarGoogle(cfg.googleClientId);
       } catch (e) {
@@ -91,11 +111,9 @@
     exigirCaptcha: function () {
       var token = widgetId === null ? '' : global.grecaptcha.getResponse(widgetId);
       if (!token) {
-        var alvo = document.getElementById('erro-captcha');
-        alvo.innerText = widgetId === null
+        avisarCaptcha(widgetId === null
           ? 'A verificação de segurança não carregou. Recarregue a página.'
-          : 'Confirme que você não é um robô.';
-        alvo.classList.remove('hidden');
+          : 'Confirme que você não é um robô.');
       }
       return token;
     },
