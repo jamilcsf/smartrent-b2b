@@ -45,6 +45,7 @@ public class GroqPricingSuggestionProvider implements PricingSuggestionService {
     private static final String SISTEMA = "Você é um especialista em precificação de aluguel por temporada "
             + "no Brasil, com foco na Grande Florianópolis. Sugira o valor da diária em reais (BRL) para o "
             + "imóvel descrito, considerando características, localização, área e a época do ano. "
+            + "Quando houver dados reais da plataforma (histórico do imóvel e anúncios semelhantes), dê peso a eles. "
             + "Responda SOMENTE com um objeto JSON no formato "
             + "{\"valor\": <número, diária em reais>, \"justificativa\": \"<até 300 caracteres, em português>\"}.";
 
@@ -53,21 +54,29 @@ public class GroqPricingSuggestionProvider implements PricingSuggestionService {
     private final String apiKey;
     private final String modelo;
     private final Clock clock;
+    private final ContextoDadosService contexto; // nulo = sem dados da plataforma (testes)
 
     @Autowired
     public GroqPricingSuggestionProvider(RestClient.Builder builder,
                                          ObjectMapper objectMapper,
                                          Clock clock,
+                                         ContextoDadosService contexto,
                                          @Value("${smartrent.groq.api-key:}") String apiKey,
                                          @Value("${smartrent.groq.model:llama-3.3-70b-versatile}") String modelo,
                                          @Value("${smartrent.groq.base-url:https://api.groq.com/openai/v1}") String baseUrl,
                                          @Value("${smartrent.groq.timeout-ms:15000}") long timeoutMs) {
-        this(comTimeout(builder, baseUrl, timeoutMs), objectMapper, clock, apiKey, modelo);
+        this(comTimeout(builder, baseUrl, timeoutMs), objectMapper, clock, apiKey, modelo, contexto);
     }
 
     /** Construtor para testes: recebe o cliente HTTP ja montado. */
     GroqPricingSuggestionProvider(RestClient restClient, ObjectMapper objectMapper, Clock clock,
                                   String apiKey, String modelo) {
+        this(restClient, objectMapper, clock, apiKey, modelo, null);
+    }
+
+    GroqPricingSuggestionProvider(RestClient restClient, ObjectMapper objectMapper, Clock clock,
+                                  String apiKey, String modelo, ContextoDadosService contexto) {
+        this.contexto = contexto;
         this.restClient = restClient;
         this.objectMapper = objectMapper;
         this.clock = clock;
@@ -138,7 +147,21 @@ public class GroqPricingSuggestionProvider implements PricingSuggestionService {
         if (i.getComodidades() != null && !i.getComodidades().isEmpty()) {
             sb.append("Comodidades: ").append(String.join(", ", i.getComodidades())).append('\n');
         }
+        sb.append(dadosDaPlataforma(i));
         return sb.toString();
+    }
+
+    /** Historico do imovel e panorama agregado; se a consulta falhar, a IA segue sem esse contexto. */
+    private String dadosDaPlataforma(Imovel i) {
+        if (contexto == null) {
+            return "";
+        }
+        try {
+            return ContextoDadosService.paraPrompt(contexto.montar(i));
+        } catch (RuntimeException e) {
+            log.warn("Contexto de dados indisponível para a IA de preço: {}", e.getMessage());
+            return "";
+        }
     }
 
     private Sugestao interpretar(String corpo) {

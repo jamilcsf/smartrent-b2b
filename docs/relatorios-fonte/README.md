@@ -1,8 +1,8 @@
 # Documentação do SmartRent B2B — código-fonte dos PDFs
 
-Esta pasta gera os 6 documentos PDF do projeto (Relatório Técnico, Cronograma,
+Esta pasta gera os 7 documentos PDF do projeto (Relatório Técnico, Cronograma,
 Matriz de Riscos, Plano de Testes, Matriz de Rastreabilidade, Business Model
-Canvas). Eles **não são editados diretamente** — são gerados por estes
+Canvas e Análise de Viabilidade). Eles **não são editados diretamente** — são gerados por estes
 scripts Python (reportlab + matplotlib), para manter formatação ABNT
 consistente entre eles.
 
@@ -38,6 +38,7 @@ python3 gerar_todos.py --so-pdfs
 | `build_04_testes.py` | Documento 4 — Plano de Testes |
 | `build_05_rastreabilidade.py` | Documento 5 — Matriz de Rastreabilidade |
 | `build_06_bmc.py` | Documento 6 — Business Model Canvas |
+| `build_07_viabilidade.py` | Documento 7 — Análise de Viabilidade e Impacto do MVP (números vêm de `scripts/analise_viabilidade.py`) |
 
 ## Quando atualizar o quê
 
