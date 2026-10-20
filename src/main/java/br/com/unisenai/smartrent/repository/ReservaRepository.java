@@ -61,6 +61,14 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long>, JpaSpec
                                         @Param("checkin") LocalDate checkin,
                                         @Param("checkout") LocalDate checkout);
 
+    /** Reservas que ocupam datas (confirmadas ou concluidas) dos imoveis informados e tocam [de, ate): base da IA de preco. */
+    @Query("SELECT r FROM Reserva r WHERE r.imovel.id IN :ids AND r.status IN "
+         + "(br.com.unisenai.smartrent.model.enums.StatusReserva.CONFIRMADA, br.com.unisenai.smartrent.model.enums.StatusReserva.CONCLUIDA)"
+         + " AND r.dataCheckin < :ate AND r.dataCheckout > :de")
+    List<Reserva> findOcupacaoNoPeriodo(@Param("ids") java.util.Collection<Long> ids,
+                                        @Param("de") LocalDate de,
+                                        @Param("ate") LocalDate ate);
+
     /** Reservas ativas (nao canceladas) que tocam o periodo [de, ate), para o calendario do gestor. */
     @Query("SELECT r FROM Reserva r WHERE r.imovel.id = :imovelId AND " + ATIVA
          + " AND r.dataCheckin < :ate AND r.dataCheckout > :de ORDER BY r.dataCheckin")

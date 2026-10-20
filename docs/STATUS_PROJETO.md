@@ -252,3 +252,10 @@ Resolvido nesta rodada (antes pendente): 403/404 uniforme em reserva, notificaç
 Pendente: validar V20 e Flyway 11 em PostgreSQL real; rotacionar a credencial e, com autorização, limpar o histórico; reserva, notificação e imóvel ainda com id numérico nas rotas.
 **V2 (não implementado):** negar por padrão no `SecurityConfig`, UUID em reserva/notificação/imóvel, CSP com nonce, moderação por IA e detecção semântica de burla do filtro, imagens e comprovantes no chat,
 rotação de chave da cifra e AAD com id da linha, rate limit distribuído, scan de CVE com banco de vulnerabilidades no CI.
+
+## 📈 AV Inteligência de Dados — viabilidade e impacto do MVP (2026-10-20)
+
+- **Entregue:** [`analise-viabilidade-mvp.md`](analise-viabilidade-mvp.md) (viabilidade técnica, econômica e de impacto, riscos, critérios de "segue/ajusta/para" e matriz requisito × evidência) e `scripts/analise_viabilidade.py` (modelo de equilíbrio reproduzível).
+- **Limite assumido:** preço, adesão e churn são **hipóteses** não validadas com clientes; a sugestão de preço por IA agora recebe o histórico do imóvel e o panorama agregado de anúncios semelhantes (`ContextoDadosService`, mín. 3 anúncios por privacidade), mas falta medir sugestão × resultado e, em plataforma nova, o contexto vem vazio.
+- **PDF:** `docs/relatorios-fonte/out/07_ANALISE_DE_VIABILIDADE.pdf` (Documento 7, gerado por `build_07_viabilidade.py` a partir de `scripts/analise_viabilidade.py`); os 6 PDFs anteriores não mudaram. Suíte: 725 testes, 0 falhas.
+

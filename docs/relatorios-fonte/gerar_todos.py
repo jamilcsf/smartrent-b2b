@@ -27,6 +27,7 @@ DOCUMENTOS = [
     "build_04_testes.py",
     "build_05_rastreabilidade.py",
     "build_06_bmc.py",
+    "build_07_viabilidade.py",
 ]
 
 os.makedirs("out", exist_ok=True)

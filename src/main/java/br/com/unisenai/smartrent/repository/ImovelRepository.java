@@ -59,6 +59,13 @@ public interface ImovelRepository extends JpaRepository<Imovel, Long>, JpaSpecif
     @Query("select i from Imovel i where " + VISIVEL + " order by i.id")
     List<Imovel> findVisiveis(@Param("agora") LocalDateTime agora);
 
+    /** Anuncios no ar do mesmo tipo e cidade, exceto o proprio: a "concorrencia" usada como contexto da IA de preco. */
+    @Query("select i from Imovel i where i.id <> :id and i.tipoImovel = :tipo and lower(i.endereco.cidade) = lower(:cidade) and " + VISIVEL)
+    List<Imovel> findSemelhantesNoAr(@Param("id") Long id,
+                                     @Param("tipo") br.com.unisenai.smartrent.model.enums.TipoImovel tipo,
+                                     @Param("cidade") String cidade,
+                                     @Param("agora") LocalDateTime agora);
+
     @EntityGraph(attributePaths = "comodidades")
     @Query("select i from Imovel i where i.id = :id and " + VISIVEL)
     Optional<Imovel> findVisivelPorId(@Param("id") Long id, @Param("agora") LocalDateTime agora);
